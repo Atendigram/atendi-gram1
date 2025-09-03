@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   TrendingUp,
   AlertTriangle,
@@ -23,12 +23,21 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
+import { createClient } from '@supabase/supabase-js';
 import { EditableField } from './ui/editable-field';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+
+/* ----------------------------------------------------------------
+   Supabase client
+----------------------------------------------------------------- */
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL!,
+  import.meta.env.VITE_SUPABASE_ANON_KEY!
+);
 
 /* ----------------------------------------------------------------
    Dados de exemplo (gráficos)
@@ -107,20 +116,20 @@ const Dashboard = () => {
   const [currentMonth, setCurrentMonth] = useState('Agosto 2023');
 
   /* ====== CARDS ====== */
-  // 1) Total de Contatos 👥
-  const [totalContacts, setTotalContacts] = useState(15450);
-  const [contactsGrowth, setContactsGrowth] = useState(8.5);
+  // 1) Total de Contatos 👥  (vem do Supabase)
+  const [totalContacts, setTotalContacts] = useState(0);
+  const [contactsGrowth, setContactsGrowth] = useState(8.5); // segue editável/local
 
-  // 2) Contatos Ativos 🟢
-  const [activeContacts, setActiveContacts] = useState(35);
-  const [newContacts, setNewContacts] = useState(5);
+  // 2) Contatos Ativos 🟢 (contatos que possuem alguma conversa) – computado a partir de conversations
+  const [activeContacts, setActiveContacts] = useState(0);
+  const [newContacts, setNewContacts] = useState(5); // segue local (placeholder)
 
-  // 3) Conversas Atendidas 💬
-  const [attendedConversations, setAttendedConversations] = useState(75);
-  const [conversationsGrowth, setConversationsGrowth] = useState(5.2);
+  // 3) Conversas Atendidas 💬 (status = 'attended')
+  const [attendedConversations, setAttendedConversations] = useState(0);
+  const [conversationsGrowth, setConversationsGrowth] = useState(5.2); // segue local
 
-  // 4) Total de Mensagens ✉️ (número simples)
-  const [totalMessages, setTotalMessages] = useState(3);
+  // 4) Total de Mensagens ✉️
+  const [totalMessages, setTotalMessages] = useState(0);
 
   /* Tarefas e alertas (cards de baixo) */
   const [upcomingTasks, setUpcomingTasks] = useState(initialUpcomingTasks);
@@ -252,6 +261,68 @@ const Dashboard = () => {
   const handleAddTransaction = () => {
     toast.info('Redirecionando para Finanças…');
   };
+
+  /* ----------------------------------------------------------------
+     BUSCA DOS KPIs NO SUPABASE + REALTIME
+  ----------------------------------------------------------------- */
+  useEffect(() => {
+    fetchKpis();
+
+    // Inscrições realtime para atualizar os KPIs automaticamente
+    const ch = supabase
+      .channel('kpis')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'contacts' }, fetchKpis)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'contacts' }, fetchKpis)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'contacts' }, fetchKpis)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversations' }, fetchKpis)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations' }, fetchKpis)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'conversations' }, fetchKpis)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, fetchKpis)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, fetchKpis)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, fetchKpis)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(ch);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function fetchKpis() {
+    try {
+      // Total de contatos
+      const { count: c1, error: e1 } = await supabase
+        .from('contacts')
+        .select('*', { count: 'exact', head: true });
+      if (e1) throw e1;
+      setTotalContacts(c1 ?? 0);
+
+      // Contatos ativos = quantidade de contatos que possuem alguma conversa
+      const { data: convForContacts, error: ec } = await supabase
+        .from('conversations')
+        .select('contact_id');
+      if (ec) throw ec;
+      const uniqueContacts = new Set((convForContacts ?? []).map((r: any) => r.contact_id));
+      setActiveContacts(uniqueContacts.size);
+
+      // Conversas atendidas (status = 'attended')
+      const { count: c2, error: e2 } = await supabase
+        .from('conversations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'attended');
+      if (e2) throw e2;
+      setAttendedConversations(c2 ?? 0);
+
+      // Total de mensagens
+      const { count: c3, error: e3 } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true });
+      if (e3) throw e3;
+      setTotalMessages(c3 ?? 0);
+    } catch (err) {
+      console.error('Erro ao buscar KPIs no Supabase:', err);
+    }
+  }
 
   return (
     <div className="p-6 space-y-6 animate-enter">
