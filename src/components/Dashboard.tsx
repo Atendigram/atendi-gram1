@@ -30,122 +30,127 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
-// --- Dados de exemplo (gráficos) ---
+/* ----------------------------------------------------------------
+   Dados de exemplo (mantidos para o gráfico/visuais)
+----------------------------------------------------------------- */
 const revenueData = [
   { month: 'Jan', revenue: 1500 },
-  { month: 'Fev', revenue: 2200 },
+  { month: 'Fév', revenue: 2200 },
   { month: 'Mar', revenue: 2500 },
-  { month: 'Abr', revenue: 2800 },
+  { month: 'Avr', revenue: 2800 },
   { month: 'Mai', revenue: 3200 },
-  { month: 'Jun', revenue: 3500 },
-  { month: 'Jul', revenue: 4000 },
+  { month: 'Juin', revenue: 3500 },
+  { month: 'Juil', revenue: 4000 },
 ];
 
-const contactsDistribution = [
-  { name: 'Leads', value: 40 },
-  { name: 'Clientes', value: 25 },
-  { name: 'Suporte', value: 15 },
-  { name: 'Parcerias', value: 10 },
-  { name: 'Outros', value: 10 },
+const productionData = [
+  { name: 'Canne à Sucre', value: 40 },
+  { name: 'Banane', value: 25 },
+  { name: 'Ananas', value: 15 },
+  { name: 'Igname', value: 10 },
+  { name: 'Autre', value: 10 },
 ];
 
-// --- Tarefas (exemplo) ---
+/* Lista de tarefas (apenas UI/local) */
 const initialUpcomingTasks = [
-  { id: 1, title: 'Responder novos leads no Telegram', due: 'Hoje', priority: 'high' },
-  { id: 2, title: 'Configurar mensagem automática', due: 'Amanhã', priority: 'medium' },
-  { id: 3, title: 'Revisar tags dos contatos', due: '28/08', priority: 'low' },
-  { id: 4, title: 'Organizar funil de atendimento', due: '30/08', priority: 'medium' },
+  { id: 1, title: 'Récolter la canne à sucre', due: "Aujourd'hui", priority: 'high' },
+  { id: 2, title: 'Commander des plants de bananier', due: 'Demain', priority: 'medium' },
+  { id: 3, title: 'Maintenance du tracteur', due: '28/08', priority: 'low' },
+  { id: 4, title: "Irrigation des plantations d'ananas", due: '30/08', priority: 'medium' },
 ];
 
-// --- Alertas (exemplo) ---
+/* Alertas (cartão “Alertes” da coluna da direita) – UI/local */
 const initialAlerts = [
-  { id: 1, message: 'Fila de mensagens acima do normal', type: 'warning' },
-  { id: 2, message: 'Taxa de resposta caiu nas últimas 24h', type: 'danger' },
-  { id: 3, message: 'Integração com Supabase OK', type: 'info' },
+  { id: 1, message: 'Niveau bas de plants de bananier', type: 'warning' },
+  { id: 2, message: 'Risque cyclonique pour la semaine prochaine', type: 'danger' },
+  { id: 3, message: 'Échéance de subvention régionale approche', type: 'info' },
 ];
 
-// --- “Alertas de conversa” (tabela) ---
-const initialConversationAlerts = [
+/* “Alertes Météo” (tabela) – mantido por enquanto */
+const initialWeatherAlerts = [
   {
     id: 1,
-    type: 'Pico de mensagens',
-    region: 'Todos os canais',
+    type: 'Cyclone',
+    region: 'Toute la Guadeloupe',
     startDate: '2023-09-10',
     endDate: '2023-09-12',
-    severity: 'crítica',
-    description: 'Grande volume de mensagens entrando',
+    severity: 'critique',
+    description: 'Cyclone tropical de catégorie 2 en approche',
   },
   {
     id: 2,
-    type: 'Queda de resposta',
-    region: 'Equipe Suporte',
+    type: 'Pluie',
+    region: 'Basse-Terre',
     startDate: '2023-09-20',
     endDate: '2023-09-23',
-    severity: 'moderada',
-    description: 'Tempo médio de resposta acima do esperado',
+    severity: 'modérée',
+    description: 'Fortes précipitations attendues',
   },
 ];
 
 const Dashboard = () => {
-  // Títulos do topo
-  const [title, setTitle] = useState('Olá, Atendente');
-  const [description, setDescription] = useState('Aqui está uma visão geral do seu atendimento no AtendiGram');
+  /* Cabeçalho */
+  const [title, setTitle] = useState('Olá, Atendente 👋');
+  const [description, setDescription] = useState(
+    'Aqui está uma visão geral do seu atendimento no AtendiGram'
+  );
   const [currentMonth, setCurrentMonth] = useState('Agosto 2023');
 
-  // Cards principais
-  const [monthlyRevenue, setMonthlyRevenue] = useState(15450);
-  const [revenueGrowth, setRevenueGrowth] = useState(8.5);
+  /* ====== NOVOS ESTADOS DOS CARDS ====== */
+  // Card 1: Total de Contatos
+  const [totalContacts, setTotalContacts] = useState(15450);
+  const [contactsGrowth, setContactsGrowth] = useState(8.5);
+
+  // Card 2: Contatos Ativos
   const [activeContacts, setActiveContacts] = useState(35);
   const [newContacts, setNewContacts] = useState(5);
-  const [handledConversations, setHandledConversations] = useState(75);
-  const [handledGrowth, setHandledGrowth] = useState(5.2);
-  const [alertsCount, setAlertsCount] = useState(3);
 
-  // Tarefas / alertas simples
+  // Card 3: Conversas Atendidas
+  const [attendedConversations, setAttendedConversations] = useState(75);
+  const [conversationsGrowth, setConversationsGrowth] = useState(5.2);
+
+  // Card 4: Total de Mensagens
+  const [totalMessages, setTotalMessages] = useState(3);
+
+  /* Tarefas / Alertas (colunas de baixo) */
   const [upcomingTasks, setUpcomingTasks] = useState(initialUpcomingTasks);
   const [alerts, setAlerts] = useState(initialAlerts);
+  const [weatherAlerts, setWeatherAlerts] = useState(initialWeatherAlerts);
 
-  // Tabela de “Alertas de Conversa”
-  const [conversationAlerts, setConversationAlerts] = useState(initialConversationAlerts);
-
-  // Modal novo alerta
+  /* Dialog de adicionar alerta meteo */
   const [showAddAlertDialog, setShowAddAlertDialog] = useState(false);
   const [newAlert, setNewAlert] = useState({
-    type: 'Pico de mensagens',
+    type: 'Cyclone',
     region: '',
     startDate: '',
     endDate: '',
-    severity: 'moderada',
+    severity: 'modérée',
     description: '',
   });
 
-  // Edição de tarefa
-  const [editingTask, setEditingTask] = useState<number | null>(null);
-  const [editedTaskTitle, setEditedTaskTitle] = useState('');
-
-  // Handlers (títulos/descrição/mês)
+  /* ===== handlers de edição ===== */
   const handleTitleChange = (value: string | number) => {
     setTitle(String(value));
     toast.success('Título atualizado');
   };
+
   const handleDescriptionChange = (value: string | number) => {
     setDescription(String(value));
     toast.success('Descrição atualizada');
   };
+
   const handleMonthChange = (value: string | number) => {
     setCurrentMonth(String(value));
-    toast.success('Período atualizado');
+    toast.success('Mês atualizado');
   };
 
-  // Handlers dos cards
-  const handleRevenueChange = (value: string | number) => {
-    setMonthlyRevenue(Number(value));
-    toast.success('Faturamento atualizado');
+  // Card 1
+  const handleTotalContactsChange = (value: string | number) => {
+    setTotalContacts(Number(value));
+    toast.success('Total de contatos atualizado');
   };
-  const handleRevenueGrowthChange = (value: string | number) => {
-    setRevenueGrowth(Number(value));
-    toast.success('Variação do faturamento atualizada');
-  };
+
+  // Card 2
   const handleActiveContactsChange = (value: string | number) => {
     setActiveContacts(Number(value));
     toast.success('Contatos ativos atualizado');
@@ -154,16 +159,21 @@ const Dashboard = () => {
     setNewContacts(Number(value));
     toast.success('Novos contatos atualizado');
   };
-  const handleHandledChange = (value: string | number) => {
-    setHandledConversations(Number(value));
+
+  // Card 3
+  const handleAttendedChange = (value: string | number) => {
+    setAttendedConversations(Number(value));
     toast.success('Conversas atendidas atualizado');
   };
-  const handleHandledGrowthChange = (value: string | number) => {
-    setHandledGrowth(Number(value));
-    toast.success('Variação do atendimento atualizada');
+  const handleAttendedGrowthChange = (value: string | number) => {
+    setConversationsGrowth(Number(value));
+    toast.success('Variação de conversas atualizada');
   };
 
-  // Tarefas
+  /* ===== tarefas ===== */
+  const [editingTask, setEditingTask] = useState<number | null>(null);
+  const [editedTaskTitle, setEditedTaskTitle] = useState('');
+
   const handleEditTask = (taskId: number) => {
     const task = upcomingTasks.find((t) => t.id === taskId);
     if (task) {
@@ -171,56 +181,60 @@ const Dashboard = () => {
       setEditedTaskTitle(task.title);
     }
   };
+
   const handleSaveTask = (taskId: number) => {
-    if (!editedTaskTitle.trim()) return;
-    setUpcomingTasks((t) => t.map((task) => (task.id === taskId ? { ...task, title: editedTaskTitle } : task)));
+    if (editedTaskTitle.trim() === '') return;
+    setUpcomingTasks(
+      upcomingTasks.map((task) => (task.id === taskId ? { ...task, title: editedTaskTitle } : task))
+    );
     setEditingTask(null);
     toast.success('Tarefa atualizada');
   };
+
   const handleDeleteTask = (taskId: number) => {
-    setUpcomingTasks((t) => t.filter((task) => task.id !== taskId));
+    setUpcomingTasks(upcomingTasks.filter((task) => task.id !== taskId));
     toast.success('Tarefa removida');
   };
 
-  // Alertas “simples”
+  /* ===== alertas (card da direita) ===== */
   const handleEditAlert = (id: number, message: string) => {
-    setAlerts((a) => a.map((al) => (al.id === id ? { ...al, message } : al)));
+    setAlerts(alerts.map((a) => (a.id === id ? { ...a, message } : a)));
     toast.success('Alerta atualizado');
   };
+
   const handleDeleteAlert = (id: number) => {
-    setAlerts((a) => a.filter((al) => al.id !== id));
-    setAlertsCount((prev) => prev - 1);
+    setAlerts(alerts.filter((a) => a.id !== id));
     toast.success('Alerta removido');
   };
 
-  // Alertas de Conversa (tabela)
-  const handleDeleteConversationAlert = (id: number) => {
-    setConversationAlerts((a) => a.filter((al) => al.id !== id));
-    toast.success('Alerta de conversa removido');
+  /* ===== alertas meteo (tabela) ===== */
+  const handleDeleteWeatherAlert = (id: number) => {
+    setWeatherAlerts(weatherAlerts.filter((a) => a.id !== id));
+    toast.success('Alerta removido');
   };
-  const handleAddConversationAlert = () => {
-    const { region, startDate, endDate, description } = newAlert;
-    if (!region || !startDate || !endDate || !description) {
-      toast.error('Preencha todos os campos');
+
+  const handleAddWeatherAlert = () => {
+    if (!newAlert.region || !newAlert.startDate || !newAlert.endDate || !newAlert.description) {
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
-    const newId = Math.max(0, ...conversationAlerts.map((a) => a.id)) + 1;
-    setConversationAlerts((a) => [...a, { id: newId, ...newAlert }]);
+    const newId = Math.max(...weatherAlerts.map((a) => a.id), 0) + 1;
+    setWeatherAlerts([...weatherAlerts, { id: newId, ...newAlert }]);
     setShowAddAlertDialog(false);
     setNewAlert({
-      type: 'Pico de mensagens',
+      type: 'Cyclone',
       region: '',
       startDate: '',
       endDate: '',
-      severity: 'moderada',
+      severity: 'modérée',
       description: '',
     });
-    toast.success('Novo alerta de conversa adicionado');
+    toast.success('Novo alerta adicionado');
   };
 
-  // CTA do topo
-  const handleNewConversation = () => {
-    toast.info('Abrir criação de nova conversa…');
+  /* ===== ação fictícia ===== */
+  const handleAddTransaction = () => {
+    toast.info('Redirecionando para Finanças…');
   };
 
   return (
@@ -235,6 +249,7 @@ const Dashboard = () => {
             <EditableField value={description} onSave={handleDescriptionChange} className="inline-block" showEditIcon />
           </p>
         </div>
+
         <div className="flex items-center space-x-4">
           <button className="px-4 py-2 text-sm text-agri-primary font-medium bg-agri-primary/10 rounded-lg hover:bg-agri-primary/20 transition-colors">
             <Calendar className="h-4 w-4 inline mr-2" />
@@ -242,7 +257,7 @@ const Dashboard = () => {
           </button>
           <button
             className="px-4 py-2 text-sm bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark transition-colors"
-            onClick={handleNewConversation}
+            onClick={handleAddTransaction}
           >
             <Wallet className="h-4 w-4 inline mr-2" />
             Nova Conversa
@@ -250,50 +265,90 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Cards principais */}
+      {/* ====== CARDS RÁPIDOS ====== */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total de Contatos 👥 */}
         <div className="stat-card card-hover">
-          <p className="stat-label">Faturamento Mensal</p>
+          <p className="stat-label">Total de Contatos 👥</p>
           <div className="flex items-baseline justify-between mt-2">
             <p className="stat-value">
-              <EditableField value={monthlyRevenue} type="number" onSave={handleRevenueChange} className="inline-block font-bold" /> R$
+              <EditableField
+                value={totalContacts}
+                type="number"
+                onSave={handleTotalContactsChange}
+                className="inline-block font-bold"
+              />
             </p>
             <span className="text-agri-success text-sm font-medium flex items-center">
               <TrendingUp className="h-4 w-4 mr-1" /> +
-              <EditableField value={revenueGrowth} type="number" onSave={handleRevenueGrowthChange} className="inline-block" />%
+              <EditableField
+                value={contactsGrowth}
+                type="number"
+                onSave={(v) => {
+                  setContactsGrowth(Number(v));
+                  toast.success('Variação atualizada');
+                }}
+                className="inline-block"
+              />
+              %
             </span>
           </div>
         </div>
 
+        {/* Contatos Ativos 🟢 */}
         <div className="stat-card card-hover">
-          <p className="stat-label">Contatos Ativos</p>
+          <p className="stat-label">Contatos Ativos 🟢</p>
           <div className="flex items-baseline justify-between mt-2">
             <p className="stat-value">
-              <EditableField value={activeContacts} type="number" onSave={handleActiveContactsChange} className="inline-block font-bold" />
+              <EditableField
+                value={activeContacts}
+                type="number"
+                onSave={handleActiveContactsChange}
+                className="inline-block font-bold"
+              />
             </p>
             <span className="text-agri-primary text-sm font-medium">
-              <EditableField value={newContacts} type="number" onSave={handleNewContactsChange} className="inline-block" /> novos
+              <EditableField
+                value={newContacts}
+                type="number"
+                onSave={handleNewContactsChange}
+                className="inline-block"
+              />{' '}
+              novos
             </span>
           </div>
         </div>
 
+        {/* Conversas atendidas 💬 */}
         <div className="stat-card card-hover">
-          <p className="stat-label">Conversas Atendidas</p>
+          <p className="stat-label">Conversas Atendidas 💬</p>
           <div className="flex items-baseline justify-between mt-2">
             <p className="stat-value">
-              <EditableField value={handledConversations} type="number" onSave={handleHandledChange} className="inline-block font-bold" />
+              <EditableField
+                value={attendedConversations}
+                type="number"
+                onSave={handleAttendedChange}
+                className="inline-block font-bold"
+              />
             </p>
             <span className="text-agri-success text-sm font-medium flex items-center">
               <TrendingUp className="h-4 w-4 mr-1" /> +
-              <EditableField value={handledGrowth} type="number" onSave={handleHandledGrowthChange} className="inline-block" />%
+              <EditableField
+                value={conversationsGrowth}
+                type="number"
+                onSave={handleAttendedGrowthChange}
+                className="inline-block"
+              />
+              %
             </span>
           </div>
         </div>
 
+        {/* Total de Mensagens ✉️ */}
         <div className="stat-card card-hover">
-          <p className="stat-label">Alertas</p>
+          <p className="stat-label">Total de Mensagens ✉️</p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">{alertsCount}</p>
+            <p className="stat-value">{totalMessages}</p>
             <span className="text-agri-warning text-sm font-medium flex items-center">
               <AlertTriangle className="h-4 w-4 mr-1" /> Recentes
             </span>
@@ -301,75 +356,98 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Alertas de Conversa */}
+      {/* ====== Alertas “Météo” (mantido) ====== */}
       <div className="bg-white rounded-xl border p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Alertas de Conversa</h2>
+          <h2 className="text-xl font-semibold">Alertes Météorologiques 🌦️</h2>
           <Button onClick={() => setShowAddAlertDialog(true)} className="bg-agri-primary hover:bg-agri-primary-dark">
-            <Plus size={16} className="mr-2" /> Novo Alerta
+            <Plus size={16} className="mr-2" /> Ajouter une alerte
           </Button>
         </div>
         <p className="text-muted-foreground mb-6">
-          Acompanhe alertas que impactam seu atendimento (picos, quedas e desempenho das equipes).
+          Suivez les alertes météorologiques impactant l&apos;agriculture en Guadeloupe
         </p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted text-xs uppercase">
               <tr>
-                <th className="px-4 py-3 text-left">Tipo</th>
-                <th className="px-4 py-3 text-left">Equipe/Canais</th>
-                <th className="px-4 py-3 text-left">Período</th>
-                <th className="px-4 py-3 text-left">Severidade</th>
-                <th className="px-4 py-3 text-left">Descrição</th>
-                <th className="px-4 py-3 text-left">Ações</th>
+                <th className="px-4 py-3 text-left">Type</th>
+                <th className="px-4 py-3 text-left">Région</th>
+                <th className="px-4 py-3 text-left">Période</th>
+                <th className="px-4 py-3 text-left">Sévérité</th>
+                <th className="px-4 py-3 text-left">Description</th>
+                <th className="px-4 py-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {conversationAlerts.map((alert) => (
+              {weatherAlerts.map((alert) => (
                 <tr key={alert.id} className="border-t hover:bg-muted/30">
-                  <td className="px-4 py-3">{alert.type}</td>
+                  <td className="px-4 py-3 flex items-center">
+                    {alert.type === 'Cyclone' ? (
+                      <span className="flex items-center text-red-500">
+                        <AlertTriangle size={16} className="mr-1" /> {alert.type}
+                      </span>
+                    ) : alert.type === 'Pluie' ? (
+                      <span className="flex items-center text-blue-500">
+                        <CloudRain size={16} className="mr-1" /> {alert.type}
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        <Wind size={16} className="mr-1" /> {alert.type}
+                      </span>
+                    )}
+                  </td>
+
                   <td className="px-4 py-3">
                     <EditableField
                       value={alert.region}
                       onSave={(value) => {
-                        setConversationAlerts((a) => a.map((al) => (al.id === alert.id ? { ...al, region: String(value) } : al)));
-                        toast.success('Equipe/Canais atualizado');
+                        setWeatherAlerts(
+                          weatherAlerts.map((a) => (a.id === alert.id ? { ...a, region: String(value) } : a))
+                        );
+                        toast.success('Région mise à jour');
                       }}
                     />
                   </td>
+
                   <td className="px-4 py-3">
                     <div className="space-y-1">
                       <div>
-                        <span className="text-xs text-muted-foreground">Início:</span>{' '}
+                        <span className="text-xs text-muted-foreground">Début:&nbsp;</span>
                         <EditableField
                           value={alert.startDate}
                           type="date"
                           onSave={(value) => {
-                            setConversationAlerts((a) => a.map((al) => (al.id === alert.id ? { ...al, startDate: String(value) } : al)));
-                            toast.success('Data inicial atualizada');
+                            setWeatherAlerts(
+                              weatherAlerts.map((a) => (a.id === alert.id ? { ...a, startDate: String(value) } : a))
+                            );
+                            toast.success('Date de début mise à jour');
                           }}
                         />
                       </div>
                       <div>
-                        <span className="text-xs text-muted-foreground">Fim:</span>{' '}
+                        <span className="text-xs text-muted-foreground">Fin:&nbsp;</span>
                         <EditableField
                           value={alert.endDate}
                           type="date"
                           onSave={(value) => {
-                            setConversationAlerts((a) => a.map((al) => (al.id === alert.id ? { ...al, endDate: String(value) } : al)));
-                            toast.success('Data final atualizada');
+                            setWeatherAlerts(
+                              weatherAlerts.map((a) => (a.id === alert.id ? { ...a, endDate: String(value) } : a))
+                            );
+                            toast.success('Date de fin mise à jour');
                           }}
                         />
                       </div>
                     </div>
                   </td>
+
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                        alert.severity === 'crítica'
+                        alert.severity === 'critique'
                           ? 'bg-red-100 text-red-800'
-                          : alert.severity === 'moderada'
+                          : alert.severity === 'modérée'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-green-100 text-green-800'
                       }`}
@@ -377,26 +455,32 @@ const Dashboard = () => {
                       <EditableField
                         value={alert.severity}
                         onSave={(value) => {
-                          setConversationAlerts((a) => a.map((al) => (al.id === alert.id ? { ...al, severity: String(value) } : al)));
-                          toast.success('Severidade atualizada');
+                          setWeatherAlerts(
+                            weatherAlerts.map((a) => (a.id === alert.id ? { ...a, severity: String(value) } : a))
+                          );
+                          toast.success('Sévérité mise à jour');
                         }}
                       />
                     </span>
                   </td>
+
                   <td className="px-4 py-3">
                     <EditableField
                       value={alert.description}
                       onSave={(value) => {
-                        setConversationAlerts((a) => a.map((al) => (al.id === alert.id ? { ...al, description: String(value) } : al)));
-                        toast.success('Descrição atualizada');
+                        setWeatherAlerts(
+                          weatherAlerts.map((a) => (a.id === alert.id ? { ...a, description: String(value) } : a))
+                        );
+                        toast.success('Description mise à jour');
                       }}
                     />
                   </td>
+
                   <td className="px-4 py-3">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteConversationAlert(alert.id)}
+                      onClick={() => handleDeleteWeatherAlert(alert.id)}
                       className="text-red-500 hover:text-red-700 hover:bg-red-100"
                     >
                       <Trash2 size={16} />
@@ -404,10 +488,11 @@ const Dashboard = () => {
                   </td>
                 </tr>
               ))}
-              {conversationAlerts.length === 0 && (
+
+              {weatherAlerts.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-4 text-center text-muted-foreground">
-                    Nenhum alerta de conversa no momento
+                    Aucune alerte disponible
                   </td>
                 </tr>
               )}
@@ -416,11 +501,12 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Gráficos */}
+      {/* ====== Gráficos / listas ====== */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Gráfico de Faturamento 📈 */}
         <div className="dashboard-card col-span-full lg:col-span-2 card-hover">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Gráfico de Faturamento</h3>
+            <h3 className="font-semibold">Gráfico de Faturamento 📈</h3>
             <div className="flex space-x-2">
               <button className="text-xs px-3 py-1.5 bg-muted rounded-md text-foreground">2023</button>
               <button className="text-xs px-3 py-1.5 text-muted-foreground hover:bg-muted rounded-md">2022</button>
@@ -437,23 +523,31 @@ const Dashboard = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `R$ ${v}`} />
-                <Tooltip formatter={(v) => [`R$ ${v}`, 'Faturamento']} />
-                <Area type="monotone" dataKey="revenue" stroke="#4CAF50" fillOpacity={1} fill="url(#colorRevenue)" activeDot={{ r: 8 }} />
+                <YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `${v} €`} />
+                <Tooltip formatter={(v) => [`${v} €`, 'Valor']} />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#4CAF50"
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)"
+                  activeDot={{ r: 8 }}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
+        {/* Distribuição (placeholder) */}
         <div className="dashboard-card card-hover">
-          <h3 className="font-semibold mb-4">Distribuição de Contatos</h3>
+          <h3 className="font-semibold mb-4">Distribuição (exemplo) 🧭</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={contactsDistribution} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
+              <BarChart data={productionData} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
                 <XAxis type="number" axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={90} />
-                <Tooltip formatter={(v) => [`${v}%`, 'Percentual']} />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={80} />
+                <Tooltip formatter={(value: any) => [`${value}%`, 'Percentual']} />
                 <Bar dataKey="value" fill="#8D6E63" radius={[0, 4, 4, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
@@ -461,11 +555,12 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Tarefas / Alertas do Sistema */}
+      {/* Tarefas e Alertas (cards inferiores) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Tarefas a vir 📋 */}
         <div className="dashboard-card card-hover">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Tarefas Pendentes</h3>
+            <h3 className="font-semibold">Tarefas a Vir 📋</h3>
             <button className="text-xs text-agri-primary hover:underline">Ver tudo</button>
           </div>
 
@@ -474,7 +569,11 @@ const Dashboard = () => {
               <div key={task.id} className="flex items-center p-2 rounded-lg hover:bg-muted">
                 <div
                   className={`w-2 h-2 rounded-full mr-3 ${
-                    task.priority === 'high' ? 'bg-agri-danger' : task.priority === 'medium' ? 'bg-agri-warning' : 'bg-agri-success'
+                    task.priority === 'high'
+                      ? 'bg-agri-danger'
+                      : task.priority === 'medium'
+                      ? 'bg-agri-warning'
+                      : 'bg-agri-success'
                   }`}
                 />
                 <div className="flex-1">
@@ -501,29 +600,28 @@ const Dashboard = () => {
                     </>
                   )}
                 </div>
-                <div className="flex">
-                  {editingTask !== task.id && (
-                    <>
-                      <button className="p-1.5 hover:bg-muted rounded" onClick={() => handleEditTask(task.id)}>
-                        <Edit className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                      <button className="p-1.5 hover:bg-muted rounded text-red-500" onClick={() => handleDeleteTask(task.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </>
-                  )}
-                </div>
+                {editingTask !== task.id && (
+                  <div className="flex">
+                    <button className="p-1.5 hover:bg-muted rounded" onClick={() => handleEditTask(task.id)}>
+                      <Edit className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                    <button className="p-1.5 hover:bg-muted rounded text-red-500" onClick={() => handleDeleteTask(task.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
             {upcomingTasks.length === 0 && (
-              <p className="text-center text-muted-foreground py-4">Nenhuma tarefa pendente</p>
+              <p className="text-center text-muted-foreground py-4">Nenhuma tarefa a vir</p>
             )}
           </div>
         </div>
 
+        {/* Alertas (laterais) 🚨 */}
         <div className="dashboard-card card-hover">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Alertas do Sistema</h3>
+            <h3 className="font-semibold">Alertas 🚨</h3>
             <button className="text-xs text-agri-primary hover:underline">Gerenciar alertas</button>
           </div>
 
@@ -552,7 +650,7 @@ const Dashboard = () => {
                     />
                     <EditableField
                       value={alert.message}
-                      onSave={(value) => handleEditAlert(alert.id, String(value))}
+                      onSave={(val) => handleEditAlert(alert.id, String(val))}
                       className="text-sm"
                     />
                   </div>
@@ -570,16 +668,17 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Modal: Novo Alerta de Conversa */}
+      {/* Dialog: adicionar alerta meteo */}
       <Dialog open={showAddAlertDialog} onOpenChange={setShowAddAlertDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Novo Alerta de Conversa</DialogTitle>
+            <DialogTitle>Ajouter une alerte météorologique</DialogTitle>
           </DialogHeader>
+
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="alertType" className="text-right">
-                Tipo
+                Type
               </Label>
               <select
                 id="alertType"
@@ -587,27 +686,23 @@ const Dashboard = () => {
                 onChange={(e) => setNewAlert({ ...newAlert, type: e.target.value })}
                 className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="Pico de mensagens">Pico de mensagens</option>
-                <option value="Queda de resposta">Queda de resposta</option>
-                <option value="Canal indisponível">Canal indisponível</option>
+                <option value="Cyclone">Cyclone</option>
+                <option value="Pluie">Pluie</option>
+                <option value="Sécheresse">Sécheresse</option>
+                <option value="Vent">Vent</option>
               </select>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="region" className="text-right">
-                Equipe/Canais
+                Région
               </Label>
-              <Input
-                id="region"
-                value={newAlert.region}
-                onChange={(e) => setNewAlert({ ...newAlert, region: e.target.value })}
-                className="col-span-3"
-              />
+              <Input id="region" value={newAlert.region} onChange={(e) => setNewAlert({ ...newAlert, region: e.target.value })} className="col-span-3" />
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="startDate" className="text-right">
-                Início
+                Date de début
               </Label>
               <Input
                 id="startDate"
@@ -620,7 +715,7 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="endDate" className="text-right">
-                Fim
+                Date de fin
               </Label>
               <Input
                 id="endDate"
@@ -633,7 +728,7 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="severity" className="text-right">
-                Severidade
+                Sévérité
               </Label>
               <select
                 id="severity"
@@ -641,15 +736,15 @@ const Dashboard = () => {
                 onChange={(e) => setNewAlert({ ...newAlert, severity: e.target.value })}
                 className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="baixa">Baixa</option>
-                <option value="moderada">Moderada</option>
-                <option value="crítica">Crítica</option>
+                <option value="faible">Faible</option>
+                <option value="modérée">Modérée</option>
+                <option value="critique">Critique</option>
               </select>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
-                Descrição
+                Description
               </Label>
               <Input
                 id="description"
@@ -659,11 +754,12 @@ const Dashboard = () => {
               />
             </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddAlertDialog(false)}>
-              Cancelar
+              Annuler
             </Button>
-            <Button onClick={handleAddConversationAlert}>Adicionar</Button>
+            <Button onClick={handleAddWeatherAlert}>Ajouter</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
