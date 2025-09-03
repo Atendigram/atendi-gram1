@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { EditableField } from '../ui/editable-field';
@@ -49,7 +48,7 @@ const StatCards: React.FC<StatCardsProps> = ({
                   className="inline-block"
                 /> €
               </p>
-              <span className="text-green-600 text-sm font-medium flex items-center ml-3">
+              <span className="text-pink-600 text-sm font-medium flex items-center ml-3">
                 <TrendingUp className="h-4 w-4 mr-1" /> +
                 <EditableField
                   value={revenueGrowth}
@@ -76,7 +75,7 @@ const StatCards: React.FC<StatCardsProps> = ({
                   className="inline-block"
                 /> ha
               </p>
-              <span className="text-agri-primary text-sm font-medium ml-3">
+              <span className="text-primary text-sm font-medium ml-3">
                 <EditableField
                   value={parcelsCount}
                   type="number"
@@ -102,7 +101,7 @@ const StatCards: React.FC<StatCardsProps> = ({
                   className="inline-block"
                 /> t/ha
               </p>
-              <span className="text-green-600 text-sm font-medium flex items-center ml-3">
+              <span className="text-pink-600 text-sm font-medium flex items-center ml-3">
                 <TrendingUp className="h-4 w-4 mr-1" /> +
                 <EditableField
                   value={yieldGrowth}
