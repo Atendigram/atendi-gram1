@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useCRM } from '@/contexts/CRMContext';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
@@ -76,10 +75,9 @@ export const usePreviewActions = ({
     setIsActionInProgress(true);
     
     try {
-      await exportModuleData(moduleName, 'pdf', data, {
-        title: title || `Rapport - ${moduleName}`,
-        columns: columns
-      });
+      // ✅ Corrigido: exportModuleData aceita 2-3 args (ex.: moduleName, format[, options])
+      // Aqui usamos o formato básico de 2 args, igual no Index.tsx.
+      await exportModuleData(moduleName, 'pdf');
       toast.success("PDF généré avec succès", {
         description: "Le document a été téléchargé."
       });
