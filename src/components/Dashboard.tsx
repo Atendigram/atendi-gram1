@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import {
   TrendingUp,
   AlertTriangle,
-  CloudRain,
-  Wind,
   Calendar,
   Wallet,
   Trash2,
@@ -11,6 +9,8 @@ import {
   X,
   Check,
   Edit,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -31,7 +31,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 
 /* ----------------------------------------------------------------
-   Dados de exemplo (mantidos para o gráfico/visuais)
+   Dados de exemplo (gráficos)
 ----------------------------------------------------------------- */
 const revenueData = [
   { month: 'Jan', revenue: 1500 },
@@ -51,7 +51,7 @@ const productionData = [
   { name: 'Autre', value: 10 },
 ];
 
-/* Lista de tarefas (apenas UI/local) */
+/* Tarefas (UI/local) */
 const initialUpcomingTasks = [
   { id: 1, title: 'Récolter la canne à sucre', due: "Aujourd'hui", priority: 'high' },
   { id: 2, title: 'Commander des plants de bananier', due: 'Demain', priority: 'medium' },
@@ -59,32 +59,42 @@ const initialUpcomingTasks = [
   { id: 4, title: "Irrigation des plantations d'ananas", due: '30/08', priority: 'medium' },
 ];
 
-/* Alertas (cartão “Alertes” da coluna da direita) – UI/local */
+/* Alertas do card lateral (UI/local) */
 const initialAlerts = [
   { id: 1, message: 'Niveau bas de plants de bananier', type: 'warning' },
   { id: 2, message: 'Risque cyclonique pour la semaine prochaine', type: 'danger' },
   { id: 3, message: 'Échéance de subvention régionale approche', type: 'info' },
 ];
 
-/* “Alertes Météo” (tabela) – mantido por enquanto */
-const initialWeatherAlerts = [
+/* ===== Alertas de Conversa (tabela principal) ===== */
+type ConversationAlert = {
+  id: number;
+  type: 'Pico de mensagens' | 'Queda de resposta' | 'Outros';
+  team: string;
+  startDate: string;
+  endDate: string;
+  severity: 'crítica' | 'moderada' | 'baixa';
+  description: string;
+};
+
+const initialConversationAlerts: ConversationAlert[] = [
   {
     id: 1,
-    type: 'Cyclone',
-    region: 'Toute la Guadeloupe',
-    startDate: '2023-09-10',
-    endDate: '2023-09-12',
-    severity: 'critique',
-    description: 'Cyclone tropical de catégorie 2 en approche',
+    type: 'Pico de mensagens',
+    team: 'Todos os canais',
+    startDate: '2023-09-09',
+    endDate: '2023-09-11',
+    severity: 'crítica',
+    description: 'Grande volume de mensagens entrando',
   },
   {
     id: 2,
-    type: 'Pluie',
-    region: 'Basse-Terre',
-    startDate: '2023-09-20',
-    endDate: '2023-09-23',
-    severity: 'modérée',
-    description: 'Fortes précipitations attendues',
+    type: 'Queda de resposta',
+    team: 'Equipe Suporte',
+    startDate: '2023-09-19',
+    endDate: '2023-09-22',
+    severity: 'moderada',
+    description: 'Tempo médio de resposta acima do esperado',
   },
 ];
 
@@ -96,35 +106,39 @@ const Dashboard = () => {
   );
   const [currentMonth, setCurrentMonth] = useState('Agosto 2023');
 
-  /* ====== NOVOS ESTADOS DOS CARDS ====== */
-  // Card 1: Total de Contatos
+  /* ====== CARDS ====== */
+  // 1) Total de Contatos 👥
   const [totalContacts, setTotalContacts] = useState(15450);
   const [contactsGrowth, setContactsGrowth] = useState(8.5);
 
-  // Card 2: Contatos Ativos
+  // 2) Contatos Ativos 🟢
   const [activeContacts, setActiveContacts] = useState(35);
   const [newContacts, setNewContacts] = useState(5);
 
-  // Card 3: Conversas Atendidas
+  // 3) Conversas Atendidas 💬
   const [attendedConversations, setAttendedConversations] = useState(75);
   const [conversationsGrowth, setConversationsGrowth] = useState(5.2);
 
-  // Card 4: Total de Mensagens
+  // 4) Total de Mensagens ✉️ (número simples)
   const [totalMessages, setTotalMessages] = useState(3);
 
-  /* Tarefas / Alertas (colunas de baixo) */
+  /* Tarefas e alertas (cards de baixo) */
   const [upcomingTasks, setUpcomingTasks] = useState(initialUpcomingTasks);
   const [alerts, setAlerts] = useState(initialAlerts);
-  const [weatherAlerts, setWeatherAlerts] = useState(initialWeatherAlerts);
 
-  /* Dialog de adicionar alerta meteo */
+  /* ===== tabela: Alertas de Conversa ===== */
+  const [conversationAlerts, setConversationAlerts] = useState<ConversationAlert[]>(
+    initialConversationAlerts
+  );
+
   const [showAddAlertDialog, setShowAddAlertDialog] = useState(false);
-  const [newAlert, setNewAlert] = useState({
-    type: 'Cyclone',
-    region: '',
+  const [newConvAlert, setNewConvAlert] = useState<ConversationAlert>({
+    id: 0,
+    type: 'Pico de mensagens',
+    team: '',
     startDate: '',
     endDate: '',
-    severity: 'modérée',
+    severity: 'moderada',
     description: '',
   });
 
@@ -196,7 +210,7 @@ const Dashboard = () => {
     toast.success('Tarefa removida');
   };
 
-  /* ===== alertas (card da direita) ===== */
+  /* ===== alertas do card da direita ===== */
   const handleEditAlert = (id: number, message: string) => {
     setAlerts(alerts.map((a) => (a.id === id ? { ...a, message } : a)));
     toast.success('Alerta atualizado');
@@ -207,29 +221,31 @@ const Dashboard = () => {
     toast.success('Alerta removido');
   };
 
-  /* ===== alertas meteo (tabela) ===== */
-  const handleDeleteWeatherAlert = (id: number) => {
-    setWeatherAlerts(weatherAlerts.filter((a) => a.id !== id));
-    toast.success('Alerta removido');
-  };
-
-  const handleAddWeatherAlert = () => {
-    if (!newAlert.region || !newAlert.startDate || !newAlert.endDate || !newAlert.description) {
+  /* ===== alertas de conversa (tabela) ===== */
+  const addConversationAlert = () => {
+    const { team, startDate, endDate, description } = newConvAlert;
+    if (!team || !startDate || !endDate || !description) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
-    const newId = Math.max(...weatherAlerts.map((a) => a.id), 0) + 1;
-    setWeatherAlerts([...weatherAlerts, { id: newId, ...newAlert }]);
+    const newId = Math.max(0, ...conversationAlerts.map((a) => a.id)) + 1;
+    setConversationAlerts([...conversationAlerts, { ...newConvAlert, id: newId }]);
     setShowAddAlertDialog(false);
-    setNewAlert({
-      type: 'Cyclone',
-      region: '',
+    setNewConvAlert({
+      id: 0,
+      type: 'Pico de mensagens',
+      team: '',
       startDate: '',
       endDate: '',
-      severity: 'modérée',
+      severity: 'moderada',
       description: '',
     });
-    toast.success('Novo alerta adicionado');
+    toast.success('Novo alerta de conversa adicionado');
+  };
+
+  const deleteConversationAlert = (id: number) => {
+    setConversationAlerts(conversationAlerts.filter((a) => a.id !== id));
+    toast.success('Alerta removido');
   };
 
   /* ===== ação fictícia ===== */
@@ -348,7 +364,17 @@ const Dashboard = () => {
         <div className="stat-card card-hover">
           <p className="stat-label">Total de Mensagens ✉️</p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">{totalMessages}</p>
+            <p className="stat-value">
+              <EditableField
+                value={totalMessages}
+                type="number"
+                onSave={(v) => {
+                  setTotalMessages(Number(v));
+                  toast.success('Total de mensagens atualizado');
+                }}
+                className="inline-block font-bold"
+              />
+            </p>
             <span className="text-agri-warning text-sm font-medium flex items-center">
               <AlertTriangle className="h-4 w-4 mr-1" /> Recentes
             </span>
@@ -356,87 +382,92 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ====== Alertas “Météo” (mantido) ====== */}
+      {/* ====== ALERTAS DE CONVERSA ====== */}
       <div className="bg-white rounded-xl border p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Alertes Météorologiques 🌦️</h2>
+          <h2 className="text-xl font-semibold">Alertas de Conversa 💬</h2>
           <Button onClick={() => setShowAddAlertDialog(true)} className="bg-agri-primary hover:bg-agri-primary-dark">
-            <Plus size={16} className="mr-2" /> Ajouter une alerte
+            <Plus size={16} className="mr-2" /> Novo Alerta
           </Button>
         </div>
         <p className="text-muted-foreground mb-6">
-          Suivez les alertes météorologiques impactant l&apos;agriculture en Guadeloupe
+          Acompanhe alertas que impactam seu atendimento (picos, quedas e desempenho das equipes).
         </p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted text-xs uppercase">
               <tr>
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-left">Région</th>
-                <th className="px-4 py-3 text-left">Période</th>
-                <th className="px-4 py-3 text-left">Sévérité</th>
-                <th className="px-4 py-3 text-left">Description</th>
-                <th className="px-4 py-3 text-left">Actions</th>
+                <th className="px-4 py-3 text-left">Tipo</th>
+                <th className="px-4 py-3 text-left">Equipe/Canais</th>
+                <th className="px-4 py-3 text-left">Período</th>
+                <th className="px-4 py-3 text-left">Severidade</th>
+                <th className="px-4 py-3 text-left">Descrição</th>
+                <th className="px-4 py-3 text-left">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {weatherAlerts.map((alert) => (
+              {conversationAlerts.map((alert) => (
                 <tr key={alert.id} className="border-t hover:bg-muted/30">
-                  <td className="px-4 py-3 flex items-center">
-                    {alert.type === 'Cyclone' ? (
-                      <span className="flex items-center text-red-500">
-                        <AlertTriangle size={16} className="mr-1" /> {alert.type}
-                      </span>
-                    ) : alert.type === 'Pluie' ? (
-                      <span className="flex items-center text-blue-500">
-                        <CloudRain size={16} className="mr-1" /> {alert.type}
-                      </span>
+                  <td className="px-4 py-3 flex items-center gap-2">
+                    {alert.type === 'Pico de mensagens' ? (
+                      <ArrowUpRight size={16} className="text-agri-danger" />
+                    ) : alert.type === 'Queda de resposta' ? (
+                      <ArrowDownRight size={16} className="text-agri-warning" />
                     ) : (
-                      <span className="flex items-center">
-                        <Wind size={16} className="mr-1" /> {alert.type}
-                      </span>
+                      <AlertTriangle size={16} className="text-muted-foreground" />
                     )}
+                    <EditableField
+                      value={alert.type}
+                      onSave={(val) =>
+                        setConversationAlerts(
+                          conversationAlerts.map((a) =>
+                            a.id === alert.id ? { ...a, type: String(val) as ConversationAlert['type'] } : a
+                          )
+                        )
+                      }
+                    />
                   </td>
 
                   <td className="px-4 py-3">
                     <EditableField
-                      value={alert.region}
-                      onSave={(value) => {
-                        setWeatherAlerts(
-                          weatherAlerts.map((a) => (a.id === alert.id ? { ...a, region: String(value) } : a))
-                        );
-                        toast.success('Région mise à jour');
-                      }}
+                      value={alert.team}
+                      onSave={(val) =>
+                        setConversationAlerts(
+                          conversationAlerts.map((a) => (a.id === alert.id ? { ...a, team: String(val) } : a))
+                        )
+                      }
                     />
                   </td>
 
                   <td className="px-4 py-3">
                     <div className="space-y-1">
                       <div>
-                        <span className="text-xs text-muted-foreground">Début:&nbsp;</span>
+                        <span className="text-xs text-muted-foreground">Início:&nbsp;</span>
                         <EditableField
                           value={alert.startDate}
                           type="date"
-                          onSave={(value) => {
-                            setWeatherAlerts(
-                              weatherAlerts.map((a) => (a.id === alert.id ? { ...a, startDate: String(value) } : a))
-                            );
-                            toast.success('Date de début mise à jour');
-                          }}
+                          onSave={(val) =>
+                            setConversationAlerts(
+                              conversationAlerts.map((a) =>
+                                a.id === alert.id ? { ...a, startDate: String(val) } : a
+                              )
+                            )
+                          }
                         />
                       </div>
                       <div>
-                        <span className="text-xs text-muted-foreground">Fin:&nbsp;</span>
+                        <span className="text-xs text-muted-foreground">Fim:&nbsp;</span>
                         <EditableField
                           value={alert.endDate}
                           type="date"
-                          onSave={(value) => {
-                            setWeatherAlerts(
-                              weatherAlerts.map((a) => (a.id === alert.id ? { ...a, endDate: String(value) } : a))
-                            );
-                            toast.success('Date de fin mise à jour');
-                          }}
+                          onSave={(val) =>
+                            setConversationAlerts(
+                              conversationAlerts.map((a) =>
+                                a.id === alert.id ? { ...a, endDate: String(val) } : a
+                              )
+                            )
+                          }
                         />
                       </div>
                     </div>
@@ -445,21 +476,22 @@ const Dashboard = () => {
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                        alert.severity === 'critique'
+                        alert.severity === 'crítica'
                           ? 'bg-red-100 text-red-800'
-                          : alert.severity === 'modérée'
+                          : alert.severity === 'moderada'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-green-100 text-green-800'
                       }`}
                     >
                       <EditableField
                         value={alert.severity}
-                        onSave={(value) => {
-                          setWeatherAlerts(
-                            weatherAlerts.map((a) => (a.id === alert.id ? { ...a, severity: String(value) } : a))
-                          );
-                          toast.success('Sévérité mise à jour');
-                        }}
+                        onSave={(val) =>
+                          setConversationAlerts(
+                            conversationAlerts.map((a) =>
+                              a.id === alert.id ? { ...a, severity: String(val) as ConversationAlert['severity'] } : a
+                            )
+                          )
+                        }
                       />
                     </span>
                   </td>
@@ -467,12 +499,13 @@ const Dashboard = () => {
                   <td className="px-4 py-3">
                     <EditableField
                       value={alert.description}
-                      onSave={(value) => {
-                        setWeatherAlerts(
-                          weatherAlerts.map((a) => (a.id === alert.id ? { ...a, description: String(value) } : a))
-                        );
-                        toast.success('Description mise à jour');
-                      }}
+                      onSave={(val) =>
+                        setConversationAlerts(
+                          conversationAlerts.map((a) =>
+                            a.id === alert.id ? { ...a, description: String(val) } : a
+                          )
+                        )
+                      }
                     />
                   </td>
 
@@ -480,7 +513,7 @@ const Dashboard = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteWeatherAlert(alert.id)}
+                      onClick={() => deleteConversationAlert(alert.id)}
                       className="text-red-500 hover:text-red-700 hover:bg-red-100"
                     >
                       <Trash2 size={16} />
@@ -489,10 +522,10 @@ const Dashboard = () => {
                 </tr>
               ))}
 
-              {weatherAlerts.length === 0 && (
+              {conversationAlerts.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-4 text-center text-muted-foreground">
-                    Aucune alerte disponible
+                    Nenhum alerta de conversa no momento
                   </td>
                 </tr>
               )}
@@ -668,88 +701,96 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Dialog: adicionar alerta meteo */}
+      {/* Dialog: novo Alerta de Conversa */}
       <Dialog open={showAddAlertDialog} onOpenChange={setShowAddAlertDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Ajouter une alerte météorologique</DialogTitle>
+            <DialogTitle>Novo alerta de conversa</DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="alertType" className="text-right">
-                Type
+              <Label htmlFor="type" className="text-right">
+                Tipo
               </Label>
               <select
-                id="alertType"
-                value={newAlert.type}
-                onChange={(e) => setNewAlert({ ...newAlert, type: e.target.value })}
+                id="type"
+                value={newConvAlert.type}
+                onChange={(e) =>
+                  setNewConvAlert({ ...newConvAlert, type: e.target.value as ConversationAlert['type'] })
+                }
                 className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="Cyclone">Cyclone</option>
-                <option value="Pluie">Pluie</option>
-                <option value="Sécheresse">Sécheresse</option>
-                <option value="Vent">Vent</option>
+                <option value="Pico de mensagens">Pico de mensagens</option>
+                <option value="Queda de resposta">Queda de resposta</option>
+                <option value="Outros">Outros</option>
               </select>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="region" className="text-right">
-                Région
+              <Label htmlFor="team" className="text-right">
+                Equipe/Canais
               </Label>
-              <Input id="region" value={newAlert.region} onChange={(e) => setNewAlert({ ...newAlert, region: e.target.value })} className="col-span-3" />
+              <Input
+                id="team"
+                value={newConvAlert.team}
+                onChange={(e) => setNewConvAlert({ ...newConvAlert, team: e.target.value })}
+                className="col-span-3"
+              />
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="startDate" className="text-right">
-                Date de début
+                Início
               </Label>
               <Input
                 id="startDate"
                 type="date"
-                value={newAlert.startDate}
-                onChange={(e) => setNewAlert({ ...newAlert, startDate: e.target.value })}
+                value={newConvAlert.startDate}
+                onChange={(e) => setNewConvAlert({ ...newConvAlert, startDate: e.target.value })}
                 className="col-span-3"
               />
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="endDate" className="text-right">
-                Date de fin
+                Fim
               </Label>
               <Input
                 id="endDate"
                 type="date"
-                value={newAlert.endDate}
-                onChange={(e) => setNewAlert({ ...newAlert, endDate: e.target.value })}
+                value={newConvAlert.endDate}
+                onChange={(e) => setNewConvAlert({ ...newConvAlert, endDate: e.target.value })}
                 className="col-span-3"
               />
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="severity" className="text-right">
-                Sévérité
+                Severidade
               </Label>
               <select
                 id="severity"
-                value={newAlert.severity}
-                onChange={(e) => setNewAlert({ ...newAlert, severity: e.target.value })}
+                value={newConvAlert.severity}
+                onChange={(e) =>
+                  setNewConvAlert({ ...newConvAlert, severity: e.target.value as ConversationAlert['severity'] })
+                }
                 className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="faible">Faible</option>
-                <option value="modérée">Modérée</option>
-                <option value="critique">Critique</option>
+                <option value="baixa">Baixa</option>
+                <option value="moderada">Moderada</option>
+                <option value="crítica">Crítica</option>
               </select>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
-                Description
+                Descrição
               </Label>
               <Input
                 id="description"
-                value={newAlert.description}
-                onChange={(e) => setNewAlert({ ...newAlert, description: e.target.value })}
+                value={newConvAlert.description}
+                onChange={(e) => setNewConvAlert({ ...newConvAlert, description: e.target.value })}
                 className="col-span-3"
               />
             </div>
@@ -757,9 +798,9 @@ const Dashboard = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddAlertDialog(false)}>
-              Annuler
+              Cancelar
             </Button>
-            <Button onClick={handleAddWeatherAlert}>Ajouter</Button>
+            <Button onClick={addConversationAlert}>Adicionar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
