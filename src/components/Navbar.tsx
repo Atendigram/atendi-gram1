@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Home,
-  MapPin,
-  Package,
+  Users,
+  Send, // aviãozinho Telegram
+  MessageSquare,
   Wallet,
   BarChart2,
   Menu,
@@ -12,9 +13,7 @@ import {
   Moon,
   ChevronRight,
   Settings,
-  Users,
   FileText,
-  Send, // ✈️ aviãozinho estilo Telegram
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -50,14 +49,14 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { title: 'Tableau de bord', path: '/', icon: Home },
-    { title: 'Parcelles', path: '/parcelles', icon: MapPin },
-    { title: 'Telegram', path: '/telegram', icon: Send }, // ✅ trocado label + aviãozinho
-    { title: 'Inventaire', path: '/inventaire', icon: Package },
-    { title: 'Finances', path: '/finances', icon: Wallet },
-    { title: 'Statistiques', path: '/statistiques', icon: BarChart2 },
-    { title: 'Rapports', path: '/rapports', icon: FileText },
-    { title: 'Paramètres', path: '/parametres', icon: Settings },
+    { title: 'Dashboard', path: '/', icon: Home },
+    { title: 'Contatos', path: '/contatos', icon: Users },
+    { title: 'Telegram', path: '/telegram', icon: Send },
+    { title: 'Mensagens', path: '/mensagens', icon: MessageSquare },
+    { title: 'Financeiro', path: '/financeiro', icon: Wallet },
+    { title: 'Estatísticas', path: '/estatisticas', icon: BarChart2 },
+    { title: 'Relatórios', path: '/relatorios', icon: FileText },
+    { title: 'Configurações', path: '/configuracoes', icon: Settings },
   ];
 
   const isActive = (path: string) => {
@@ -87,7 +86,7 @@ const Navbar = () => {
       >
         <div className="p-4 border-b border-border flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
-            {/* ✅ logo aviãozinho */}
+            {/* Logo aviãozinho */}
             <Send className="h-6 w-6 text-primary" />
             <span className="text-lg font-bold text-foreground">AtendiGram</span>
           </Link>
@@ -131,8 +130,8 @@ const Navbar = () => {
               <span className="text-sm font-medium">AD</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">Utilisateur</p>
-              <p className="text-xs text-muted-foreground truncate">agriculteur@example.com</p>
+              <p className="text-sm font-medium truncate">Usuário</p>
+              <p className="text-xs text-muted-foreground truncate">usuario@atendigram.com</p>
             </div>
           </div>
         </div>
