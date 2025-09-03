@@ -250,4 +250,146 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold mb-1">
             <EditableField
               value={title}
-              onSave={handleTi
+              onSave={handleTitleChange}
+              className="inline-block"
+              showEditIcon={true}
+            />
+          </h1>
+          <p className="text-muted-foreground">
+            <EditableField
+              value={description}
+              onSave={handleDescriptionChange}
+              className="inline-block"
+              showEditIcon={true}
+            />
+          </p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <button className="px-4 py-2 text-sm text-agri-primary font-medium bg-agri-primary/10 rounded-lg hover:bg-agri-primary/20 transition-colors">
+            <Calendar className="h-4 w-4 inline mr-2" />
+            <EditableField
+              value={currentMonth}
+              onSave={handleMonthChange}
+              className="inline-block"
+            />
+          </button>
+          <button 
+            className="px-4 py-2 text-sm bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark transition-colors"
+            onClick={handleAddTransaction}
+          >
+            <Wallet className="h-4 w-4 inline mr-2" />
+            Ajouter une transaction
+          </button>
+        </div>
+      </header>
+
+      {/* Quick Stats Row - Adapté à l'agriculture guadeloupéenne */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="stat-card card-hover">
+          <p className="stat-label">Revenu mensuel</p>
+          <div className="flex items-baseline justify-between mt-2">
+            <p className="stat-value">
+              <EditableField
+                value={monthlyRevenue}
+                type="number"
+                onSave={handleRevenueChange}
+                className="inline-block font-bold"
+              /> €
+            </p>
+            <span className="text-agri-success text-sm font-medium flex items-center">
+              <TrendingUp className="h-4 w-4 mr-1" /> +
+              <EditableField
+                value={revenueGrowth}
+                type="number"
+                onSave={handleRevenueGrowthChange}
+                className="inline-block"
+              />%
+            </span>
+          </div>
+        </div>
+        
+        <div className="stat-card card-hover">
+          <p className="stat-label">Superficie cultivée</p>
+          <div className="flex items-baseline justify-between mt-2">
+            <p className="stat-value">
+              <EditableField
+                value={cultivatedArea}
+                type="number"
+                onSave={handleAreaChange}
+                className="inline-block font-bold"
+              /> ha
+            </p>
+            <span className="text-agri-primary text-sm font-medium">
+              <EditableField
+                value={parcelsCount}
+                type="number"
+                onSave={handleParcelsCountChange}
+                className="inline-block"
+              /> parcelles
+            </span>
+          </div>
+        </div>
+        
+        <div className="stat-card card-hover">
+          <p className="stat-label">Rendement moyen</p>
+          <div className="flex items-baseline justify-between mt-2">
+            <p className="stat-value">
+              <EditableField
+                value={averageYield}
+                type="number"
+                onSave={handleYieldChange}
+                className="inline-block font-bold"
+              /> t/ha
+            </p>
+            <span className="text-agri-success text-sm font-medium flex items-center">
+              <TrendingUp className="h-4 w-4 mr-1" /> +
+              <EditableField
+                value={yieldGrowth}
+                type="number"
+                onSave={handleYieldGrowthChange}
+                className="inline-block"
+              />%
+            </span>
+          </div>
+        </div>
+        
+        <div className="stat-card card-hover">
+          <p className="stat-label">Alertes</p>
+          <div className="flex items-baseline justify-between mt-2">
+            <p className="stat-value">{alertsCount}</p>
+            <span className="text-agri-warning text-sm font-medium flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-1" /> Récent
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Weather alerts section */}
+      <div className="bg-white rounded-xl border p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Alertes Météorologiques</h2>
+          <Button 
+            onClick={() => setShowAddAlertDialog(true)}
+            className="bg-agri-primary hover:bg-agri-primary-dark"
+          >
+            <Plus size={16} className="mr-2" /> Ajouter une alerte
+          </Button>
+        </div>
+        <p className="text-muted-foreground mb-6">
+          Suivez les alertes météorologiques impactant l'agriculture en Guadeloupe
+        </p>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted text-xs uppercase">
+              <tr>
+                <th className="px-4 py-3 text-left">Type</th>
+                <th className="px-4 py-3 text-left">Région</th>
+                <th className="px-4 py-3 text-left">Période</th>
+                <th className="px-4 py-3 text-left">Sévérité</th>
+                <th className="px-4 py-3 text-left">Description</th>
+                <th className="px-4 py-3 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* ...resto igual... */}
