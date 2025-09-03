@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, AlertTriangle } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { EditableField } from '../ui/editable-field';
 
 interface StatCardsProps {
@@ -48,7 +48,7 @@ const StatCards: React.FC<StatCardsProps> = ({
                   className="inline-block"
                 /> €
               </p>
-              <span className="text-pink-600 text-sm font-medium flex items-center ml-3">
+              <span className="text-primary text-sm font-medium flex items-center ml-3">
                 <TrendingUp className="h-4 w-4 mr-1" /> +
                 <EditableField
                   value={revenueGrowth}
@@ -101,7 +101,7 @@ const StatCards: React.FC<StatCardsProps> = ({
                   className="inline-block"
                 /> t/ha
               </p>
-              <span className="text-pink-600 text-sm font-medium flex items-center ml-3">
+              <span className="text-primary text-sm font-medium flex items-center ml-3">
                 <TrendingUp className="h-4 w-4 mr-1" /> +
                 <EditableField
                   value={yieldGrowth}
