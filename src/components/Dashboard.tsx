@@ -9,9 +9,6 @@ import { supabase } from "../lib/supabase";
 const onSaveString =
   (setter: React.Dispatch<React.SetStateAction<string>>) => (v: string) =>
     setter(v);
-const onSaveNumber =
-  (setter: React.Dispatch<React.SetStateAction<number>>) => (v: string) =>
-    setter(Number(v));
 
 const Dashboard = () => {
   // Cabeçalho
@@ -23,20 +20,25 @@ const Dashboard = () => {
 
   // Cards
   const [contactsTotal, setContactsTotal] = useState<number>(0);
-  const [activeContacts, setActiveContacts] = useState<number>(0);
-  const [newActive, setNewActive] = useState<number>(5);
-  const [attendedConversations, setAttendedConversations] = useState<number>(75);
+  const [attendedConversations, setAttendedConversations] = useState<number>(0);
 
   // Carregar dados do Supabase
   useEffect(() => {
     const load = async () => {
       try {
-        // Total de contatos (geral)
-        const { count, error } = await supabase
+        // Total de contatos
+        const { count: totalContacts, error: e1 } = await supabase
           .from("contatos_luna")
           .select("*", { count: "exact", head: true });
-        if (error) console.error("contatos total:", error);
-        setContactsTotal(count ?? 0);
+        if (e1) console.error("Erro contatos:", e1);
+        setContactsTotal(totalContacts ?? 0);
+
+        // Conversas atendidas
+        const { count: totalLogs, error: e2 } = await supabase
+          .from("logs_luna")
+          .select("*", { count: "exact", head: true });
+        if (e2) console.error("Erro logs:", e2);
+        setAttendedConversations(totalLogs ?? 0);
       } catch (err) {
         console.error(err);
         toast.error("Falha ao carregar dados do Supabase");
@@ -80,9 +82,9 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Só os 3 cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Total de Contatos (Geral) */}
+      {/* Só os 2 cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Total de Contatos */}
         <div className="stat-card card-hover">
           <p className="stat-label">Total de Contatos 👥</p>
           <div className="flex items-baseline justify-between mt-2">
@@ -90,42 +92,11 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Contatos Ativos */}
-        <div className="stat-card card-hover">
-          <p className="stat-label">Contatos Ativos 🟢</p>
-          <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">
-              <EditableField
-                value={activeContacts}
-                type="number"
-                onSave={onSaveNumber(setActiveContacts)}
-                className="inline-block font-bold"
-              />
-            </p>
-            <span className="text-sm font-medium text-muted-foreground">
-              <EditableField
-                value={newActive}
-                type="number"
-                onSave={onSaveNumber(setNewActive)}
-                className="inline-block"
-              />{" "}
-              novos
-            </span>
-          </div>
-        </div>
-
         {/* Conversas Atendidas */}
         <div className="stat-card card-hover">
-          <p className="stat-label">Conversas Atendidas 💬</p>
+          <p className="stat-label">Conversas Atendidas 💬🟢</p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">
-              <EditableField
-                value={attendedConversations}
-                type="number"
-                onSave={onSaveNumber(setAttendedConversations)}
-                className="inline-block font-bold"
-              />
-            </p>
+            <p className="stat-value">{attendedConversations}</p>
           </div>
         </div>
       </div>
