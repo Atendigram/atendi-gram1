@@ -5,30 +5,28 @@ import { EditableField } from "./ui/editable-field";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 
-/* ---------------- CONFIGURAÇÃO ---------------- */
-const CONTACTS_TABLE = "contatos_luna"; // tabela de contatos
-const LOGS_TABLE = "logsluna";          // tabela de logs (como está no Supabase)
+/* ---------------- CONFIG ---------------- */
+const CONTACTS_TABLE = "contatos_luna";
+const LOGS_TABLE = "logsluna";
 
 /* ---------------- HELPERS ---------------- */
 const onSaveString =
   (setter: React.Dispatch<React.SetStateAction<string>>) => (v: string) =>
     setter(v);
 
-// util para contar linhas de uma tabela com fallback
+const nf = new Intl.NumberFormat("pt-BR");
+
 async function countTable(table: string) {
-  // tentativa 1
-  let r1 = await supabase.from(table).select("*", { count: "exact", head: true });
+  const r1 = await supabase.from(table).select("*", { count: "exact", head: true });
   if (!r1.error && typeof r1.count === "number") return r1.count ?? 0;
 
-  // tentativa 2
-  let r2 = await supabase.from(table).select("id", { count: "exact" }).range(0, 0);
+  const r2 = await supabase.from(table).select("id", { count: "exact" }).range(0, 0);
   if (!r2.error && typeof r2.count === "number") return r2.count ?? 0;
 
-  // se falhar
   throw r1.error || r2.error || new Error(`Falha ao contar ${table}`);
 }
 
-/* ---------------- COMPONENTE ---------------- */
+/* ---------------- COMPONENT ---------------- */
 const Dashboard = () => {
   const [title, setTitle] = useState("Olá 👋");
   const [description, setDescription] = useState(
@@ -39,6 +37,7 @@ const Dashboard = () => {
   const [contactsTotal, setContactsTotal] = useState<number>(0);
   const [attendedConversations, setAttendedConversations] = useState<number>(0);
 
+  // Load inicial
   useEffect(() => {
     (async () => {
       try {
@@ -53,6 +52,42 @@ const Dashboard = () => {
         toast.error(`Erro ao carregar: ${err?.message || "ver console"}`);
       }
     })();
+  }, []);
+
+  // Realtime (sem F5)
+  useEffect(() => {
+    const chContacts = supabase
+      .channel(`rt:${CONTACTS_TABLE}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: CONTACTS_TABLE },
+        () => setContactsTotal((n) => n + 1)
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: CONTACTS_TABLE },
+        () => setContactsTotal((n) => Math.max(0, n - 1))
+      )
+      .subscribe();
+
+    const chLogs = supabase
+      .channel(`rt:${LOGS_TABLE}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: LOGS_TABLE },
+        () => setAttendedConversations((n) => n + 1)
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: LOGS_TABLE },
+        () => setAttendedConversations((n) => Math.max(0, n - 1))
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(chContacts);
+      supabase.removeChannel(chLogs);
+    };
   }, []);
 
   return (
@@ -96,15 +131,15 @@ const Dashboard = () => {
         <div className="stat-card card-hover">
           <p className="stat-label">Total de Contatos 👥</p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">{contactsTotal}</p>
+            <p className="stat-value">{nf.format(contactsTotal)}</p>
           </div>
         </div>
 
-        {/* Conversas Atendidas🟢 */}
+        {/* Conversas Atendidas */}
         <div className="stat-card card-hover">
           <p className="stat-label">Conversas Atendidas 💬</p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">{attendedConversations}</p>
+            <p className="stat-value">{nf.format(attendedConversations)}</p>
           </div>
         </div>
       </div>
