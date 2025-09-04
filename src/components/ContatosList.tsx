@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { Search, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Users, Download } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Contact {
@@ -26,6 +26,7 @@ const ContatosList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadContacts();
@@ -111,6 +112,105 @@ const ContatosList = () => {
     setCurrentPage(1);
   };
 
+  const escapeCSVField = (field: string | number | null | undefined): string => {
+    if (field === null || field === undefined) return '""';
+    const str = String(field);
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return `"${str}"`;
+  };
+
+  const exportToCSV = async () => {
+    setExporting(true);
+    try {
+      const BATCH_SIZE = 2000;
+      let allContacts: Contact[] = [];
+      let offset = 0;
+      let hasMore = true;
+
+      // Fetch all filtered data in batches
+      while (hasMore) {
+        let query = supabase
+          .from('contatos_luna')
+          .select('user_id, first_name, last_name, username, created_at');
+
+        // Apply the same search filter
+        if (searchTerm) {
+          query = query.or(`user_id.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+        }
+
+        const { data, error } = await query
+          .order('created_at', { ascending: false })
+          .range(offset, offset + BATCH_SIZE - 1);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          hasMore = false;
+        } else {
+          allContacts = [...allContacts, ...data];
+          offset += BATCH_SIZE;
+          hasMore = data.length === BATCH_SIZE;
+        }
+      }
+
+      if (allContacts.length === 0) {
+        toast({
+          title: "Aviso",
+          description: "Nenhum contato encontrado para exportar",
+          variant: "default",
+        });
+        return;
+      }
+
+      // Create CSV content
+      const headers = ['user_id', 'name', 'username', 'created_at'];
+      const csvRows = [headers.join(',')];
+
+      allContacts.forEach(contact => {
+        const name = [contact.first_name || '', contact.last_name || ''].filter(Boolean).join(' ') || '';
+        const row = [
+          escapeCSVField(contact.user_id),
+          escapeCSVField(name),
+          escapeCSVField(contact.username),
+          escapeCSVField(formatDate(contact.created_at))
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+      // Create download link
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `contatos_${today}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Sucesso",
+        description: `${allContacts.length} contatos exportados para CSV`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error exporting contacts:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível exportar os contatos",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with counters */}
@@ -144,14 +244,25 @@ const ContatosList = () => {
       <Card>
         <CardHeader>
           <CardTitle>Lista de Contatos</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por user_id, nome ou username..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="max-w-sm"
-            />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por user_id, nome ou username..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToCSV}
+              disabled={exporting || filteredCount === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {exporting ? 'Exportando...' : 'Exportar CSV'}
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
