@@ -1,18 +1,11 @@
 // src/components/Dashboard.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Calendar } from "lucide-react";
 import { EditableField } from "./ui/editable-field";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 
-/* ------------------------------ helpers ------------------------------ */
-function startOfDaysAgo(days: number) {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - days);
-  return d.toISOString();
-}
-
+/* helpers */
 const onSaveString =
   (setter: React.Dispatch<React.SetStateAction<string>>) => (v: string) =>
     setter(v);
@@ -29,38 +22,28 @@ const Dashboard = () => {
   const [currentMonth, setCurrentMonth] = useState("Agosto 2023");
 
   // Cards
-  const [contacts30, setContacts30] = useState<number>(0);
-  const [messages30, setMessages30] = useState<number>(0);
-  const [attendedConversations, setAttendedConversations] = useState<number>(75);
+  const [contactsTotal, setContactsTotal] = useState<number>(0);
   const [activeContacts, setActiveContacts] = useState<number>(0);
   const [newActive, setNewActive] = useState<number>(5);
-
-  const since30 = useMemo(() => startOfDaysAgo(30), []);
+  const [attendedConversations, setAttendedConversations] = useState<number>(75);
 
   // Carregar dados do Supabase
   useEffect(() => {
     const load = async () => {
       try {
-        const { count: contactsNow, error: e1 } = await supabase
+        // Total de contatos (geral)
+        const { count, error } = await supabase
           .from("contatos_luna")
-          .select("*", { count: "exact", head: true })
-          .gte("created_at", since30);
-        if (e1) console.error("contatos (30d):", e1);
-        setContacts30(contactsNow ?? 0);
-
-        const { count: msgsNow, error: e3 } = await supabase
-          .from("logs_luna")
-          .select("*", { count: "exact", head: true })
-          .gte("created_at", since30);
-        if (e3) console.error("mensagens (30d):", e3);
-        setMessages30(msgsNow ?? 0);
+          .select("*", { count: "exact", head: true });
+        if (error) console.error("contatos total:", error);
+        setContactsTotal(count ?? 0);
       } catch (err) {
         console.error(err);
         toast.error("Falha ao carregar dados do Supabase");
       }
     };
     load();
-  }, [since30]);
+  }, []);
 
   return (
     <div className="p-6 space-y-6 animate-enter">
@@ -94,20 +77,16 @@ const Dashboard = () => {
               className="inline-block"
             />
           </button>
-          {/* Botão "Nova Conversa" removido a pedido */}
         </div>
       </header>
 
-      {/* Só os cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total de Contatos (30d) */}
+      {/* Só os 3 cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Total de Contatos (Geral) */}
         <div className="stat-card card-hover">
-          <p className="stat-label">
-            Total de Contatos 👥{" "}
-            <span className="text-muted-foreground">(últimos 30 dias)</span>
-          </p>
+          <p className="stat-label">Total de Contatos 👥</p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">{contacts30}</p>
+            <p className="stat-value">{contactsTotal}</p>
           </div>
         </div>
 
@@ -137,10 +116,7 @@ const Dashboard = () => {
 
         {/* Conversas Atendidas */}
         <div className="stat-card card-hover">
-          <p className="stat-label">
-            Conversas Atendidas 💬{" "}
-            <span className="text-muted-foreground">(últimos 30 dias)</span>
-          </p>
+          <p className="stat-label">Conversas Atendidas 💬</p>
           <div className="flex items-baseline justify-between mt-2">
             <p className="stat-value">
               <EditableField
@@ -150,17 +126,6 @@ const Dashboard = () => {
                 className="inline-block font-bold"
               />
             </p>
-          </div>
-        </div>
-
-        {/* Total de Mensagens */}
-        <div className="stat-card card-hover">
-          <p className="stat-label">
-            Total de Mensagens ✉️{" "}
-            <span className="text-muted-foreground">(últimos 30 dias)</span>
-          </p>
-          <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">{messages30}</p>
           </div>
         </div>
       </div>
