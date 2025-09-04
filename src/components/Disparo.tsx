@@ -32,6 +32,7 @@ const Disparo = () => {
   const [textMessage, setTextMessage] = useState('');
   const [intervalSeconds, setIntervalSeconds] = useState(0);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioUploading, setAudioUploading] = useState(false);
 
   // Load contacts
@@ -138,7 +139,7 @@ const Disparo = () => {
 
     setSubmitting(true);
     try {
-      let audioUrl = null;
+      let finalAudioUrl: string | null = audioUrl ?? null;
       
       // Upload audio if provided
       if (audioFile) {
@@ -152,7 +153,8 @@ const Disparo = () => {
         if (uploadError) throw uploadError;
         
         const { data } = supabase.storage.from("audios").getPublicUrl(path);
-        audioUrl = data.publicUrl;
+        finalAudioUrl = data.publicUrl;
+        setAudioUrl(data.publicUrl);
         setAudioUploading(false);
       }
 
@@ -161,7 +163,7 @@ const Disparo = () => {
         .from('disparos')
         .insert({
           text_message: textMessage.trim() || null,
-          audio_url: audioUrl,
+          audio_url: finalAudioUrl,
           interval_seconds: intervalSeconds,
           status: 'pending'
         })
@@ -198,6 +200,7 @@ const Disparo = () => {
       // Clear form
       setTextMessage('');
       setAudioFile(null);
+      setAudioUrl(null);
       setIntervalSeconds(0);
       setSelectedContacts(new Set());
 
@@ -370,6 +373,12 @@ const Disparo = () => {
                 <div className="space-y-2">
                   <p className="text-sm text-green-600">Áudio selecionado: {audioFile.name}</p>
                   <audio src={URL.createObjectURL(audioFile)} controls className="w-full max-w-md" />
+                </div>
+              )}
+              {audioUrl && (
+                <div className="space-y-2">
+                  <p className="text-sm text-blue-600">Áudio carregado com sucesso</p>
+                  <audio src={audioUrl} controls className="w-full max-w-md" />
                 </div>
               )}
             </div>
