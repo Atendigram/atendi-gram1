@@ -1,3 +1,5 @@
+// src/components/Dashboard.tsx
+
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   TrendingUp,
@@ -29,20 +31,9 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+
+// 👇 ajuste o caminho se necessário (é o util criado pelo Lovable)
 import { supabase } from '../lib/supabase';
-
-/* ----------------------------------------------------------------
-   Helpers
------------------------------------------------------------------ */
-const nowIso = () => new Date().toISOString();
-const daysAgoIso = (d: number) =>
-  new Date(Date.now() - d * 24 * 60 * 60 * 1000).toISOString();
-
-function pctChange(curr: number, prev: number): number {
-  if (prev === 0 && curr === 0) return 0;
-  if (prev === 0 && curr > 0) return 100;
-  return ((curr - prev) / prev) * 100;
-}
 
 /* ----------------------------------------------------------------
    Dados de exemplo (gráficos)
@@ -112,6 +103,27 @@ const initialConversationAlerts: ConversationAlert[] = [
   },
 ];
 
+/* ------------------------------ helpers ------------------------------ */
+function startOfDaysAgo(days: number) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - days);
+  return d.toISOString();
+}
+
+function formatDelta(current: number, previous: number) {
+  if (!previous) return '0.0%';
+  const delta = ((current - previous) / previous) * 100;
+  const sign = delta > 0 ? '+' : '';
+  return `${sign}${delta.toFixed(1)}%`;
+}
+
+// Wrappers para consertar TS do EditableField (onSave espera string)
+const onSaveString =
+  (setter: React.Dispatch<React.SetStateAction<string>>) => (v: string) => setter(v);
+const onSaveNumber =
+  (setter: React.Dispatch<React.SetStateAction<number>>) => (v: string) => setter(Number(v));
+
 const Dashboard = () => {
   /* Cabeçalho */
   const [title, setTitle] = useState('Olá, Atendente 👋');
@@ -120,21 +132,18 @@ const Dashboard = () => {
   );
   const [currentMonth, setCurrentMonth] = useState('Agosto 2023');
 
-  /* ====== CARDS ====== */
-  // 1) Total de Contatos 👥 (total geral)
-  const [totalContacts, setTotalContacts] = useState<number>(0);
-  const [contactsGrowth, setContactsGrowth] = useState<number>(0);
+  /* ====== CARDS (valores vindos do Supabase) ====== */
+  // Contatos (últimos 30 dias)
+  const [contacts30, setContacts30] = useState<number>(0);
+  const [contactsPrev, setContactsPrev] = useState<number>(0);
 
-  // 2) Contatos Ativos 🟢 (UI local)
-  const [activeContacts, setActiveContacts] = useState(35);
-  const [newContacts, setNewContacts] = useState(5);
+  // Conversas atendidas — você pode plugar depois; por enquanto mantém local
+  const [attendedConversations, setAttendedConversations] = useState(75);
+  const [conversationsGrowth, setConversationsGrowth] = useState(5.2);
 
-  // 3) Conversas Atendidas 💬 (usando logs_luna por enquanto)
-  const [attendedConversations, setAttendedConversations] = useState<number>(0);
-  const [conversationsGrowth, setConversationsGrowth] = useState<number>(0);
-
-  // 4) Total de Mensagens ✉️ (últimos 30 dias)
-  const [totalMessages, setTotalMessages] = useState<number>(0);
+  // Mensagens (últimos 30 dias)
+  const [messages30, setMessages30] = useState<number>(0);
+  const [messagesPrev, setMessagesPrev] = useState<number>(0);
 
   /* Tarefas e alertas (cards de baixo) */
   const [upcomingTasks, setUpcomingTasks] = useState(initialUpcomingTasks);
@@ -156,112 +165,57 @@ const Dashboard = () => {
     description: '',
   });
 
-  /* =================== SUPABASE: FETCH MÉTRICAS =================== */
-  const thirtyAgo = useMemo(() => daysAgoIso(30), []);
-  const sixtyAgo = useMemo(() => daysAgoIso(60), []);
-  const now = useMemo(() => nowIso(), []);
+  // Janelas de tempo
+  const since30 = useMemo(() => startOfDaysAgo(30), []);
+  const prevSince30 = useMemo(() => startOfDaysAgo(60), []);
+  const prevUntil30 = useMemo(() => startOfDaysAgo(30), []);
 
+  /* -------------------- Carregar dados do Supabase -------------------- */
   useEffect(() => {
-    async function loadMetrics() {
-      try {
-        // -------- Total de contatos (geral)
-        const { count: contactsTotal, error: contactsErr } = await supabase
-          .from('contatos_luna')
-          .select('*', { count: 'exact', head: true });
-        if (contactsErr) throw contactsErr;
-        setTotalContacts(contactsTotal ?? 0);
+    const load = async () => {
+      // Contatos últimos 30
+      const { count: contactsNow, error: e1 } = await supabase
+        .from('contatos_luna')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', since30);
 
-        // Também puxamos janelas de 30 dias só para calcular a % (opcional)
-        const { count: contactsCurr30 } = await supabase
-          .from('contatos_luna')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', thirtyAgo)
-          .lt('created_at', now);
+      if (e1) console.error('contatos (30d):', e1);
+      setContacts30(contactsNow ?? 0);
 
-        const { count: contactsPrev30 } = await supabase
-          .from('contatos_luna')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', sixtyAgo)
-          .lt('created_at', thirtyAgo);
+      // Contatos período anterior (31–60 dias)
+      const { count: contactsBefore, error: e2 } = await supabase
+        .from('contatos_luna')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', prevSince30)
+        .lt('created_at', prevUntil30);
 
-        setContactsGrowth(
-          Math.round(pctChange(contactsCurr30 ?? 0, contactsPrev30 ?? 0) * 10) / 10
-        );
+      if (e2) console.error('contatos (31–60d):', e2);
+      setContactsPrev(contactsBefore ?? 0);
 
-        // -------- Total de mensagens (últimos 30 dias)
-        const { count: msgsCurr30, error: logsErr } = await supabase
-          .from('logs_luna')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', thirtyAgo)
-          .lt('created_at', now);
-        if (logsErr) throw logsErr;
+      // Mensagens últimos 30
+      const { count: msgsNow, error: e3 } = await supabase
+        .from('logs_luna')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', since30);
 
-        setTotalMessages(msgsCurr30 ?? 0);
+      if (e3) console.error('mensagens (30d):', e3);
+      setMessages30(msgsNow ?? 0);
 
-        // Conversas atendidas (por enquanto = total de mensagens)
-        setAttendedConversations(msgsCurr30 ?? 0);
+      // Mensagens período anterior (31–60 dias)
+      const { count: msgsBefore, error: e4 } = await supabase
+        .from('logs_luna')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', prevSince30)
+        .lt('created_at', prevUntil30);
 
-        // % vs 30 dias anteriores
-        const { count: msgsPrev30 } = await supabase
-          .from('logs_luna')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', sixtyAgo)
-          .lt('created_at', thirtyAgo);
+      if (e4) console.error('mensagens (31–60d):', e4);
+      setMessagesPrev(msgsBefore ?? 0);
+    };
 
-        const convPct = pctChange(msgsCurr30 ?? 0, msgsPrev30 ?? 0);
-        setConversationsGrowth(Math.round(convPct * 10) / 10);
-      } catch (err: any) {
-        console.error(err);
-        toast.error('Não foi possível carregar as métricas do Supabase');
-      }
-    }
+    load();
+  }, [since30, prevSince30, prevUntil30]);
 
-    loadMetrics();
-  }, [thirtyAgo, sixtyAgo, now]);
-
-  /* ===== handlers de edição (UI) ===== */
-  const handleTitleChange = (value: string | number) => {
-    setTitle(String(value));
-    toast.success('Título atualizado');
-  };
-
-  const handleDescriptionChange = (value: string | number) => {
-    setDescription(String(value));
-    toast.success('Descrição atualizada');
-  };
-
-  const handleMonthChange = (value: string | number) => {
-    setCurrentMonth(String(value));
-    toast.success('Mês atualizado');
-  };
-
-  // Card 1
-  const handleTotalContactsChange = (value: string | number) => {
-    setTotalContacts(Number(value));
-    toast.success('Total de contatos atualizado');
-  };
-
-  // Card 2
-  const handleActiveContactsChange = (value: string | number) => {
-    setActiveContacts(Number(value));
-    toast.success('Contatos ativos atualizado');
-  };
-  const handleNewContactsChange = (value: string | number) => {
-    setNewContacts(Number(value));
-    toast.success('Novos contatos atualizado');
-  };
-
-  // Card 3
-  const handleAttendedChange = (value: string | number) => {
-    setAttendedConversations(Number(value));
-    toast.success('Conversas atendidas atualizado');
-  };
-  const handleAttendedGrowthChange = (value: string | number) => {
-    setConversationsGrowth(Number(value));
-    toast.success('Variação de conversas atualizada');
-  };
-
-  /* ===== tarefas ===== */
+  /* ====================== handlers UI / edição ====================== */
   const [editingTask, setEditingTask] = useState<number | null>(null);
   const [editedTaskTitle, setEditedTaskTitle] = useState('');
 
@@ -287,7 +241,6 @@ const Dashboard = () => {
     toast.success('Tarefa removida');
   };
 
-  /* ===== alertas do card da direita ===== */
   const handleEditAlert = (id: number, message: string) => {
     setAlerts(alerts.map((a) => (a.id === id ? { ...a, message } : a)));
     toast.success('Alerta atualizado');
@@ -298,7 +251,6 @@ const Dashboard = () => {
     toast.success('Alerta removido');
   };
 
-  /* ===== alertas de conversa (tabela) ===== */
   const addConversationAlert = () => {
     const { team, startDate, endDate, description } = newConvAlert;
     if (!team || !startDate || !endDate || !description) {
@@ -320,15 +272,13 @@ const Dashboard = () => {
     toast.success('Novo alerta de conversa adicionado');
   };
 
-  const deleteConversationAlert = (id: number) => {
-    setConversationAlerts(conversationAlerts.filter((a) => a.id !== id));
-    toast.success('Alerta removido');
-  };
-
-  /* ===== ação fictícia ===== */
   const handleAddTransaction = () => {
     toast.info('Redirecionando para Finanças…');
   };
+
+  // Deltas calculados
+  const contactsDelta = formatDelta(contacts30, contactsPrev);
+  const messagesDelta = formatDelta(messages30, messagesPrev);
 
   return (
     <div className="p-6 space-y-6 animate-enter">
@@ -336,17 +286,17 @@ const Dashboard = () => {
       <header className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-1">
-            <EditableField value={title} onSave={handleTitleChange} className="inline-block" showEditIcon />
+            <EditableField value={title} onSave={onSaveString(setTitle)} className="inline-block" showEditIcon />
           </h1>
           <p className="text-muted-foreground">
-            <EditableField value={description} onSave={handleDescriptionChange} className="inline-block" showEditIcon />
+            <EditableField value={description} onSave={onSaveString(setDescription)} className="inline-block" showEditIcon />
           </p>
         </div>
 
         <div className="flex items-center space-x-4">
           <button className="px-4 py-2 text-sm text-agri-primary font-medium bg-agri-primary/10 rounded-lg hover:bg-agri-primary/20 transition-colors">
             <Calendar className="h-4 w-4 inline mr-2" />
-            <EditableField value={currentMonth} onSave={handleMonthChange} className="inline-block" />
+            <EditableField value={currentMonth} onSave={onSaveString(setCurrentMonth)} className="inline-block" />
           </button>
           <button
             className="px-4 py-2 text-sm bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark transition-colors"
@@ -360,48 +310,37 @@ const Dashboard = () => {
 
       {/* ====== CARDS RÁPIDOS ====== */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total de Contatos 👥 */}
+        {/* Total de Contatos (30d) 👥 */}
         <div className="stat-card card-hover">
-          <p className="stat-label">Total de Contatos 👥</p>
+          <p className="stat-label">
+            Total de Contatos 👥 <span className="text-muted-foreground">(últimos 30 dias)</span>
+          </p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">
-              <EditableField
-                value={totalContacts}
-                type="number"
-                onSave={handleTotalContactsChange}
-                className="inline-block font-bold"
-              />
-            </p>
+            <p className="stat-value">{contacts30}</p>
             <span className="text-agri-success text-sm font-medium flex items-center">
               <TrendingUp className="h-4 w-4 mr-1" />
-              <EditableField
-                value={contactsGrowth}
-                type="number"
-                onSave={(v) => setContactsGrowth(Number(v))}
-                className="inline-block"
-              />
-              %
+              {contactsDelta}
             </span>
           </div>
         </div>
 
-        {/* Contatos Ativos 🟢 */}
+        {/* Contatos Ativos (manual por enquanto) 🟢 */}
         <div className="stat-card card-hover">
           <p className="stat-label">Contatos Ativos 🟢</p>
           <div className="flex items-baseline justify-between mt-2">
             <p className="stat-value">
               <EditableField
-                value={activeContacts}
+                value={0}
                 type="number"
-                onSave={handleActiveContactsChange}
+                onSave={() => {}}
                 className="inline-block font-bold"
               />
             </p>
             <span className="text-agri-primary text-sm font-medium">
               <EditableField
-                value={newContacts}
+                value={5}
                 type="number"
-                onSave={handleNewContactsChange}
+                onSave={() => {}}
                 className="inline-block"
               />{' '}
               novos
@@ -409,15 +348,17 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Conversas atendidas 💬 (últimos 30 dias) */}
+        {/* Conversas atendidas 💬 (rótulo 30d visível) */}
         <div className="stat-card card-hover">
-          <p className="stat-label">Conversas Atendidas 💬 <span className="text-xs text-muted-foreground">(últimos 30 dias)</span></p>
+          <p className="stat-label">
+            Conversas Atendidas 💬 <span className="text-muted-foreground">(últimos 30 dias)</span>
+          </p>
           <div className="flex items-baseline justify-between mt-2">
             <p className="stat-value">
               <EditableField
                 value={attendedConversations}
                 type="number"
-                onSave={handleAttendedChange}
+                onSave={onSaveNumber(setAttendedConversations)}
                 className="inline-block font-bold"
               />
             </p>
@@ -426,7 +367,10 @@ const Dashboard = () => {
               <EditableField
                 value={conversationsGrowth}
                 type="number"
-                onSave={handleAttendedGrowthChange}
+                onSave={(v) => {
+                  setConversationsGrowth(Number(v));
+                  toast.success('Variação de conversas atualizada');
+                }}
                 className="inline-block"
               />
               %
@@ -434,20 +378,16 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Total de Mensagens ✉️ (últimos 30 dias) */}
+        {/* Total de Mensagens (30d) ✉️ */}
         <div className="stat-card card-hover">
-          <p className="stat-label">Total de Mensagens ✉️ <span className="text-xs text-muted-foreground">(últimos 30 dias)</span></p>
+          <p className="stat-label">
+            Total de Mensagens ✉️ <span className="text-muted-foreground">(últimos 30 dias)</span>
+          </p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">
-              <EditableField
-                value={totalMessages}
-                type="number"
-                onSave={(v) => setTotalMessages(Number(v))}
-                className="inline-block font-bold"
-              />
-            </p>
-            <span className="text-agri-warning text-sm font-medium flex items-center">
-              <AlertTriangle className="h-4 w-4 mr-1" /> Recentes
+            <p className="stat-value">{messages30}</p>
+            <span className="text-agri-success text-sm font-medium flex items-center">
+              <TrendingUp className="h-4 w-4 mr-1" />
+              {messagesDelta}
             </span>
           </div>
         </div>
@@ -584,7 +524,10 @@ const Dashboard = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteConversationAlert(alert.id)}
+                      onClick={() => {
+                        setConversationAlerts(conversationAlerts.filter((a) => a.id !== alert.id));
+                        toast.success('Alerta removido');
+                      }}
                       className="text-red-500 hover:text-red-700 hover:bg-red-100"
                     >
                       <Trash2 size={16} />
@@ -621,21 +564,17 @@ const Dashboard = () => {
               <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4CAF50" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#4CAF50" stopOpacity={0} />
+                    <stop offset="5%" stopOpacity={0.8} />
+                    <stop offset="95%" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `${v} €`} />
-                <Tooltip formatter={(v) => [`${v} €`, 'Valor']} />
+                <YAxis axisLine={false} tickLine={false} />
+                <Tooltip />
                 <Area
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#4CAF50"
-                  fillOpacity={1}
-                  fill="url(#colorRevenue)"
-                  activeDot={{ r: 8 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -651,123 +590,10 @@ const Dashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
                 <XAxis type="number" axisLine={false} tickLine={false} />
                 <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={80} />
-                <Tooltip formatter={(value: any) => [`${value}%`, 'Percentual']} />
-                <Bar dataKey="value" fill="#8D6E63" radius={[0, 4, 4, 0]} barSize={20} />
+                <Tooltip />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Tarefas e Alertas (cards inferiores) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tarefas a vir 📋 */}
-        <div className="dashboard-card card-hover">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Tarefas a Vir 📋</h3>
-            <button className="text-xs text-agri-primary hover:underline">Ver tudo</button>
-          </div>
-
-          <div className="space-y-3">
-            {upcomingTasks.map((task) => (
-              <div key={task.id} className="flex items-center p-2 rounded-lg hover:bg-muted">
-                <div
-                  className={`w-2 h-2 rounded-full mr-3 ${
-                    task.priority === 'high'
-                      ? 'bg-agri-danger'
-                      : task.priority === 'medium'
-                      ? 'bg-agri-warning'
-                      : 'bg-agri-success'
-                  }`}
-                />
-                <div className="flex-1">
-                  {editingTask === task.id ? (
-                    <div className="flex items-center">
-                      <input
-                        type="text"
-                        value={editedTaskTitle}
-                        onChange={(e) => setEditedTaskTitle(e.target.value)}
-                        className="border rounded px-2 py-1 text-sm w-full"
-                        autoFocus
-                      />
-                      <button onClick={() => handleSaveTask(task.id)} className="ml-2 p-1 text-green-600 hover:bg-green-50 rounded">
-                        <Check className="h-4 w-4" />
-                      </button>
-                      <button onClick={() => setEditingTask(null)} className="ml-1 p-1 text-red-600 hover:bg-red-50 rounded">
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-sm font-medium">{task.title}</p>
-                      <p className="text-xs text-muted-foreground">Prazo: {task.due}</p>
-                    </>
-                  )}
-                </div>
-                {editingTask !== task.id && (
-                  <div className="flex">
-                    <button className="p-1.5 hover:bg-muted rounded" onClick={() => handleEditTask(task.id)}>
-                      <Edit className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                    <button className="p-1.5 hover:bg-muted rounded text-red-500" onClick={() => handleDeleteTask(task.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-            {upcomingTasks.length === 0 && (
-              <p className="text-center text-muted-foreground py-4">Nenhuma tarefa a vir</p>
-            )}
-          </div>
-        </div>
-
-        {/* Alertas (laterais) 🚨 */}
-        <div className="dashboard-card card-hover">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Alertas 🚨</h3>
-            <button className="text-xs text-agri-primary hover:underline">Gerenciar alertas</button>
-          </div>
-
-          <div className="space-y-3">
-            {alerts.map((alert) => (
-              <div
-                key={alert.id}
-                className={`p-3 rounded-lg ${
-                  alert.type === 'danger'
-                    ? 'bg-agri-danger/10 border-l-4 border-agri-danger'
-                    : alert.type === 'warning'
-                    ? 'bg-agri-warning/10 border-l-4 border-agri-warning'
-                    : 'bg-agri-info/10 border-l-4 border-agri-info'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start flex-1">
-                    <AlertTriangle
-                      className={`h-5 w-5 mr-2 ${
-                        alert.type === 'danger'
-                          ? 'text-agri-danger'
-                          : alert.type === 'warning'
-                          ? 'text-agri-warning'
-                          : 'text-agri-info'
-                      }`}
-                    />
-                    <EditableField
-                      value={alert.message}
-                      onSave={(val) => handleEditAlert(alert.id, String(val))}
-                      className="text-sm"
-                    />
-                  </div>
-                  <button
-                    onClick={() => handleDeleteAlert(alert.id)}
-                    className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {alerts.length === 0 && <p className="text-center text-muted-foreground py-4">Nenhum alerta ativo</p>}
           </div>
         </div>
       </div>
