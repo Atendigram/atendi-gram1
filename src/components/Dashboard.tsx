@@ -1,11 +1,8 @@
 // src/components/Dashboard.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Calendar, Wallet } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { EditableField } from "./ui/editable-field";
-import { Button } from "./ui/button";
 import { toast } from "sonner";
-
-// 👉 ajuste o caminho se necessário
 import { supabase } from "../lib/supabase";
 
 /* ------------------------------ helpers ------------------------------ */
@@ -16,38 +13,34 @@ function startOfDaysAgo(days: number) {
   return d.toISOString();
 }
 
-// wrappers compatíveis com EditableField
 const onSaveString =
   (setter: React.Dispatch<React.SetStateAction<string>>) => (v: string) =>
     setter(v);
 const onSaveNumber =
   (setter: React.Dispatch<React.SetStateAction<number>>) => (v: string) =>
     setter(Number(v));
-const noop = (_: string) => {};
 
 const Dashboard = () => {
-  /* Cabeçalho */
+  // Cabeçalho
   const [title, setTitle] = useState("Olá, Atendente 👋");
   const [description, setDescription] = useState(
     "Aqui está uma visão geral do seu atendimento no AtendiGram"
   );
   const [currentMonth, setCurrentMonth] = useState("Agosto 2023");
 
-  /* ====== CARDS (dados do Supabase) ====== */
+  // Cards
   const [contacts30, setContacts30] = useState<number>(0);
   const [messages30, setMessages30] = useState<number>(0);
-
-  // campos manuais (até conectar de fato)
   const [attendedConversations, setAttendedConversations] = useState<number>(75);
+  const [activeContacts, setActiveContacts] = useState<number>(0);
+  const [newActive, setNewActive] = useState<number>(5);
 
-  // janela de tempo
   const since30 = useMemo(() => startOfDaysAgo(30), []);
 
-  /* -------------------- Carregar dados do Supabase -------------------- */
+  // Carregar dados do Supabase
   useEffect(() => {
     const load = async () => {
       try {
-        // Contatos 30d
         const { count: contactsNow, error: e1 } = await supabase
           .from("contatos_luna")
           .select("*", { count: "exact", head: true })
@@ -55,7 +48,6 @@ const Dashboard = () => {
         if (e1) console.error("contatos (30d):", e1);
         setContacts30(contactsNow ?? 0);
 
-        // Mensagens 30d
         const { count: msgsNow, error: e3 } = await supabase
           .from("logs_luna")
           .select("*", { count: "exact", head: true })
@@ -67,13 +59,8 @@ const Dashboard = () => {
         toast.error("Falha ao carregar dados do Supabase");
       }
     };
-
     load();
   }, [since30]);
-
-  const handleAddConversation = () => {
-    toast.info("Redirecionando para Finanças…");
-  };
 
   return (
     <div className="p-6 space-y-6 animate-enter">
@@ -107,19 +94,13 @@ const Dashboard = () => {
               className="inline-block"
             />
           </button>
-          <button
-            className="px-4 py-2 text-sm bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark transition-colors"
-            onClick={handleAddConversation}
-          >
-            <Wallet className="h-4 w-4 inline mr-2" />
-            Nova Conversa
-          </button>
+          {/* Botão "Nova Conversa" removido a pedido */}
         </div>
       </header>
 
-      {/* ====== SÓ OS CARDS ====== */}
+      {/* Só os cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total de Contatos (30d) 👥 */}
+        {/* Total de Contatos (30d) */}
         <div className="stat-card card-hover">
           <p className="stat-label">
             Total de Contatos 👥{" "}
@@ -127,28 +108,26 @@ const Dashboard = () => {
           </p>
           <div className="flex items-baseline justify-between mt-2">
             <p className="stat-value">{contacts30}</p>
-            {/* sem % */}
           </div>
         </div>
 
-        {/* Contatos Ativos (manual por enquanto) 🟢 */}
+        {/* Contatos Ativos */}
         <div className="stat-card card-hover">
           <p className="stat-label">Contatos Ativos 🟢</p>
           <div className="flex items-baseline justify-between mt-2">
             <p className="stat-value">
               <EditableField
-                value={0}
+                value={activeContacts}
                 type="number"
-                onSave={noop}
+                onSave={onSaveNumber(setActiveContacts)}
                 className="inline-block font-bold"
               />
             </p>
             <span className="text-sm font-medium text-muted-foreground">
-              {/* sem “novos %”, só se quiser manter “novos” */}
               <EditableField
-                value={5}
+                value={newActive}
                 type="number"
-                onSave={noop}
+                onSave={onSaveNumber(setNewActive)}
                 className="inline-block"
               />{" "}
               novos
@@ -156,7 +135,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Conversas atendidas 💬 */}
+        {/* Conversas Atendidas */}
         <div className="stat-card card-hover">
           <p className="stat-label">
             Conversas Atendidas 💬{" "}
@@ -171,11 +150,10 @@ const Dashboard = () => {
                 className="inline-block font-bold"
               />
             </p>
-            {/* sem % */}
           </div>
         </div>
 
-        {/* Total de Mensagens (30d) ✉️ */}
+        {/* Total de Mensagens */}
         <div className="stat-card card-hover">
           <p className="stat-label">
             Total de Mensagens ✉️{" "}
@@ -183,7 +161,6 @@ const Dashboard = () => {
           </p>
           <div className="flex items-baseline justify-between mt-2">
             <p className="stat-value">{messages30}</p>
-            {/* sem % */}
           </div>
         </div>
       </div>
