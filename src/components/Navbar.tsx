@@ -51,7 +51,7 @@ const Navbar = () => {
   const navItems = [
     { title: 'Dashboard', path: '/', icon: Home },
     { title: 'Contatos', path: '/contatos', icon: Users },
-    { title: 'Telegram', path: '/telegram', icon: Send },
+    { title: 'Disparo🚀', path: '/telegram', icon: Send },
     { title: 'Mensagens', path: '/mensagens', icon: MessageSquare },
     { title: 'Financeiro', path: '/financeiro', icon: Wallet },
     { title: 'Estatísticas', path: '/estatisticas', icon: BarChart2 },
@@ -112,7 +112,7 @@ const Navbar = () => {
               onClick={() => setIsOpen(false)}
             >
               <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-primary' : ''}`} />
-              <span>Disparo🚀</span>
+              <span>{item.title}</span>
 
               {isActive(item.path) && (
                 <div className="ml-auto flex items-center">
