@@ -255,14 +255,28 @@ const Disparo = () => {
       <Card>
         <CardHeader>
           <CardTitle>Contatos</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por user_id, nome ou username..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por user_id, nome ou username..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const newSelected = new Set(selectedContacts);
+                filteredContacts.forEach(contact => newSelected.add(contact.user_id));
+                setSelectedContacts(newSelected);
+              }}
+              disabled={filteredContacts.length === 0}
+            >
+              Selecionar Todos ({filteredContacts.length})
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
