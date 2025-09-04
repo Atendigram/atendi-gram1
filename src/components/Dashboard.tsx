@@ -30,7 +30,7 @@ async function countTable(table: string) {
 
 /* ---------------- COMPONENTE ---------------- */
 const Dashboard = () => {
-  const [title, setTitle] = useState("Olá, Atendente 👋");
+  const [title, setTitle] = useState("Olá 👋");
   const [description, setDescription] = useState(
     "Aqui está uma visão geral do seu atendimento no AtendiGram"
   );
