@@ -31,7 +31,7 @@ const Disparo = () => {
   // Form state
   const [textMessage, setTextMessage] = useState('');
   const [intervalSeconds, setIntervalSeconds] = useState(0);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUploading, setAudioUploading] = useState(false);
 
   // Load contacts
@@ -76,37 +76,9 @@ const Disparo = () => {
     }
   };
 
-  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAudioSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setAudioUploading(true);
-    try {
-      const ext = file.name.split(".").pop() || "ogg";
-      const path = `voices/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("audios").upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-      if (error) throw error;
-      
-      const { data } = supabase.storage.from("audios").getPublicUrl(path);
-      setAudioUrl(data.publicUrl);
-      
-      toast({
-        title: "Sucesso",
-        description: "Áudio carregado com sucesso",
-      });
-    } catch (error) {
-      console.error('Error uploading audio:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar áudio",
-        variant: "destructive",
-      });
-    } finally {
-      setAudioUploading(false);
-    }
+    setAudioFile(file || null);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -146,7 +118,7 @@ const Disparo = () => {
 
   const handleSubmit = async () => {
     // Validation
-    if (!textMessage.trim() && !audioUrl) {
+    if (!textMessage.trim() && !audioFile) {
       toast({
         title: "Erro de validação",
         description: "Você deve fornecer uma mensagem de texto ou um áudio",
@@ -166,6 +138,24 @@ const Disparo = () => {
 
     setSubmitting(true);
     try {
+      let audioUrl = null;
+      
+      // Upload audio if provided
+      if (audioFile) {
+        setAudioUploading(true);
+        const ext = audioFile.name.split(".").pop() || "ogg";
+        const path = `voices/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("audios").upload(path, audioFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+        if (uploadError) throw uploadError;
+        
+        const { data } = supabase.storage.from("audios").getPublicUrl(path);
+        audioUrl = data.publicUrl;
+        setAudioUploading(false);
+      }
+
       // Insert disparo
       const { data: disparo, error: disparoError } = await supabase
         .from('disparos')
@@ -180,18 +170,24 @@ const Disparo = () => {
 
       if (disparoError) throw disparoError;
 
-      // Insert disparo_items
-      const disparoItems = Array.from(selectedContacts).map(userId => ({
-        disparo_id: disparo.id,
-        user_id: userId.toString(),
-        status: 'pending'
-      }));
+      // Insert disparo_items in chunks of 500
+      const contactIds = Array.from(selectedContacts);
+      const chunkSize = 500;
+      
+      for (let i = 0; i < contactIds.length; i += chunkSize) {
+        const chunk = contactIds.slice(i, i + chunkSize);
+        const disparoItems = chunk.map(userId => ({
+          disparo_id: disparo.id,
+          user_id: userId.toString(),
+          status: 'pending'
+        }));
 
-      const { error: itemsError } = await supabase
-        .from('disparo_items')
-        .insert(disparoItems);
+        const { error: itemsError } = await supabase
+          .from('disparo_items')
+          .insert(disparoItems);
 
-      if (itemsError) throw itemsError;
+        if (itemsError) throw itemsError;
+      }
 
       // Success
       toast({
@@ -201,7 +197,7 @@ const Disparo = () => {
 
       // Clear form
       setTextMessage('');
-      setAudioUrl(null);
+      setAudioFile(null);
       setIntervalSeconds(0);
       setSelectedContacts(new Set());
 
@@ -214,6 +210,7 @@ const Disparo = () => {
       });
     } finally {
       setSubmitting(false);
+      setAudioUploading(false);
     }
   };
 
@@ -364,15 +361,15 @@ const Disparo = () => {
               <Input
                 type="file"
                 accept="audio/*"
-                onChange={handleAudioUpload}
+                onChange={handleAudioSelect}
                 disabled={audioUploading}
                 className="max-w-sm"
               />
               {audioUploading && <p className="text-sm text-muted-foreground">Carregando áudio...</p>}
-              {audioUrl && (
+              {audioFile && (
                 <div className="space-y-2">
-                  <p className="text-sm text-green-600">Áudio carregado com sucesso</p>
-                  <audio src={audioUrl} controls className="w-full max-w-md" />
+                  <p className="text-sm text-green-600">Áudio selecionado: {audioFile.name}</p>
+                  <audio src={URL.createObjectURL(audioFile)} controls className="w-full max-w-md" />
                 </div>
               )}
             </div>
