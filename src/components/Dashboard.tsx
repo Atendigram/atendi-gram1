@@ -99,17 +99,14 @@ const Dashboard = () => {
         const inicio30dias = new Date(agora.getTime() - 30 * 24 * 60 * 60 * 1000);
         const inicio60dias = new Date(agora.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-        // Contatos (últimos 30 dias e período anterior)
+        // Contatos (todos - sem filtro de data pois não há created_at)
         const { count: contatosAtuais } = await supabase
           .from("contatos_luna")
-          .select("*", { count: "exact", head: true })
-          .gte("created_at", inicio30dias.toISOString());
+          .select("*", { count: "exact", head: true });
 
         const { count: contatosAnteriores } = await supabase
           .from("contatos_luna")
-          .select("*", { count: "exact", head: true })
-          .gte("created_at", inicio60dias.toISOString())
-          .lt("created_at", inicio30dias.toISOString());
+          .select("*", { count: "exact", head: true });
 
         // Mensagens
         const { count: msgsAtuais } = await supabase
@@ -123,33 +120,31 @@ const Dashboard = () => {
           .gte("created_at", inicio60dias.toISOString())
           .lt("created_at", inicio30dias.toISOString());
 
-        // Conversas (exemplo: direction = in)
+        // Conversas (contando todas as mensagens como conversação)
         const { count: convsAtuais } = await supabase
           .from("logsluna")
           .select("*", { count: "exact", head: true })
-          .eq("direction", "in")
           .gte("created_at", inicio30dias.toISOString());
 
         const { count: convsAnteriores } = await supabase
           .from("logsluna")
           .select("*", { count: "exact", head: true })
-          .eq("direction", "in")
           .gte("created_at", inicio60dias.toISOString())
           .lt("created_at", inicio30dias.toISOString());
 
-        // Quantos dias temos no histórico
-        const { data: primeiroContato } = await supabase
-          .from("contatos_luna")
+        // Quantos dias temos no histórico (usando logsluna)
+        const { data: primeiroLog } = await supabase
+          .from("logsluna")
           .select("created_at")
           .order("created_at", { ascending: true })
           .limit(1);
 
-        const diasDisponiveis = primeiroContato?.length
+        const diasDisponiveis = primeiroLog?.length
           ? Math.ceil(
-              (Date.now() - new Date(primeiroContato[0].created_at).getTime()) /
+              (Date.now() - new Date(primeiroLog[0].created_at).getTime()) /
                 (1000 * 60 * 60 * 24)
             )
-          : 0;
+          : 30;
 
         // Atualiza os estados
         setTotalContacts(contatosAtuais || 0);
