@@ -255,7 +255,7 @@ const ContatosList = () => {
               />
             </div>
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
               onClick={exportToCSV}
               disabled={exporting || filteredCount === 0}
