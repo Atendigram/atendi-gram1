@@ -11,6 +11,7 @@ import FinancePage from "./pages/FinancePage";
 import StatsPage from "./pages/StatsPage";
 import DisparoPage from "./pages/DisparoPage";
 import TelegramPage from "./pages/TelegramPage";
+import Contatos from "./pages/Contatos";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { CRMProvider } from "./contexts/CRMContext";
@@ -29,6 +30,7 @@ const routes = [
   { path: "/statistiques", element: <StatisticsProvider><StatsPage /></StatisticsProvider> },
   { path: "/disparo", element: <DisparoPage /> },
   { path: "/telegram", element: <TelegramPage /> },
+  { path: "/contatos", element: <Contatos /> },
   { path: "/rapports", element: <Navigate to="/statistiques" replace /> },
   { path: "/parametres", element: <Navigate to="/" replace /> },
   { path: "/dashboard", element: <Navigate to="/" replace /> },
