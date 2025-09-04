@@ -243,7 +243,7 @@ const ContatosList = () => {
       {/* Contacts table */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Contatos</CardTitle>
+          <CardTitle>❤️👥 Lista de Contatos</CardTitle>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Search className="h-4 w-4 text-muted-foreground" />
