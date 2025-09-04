@@ -26,6 +26,7 @@ const routes = [
   { path: "/inventaire", element: <InventoryPage /> },
   { path: "/finances", element: <FinancePage /> },
   { path: "/statistiques", element: <StatisticsProvider><StatsPage /></StatisticsProvider> },
+  { path: "/disparo", element: <DisparoPage /> },
   { path: "/telegram", element: <DisparoPage /> },
   { path: "/rapports", element: <Navigate to="/statistiques" replace /> },
   { path: "/parametres", element: <Navigate to="/" replace /> },
