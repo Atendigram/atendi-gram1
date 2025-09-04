@@ -184,17 +184,17 @@ const Dashboard = () => {
       <header className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-1">
-            <EditableField value={title} onSave={setTitle} className="inline-block" showEditIcon />
+            <EditableField value={title} onSave={(value) => setTitle(String(value))} className="inline-block" showEditIcon />
           </h1>
           <p className="text-muted-foreground">
-            <EditableField value={description} onSave={setDescription} className="inline-block" showEditIcon />
+            <EditableField value={description} onSave={(value) => setDescription(String(value))} className="inline-block" showEditIcon />
           </p>
         </div>
 
         <div className="flex items-center space-x-4">
           <button className="px-4 py-2 text-sm text-agri-primary font-medium bg-agri-primary/10 rounded-lg hover:bg-agri-primary/20 transition-colors">
             <Calendar className="h-4 w-4 inline mr-2" />
-            <EditableField value={currentMonth} onSave={setCurrentMonth} className="inline-block" />
+            <EditableField value={currentMonth} onSave={(value) => setCurrentMonth(String(value))} className="inline-block" />
           </button>
           <button
             className="px-4 py-2 text-sm bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark transition-colors"
