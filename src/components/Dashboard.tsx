@@ -1,7 +1,7 @@
 // src/components/Dashboard.tsx (trecho principal focado nos cards + loading)
 
 // ⬇️ ajuste o caminho se necessário:
-import { supabase } from '@/lib/supabase';
+import { supabase } from "../lib/supabase";
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { TrendingUp, AlertTriangle, Users } from 'lucide-react';
