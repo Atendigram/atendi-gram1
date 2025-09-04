@@ -112,7 +112,7 @@ const Navbar = () => {
               onClick={() => setIsOpen(false)}
             >
               <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-primary' : ''}`} />
-              <span>{item.title}</span>
+              <span>Disparo🚀</span>
 
               {isActive(item.path) && (
                 <div className="ml-auto flex items-center">
