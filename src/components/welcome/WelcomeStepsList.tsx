@@ -172,8 +172,7 @@ const WelcomeStepsList: React.FC<WelcomeStepsListProps> = ({
                 )}
                 {step.delay_after_sec > 0 && (
                   <Badge variant="secondary" className="flex items-center space-x-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{formatDelay(step.delay_after_sec)}</span>
+                    <span>⏳ {step.delay_after_sec}s</span>
                   </Badge>
                 )}
               </div>
