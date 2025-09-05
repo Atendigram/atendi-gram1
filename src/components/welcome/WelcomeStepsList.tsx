@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import {
   Volume2,
   Clock
 } from 'lucide-react';
+import WelcomeStepConfirmDialog from './WelcomeStepConfirmDialog';
 
 interface WelcomeStep {
   id: string;
@@ -38,6 +39,16 @@ const WelcomeStepsList: React.FC<WelcomeStepsListProps> = ({
   onDeleteStep,
   onReorderSteps,
 }) => {
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    stepId: string;
+    stepName: string;
+  }>({
+    isOpen: false,
+    stepId: '',
+    stepName: '',
+  });
+
   const getStepIcon = (kind: string) => {
     switch (kind) {
       case 'text':
@@ -72,10 +83,42 @@ const WelcomeStepsList: React.FC<WelcomeStepsListProps> = ({
     const newSteps = [...steps];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     
-    if (targetIndex >= 0 && targetIndex < steps.length) {
-      [newSteps[index], newSteps[targetIndex]] = [newSteps[targetIndex], newSteps[index]];
-      onReorderSteps(newSteps);
-    }
+    if (targetIndex < 0 || targetIndex >= steps.length) return;
+    
+    // Swap the steps
+    [newSteps[index], newSteps[targetIndex]] = [newSteps[targetIndex], newSteps[index]];
+    
+    // Update order_index values
+    newSteps.forEach((step, idx) => {
+      step.order_index = idx + 1;
+    });
+    
+    onReorderSteps(newSteps);
+  };
+
+  const handleDeleteClick = (stepId: string, stepName: string) => {
+    setDeleteDialog({
+      isOpen: true,
+      stepId,
+      stepName,
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    onDeleteStep(deleteDialog.stepId);
+    setDeleteDialog({
+      isOpen: false,
+      stepId: '',
+      stepName: '',
+    });
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialog({
+      isOpen: false,
+      stepId: '',
+      stepName: '',
+    });
   };
 
   const formatDelay = (seconds: number) => {
@@ -187,13 +230,21 @@ const WelcomeStepsList: React.FC<WelcomeStepsListProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onDeleteStep(step.id)}
+                onClick={() => handleDeleteClick(step.id, `Passo ${step.order_index} - ${step.kind}`)}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
         ))}
+
+        <WelcomeStepConfirmDialog
+          isOpen={deleteDialog.isOpen}
+          onClose={handleCloseDeleteDialog}
+          onConfirm={handleConfirmDelete}
+          title="Excluir Passo"
+          description={`Tem certeza que deseja excluir "${deleteDialog.stepName}"? Esta ação não pode ser desfeita.`}
+        />
       </CardContent>
     </Card>
   );

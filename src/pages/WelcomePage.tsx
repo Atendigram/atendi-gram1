@@ -5,6 +5,7 @@ import PageLayout from '@/components/layout/PageLayout';
 import WelcomeFlowHeader from '@/components/welcome/WelcomeFlowHeader';
 import WelcomeStepsList from '@/components/welcome/WelcomeStepsList';
 import WelcomeStepModal from '@/components/welcome/WelcomeStepModal';
+import WelcomePreviewPanel from '@/components/welcome/WelcomePreviewPanel';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -33,6 +34,7 @@ const WelcomePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStep, setEditingStep] = useState<WelcomeStep | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [optimisticSteps, setOptimisticSteps] = useState<WelcomeStep[]>([]);
 
   // Load welcome flow on component mount
   useEffect(() => {
@@ -88,7 +90,9 @@ const WelcomePage = () => {
       return;
     }
 
-    setSteps(stepsData || []);
+    const loadedSteps = stepsData || [];
+    setSteps(loadedSteps);
+    setOptimisticSteps(loadedSteps);
   };
 
   const toggleFlowEnabled = async () => {
@@ -130,6 +134,11 @@ const WelcomePage = () => {
   const handleDeleteStep = async (stepId: string) => {
     if (!flow) return;
 
+    // Optimistic update
+    const originalSteps = [...steps];
+    const updatedSteps = steps.filter(step => step.id !== stepId);
+    setOptimisticSteps(updatedSteps);
+
     try {
       const { error } = await supabase
         .from('welcome_flow_steps')
@@ -144,6 +153,8 @@ const WelcomePage = () => {
         description: 'O passo foi excluído com sucesso.',
       });
     } catch (error) {
+      // Rollback optimistic update
+      setOptimisticSteps(originalSteps);
       console.error('Error deleting step:', error);
       toast({
         variant: 'destructive',
@@ -156,8 +167,34 @@ const WelcomePage = () => {
   const handleSaveStep = async (stepData: Partial<WelcomeStep>) => {
     if (!flow) return;
 
+    const isEditing = !!editingStep;
+    let optimisticStep: WelcomeStep;
+
+    if (isEditing) {
+      // Optimistic update for editing
+      optimisticStep = { ...editingStep!, ...stepData };
+      const updatedSteps = optimisticSteps.map(step => 
+        step.id === editingStep!.id ? optimisticStep : step
+      );
+      setOptimisticSteps(updatedSteps);
+    } else {
+      // Optimistic update for creating
+      const maxOrder = optimisticSteps.length > 0 ? Math.max(...optimisticSteps.map(s => s.order_index)) : 0;
+      optimisticStep = {
+        id: `temp-${Date.now()}`,
+        flow_id: flow.id,
+        order_index: maxOrder + 1,
+        kind: stepData.kind!,
+        text_content: stepData.text_content,
+        parse_mode: stepData.parse_mode,
+        media_url: stepData.media_url,
+        delay_after_sec: stepData.delay_after_sec!,
+      };
+      setOptimisticSteps([...optimisticSteps, optimisticStep]);
+    }
+
     try {
-      if (editingStep) {
+      if (isEditing) {
         // Update existing step
         const { error } = await supabase
           .from('welcome_flow_steps')
@@ -183,10 +220,12 @@ const WelcomePage = () => {
       setIsModalOpen(false);
       setEditingStep(null);
       toast({
-        title: editingStep ? 'Passo atualizado' : 'Passo criado',
-        description: `O passo foi ${editingStep ? 'atualizado' : 'criado'} com sucesso.`,
+        title: isEditing ? 'Passo atualizado' : 'Passo criado',
+        description: `O passo foi ${isEditing ? 'atualizado' : 'criado'} com sucesso.`,
       });
     } catch (error) {
+      // Rollback optimistic update
+      setOptimisticSteps(steps);
       console.error('Error saving step:', error);
       toast({
         variant: 'destructive',
@@ -197,15 +236,40 @@ const WelcomePage = () => {
   };
 
   const handleReorderSteps = (reorderedSteps: WelcomeStep[]) => {
-    setSteps(reorderedSteps);
+    setOptimisticSteps(reorderedSteps);
   };
 
   const handleSaveOrder = async () => {
     if (!flow) return;
 
+    // Validate order_index uniqueness and sequence
+    const orderIndexes = optimisticSteps.map(s => s.order_index);
+    const uniqueIndexes = new Set(orderIndexes);
+    
+    if (uniqueIndexes.size !== orderIndexes.length) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro na ordenação',
+        description: 'Os índices de ordem devem ser únicos.',
+      });
+      return;
+    }
+
+    const expectedIndexes = Array.from({ length: optimisticSteps.length }, (_, i) => i + 1);
+    const sortedIndexes = [...orderIndexes].sort((a, b) => a - b);
+    
+    if (JSON.stringify(sortedIndexes) !== JSON.stringify(expectedIndexes)) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro na ordenação',
+        description: 'Os índices devem ser sequenciais (1, 2, 3...).',
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const updates = steps.map((step, index) => ({
+      const updates = optimisticSteps.map((step, index) => ({
         id: step.id,
         order_index: index + 1,
       }));
@@ -266,34 +330,43 @@ const WelcomePage = () => {
 
   return (
     <PageLayout>
-      <div className="space-y-6">
-        <WelcomeFlowHeader
-          flow={flow}
-          onToggleEnabled={toggleFlowEnabled}
-          onCreateStep={handleCreateStep}
-          onSaveOrder={handleSaveOrder}
-          isSaving={isSaving}
-        />
-
-        <WelcomeStepsList
-          steps={steps}
-          onEditStep={handleEditStep}
-          onDeleteStep={handleDeleteStep}
-          onReorderSteps={handleReorderSteps}
-        />
-
-        {isModalOpen && (
-          <WelcomeStepModal
-            isOpen={isModalOpen}
-            onClose={() => {
-              setIsModalOpen(false);
-              setEditingStep(null);
-            }}
-            onSave={handleSaveStep}
-            editingStep={editingStep}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <WelcomeFlowHeader
+            flow={flow}
+            onToggleEnabled={toggleFlowEnabled}
+            onCreateStep={handleCreateStep}
+            onSaveOrder={handleSaveOrder}
+            isSaving={isSaving}
           />
-        )}
+
+          <WelcomeStepsList
+            steps={optimisticSteps}
+            onEditStep={handleEditStep}
+            onDeleteStep={handleDeleteStep}
+            onReorderSteps={handleReorderSteps}
+          />
+        </div>
+
+        <div className="lg:sticky lg:top-6">
+          <WelcomePreviewPanel
+            steps={optimisticSteps}
+            onRefresh={() => flow && loadSteps(flow.id)}
+          />
+        </div>
       </div>
+
+      {isModalOpen && (
+        <WelcomeStepModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingStep(null);
+          }}
+          onSave={handleSaveStep}
+          editingStep={editingStep}
+        />
+      )}
     </PageLayout>
   );
 };
