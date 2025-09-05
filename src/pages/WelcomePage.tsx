@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
 import PageLayout from '@/components/layout/PageLayout';
 import WelcomeFlowHeader from '@/components/welcome/WelcomeFlowHeader';
@@ -90,7 +91,7 @@ const WelcomePage = () => {
       return;
     }
 
-    const loadedSteps = stepsData || [];
+    const loadedSteps = (stepsData || []) as WelcomeStep[];
     setSteps(loadedSteps);
     setOptimisticSteps(loadedSteps);
   };
@@ -211,7 +212,9 @@ const WelcomePage = () => {
             ...stepData,
             flow_id: flow.id,
             order_index: maxOrder + 1,
-          });
+            kind: stepData.kind!,
+            delay_after_sec: stepData.delay_after_sec!,
+          } as any);
 
         if (error) throw error;
       }
