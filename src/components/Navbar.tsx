@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Settings,
   FileText,
+  Wand2,
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -52,6 +53,7 @@ const Navbar = () => {
     { title: 'Dashboard', path: '/', icon: Home },
     { title: 'Contatos', path: '/contatos', icon: Users },
     { title: 'Disparo🚀', path: '/telegram', icon: Send },
+    { title: 'Welcome Flow', path: '/welcome', icon: Wand2 },
     { title: 'Mensagens', path: '/mensagens', icon: MessageSquare },
     { title: 'Financeiro', path: '/financeiro', icon: Wallet },
     { title: 'Estatísticas', path: '/estatisticas', icon: BarChart2 },
