@@ -292,28 +292,30 @@ const LoginPage = () => {
         </CardHeader>
         <CardContent>
           {/* Custom Segmented Control */}
-          <div className="inline-flex items-center gap-1 rounded-xl p-1 bg-white/60 dark:bg-neutral-900/50 backdrop-blur ring-1 ring-black/5 w-full mb-6">
+          <div className="flex w-full max-w-[360px] items-center gap-1 rounded-xl p-1 bg-white/60 dark:bg-neutral-900/50 backdrop-blur ring-1 ring-black/5 mb-6">
             <button
               role="tab"
               onClick={() => setActiveTab('signin')}
-              className={activeTab === 'signin' 
-                ? "px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 flex-1 flex items-center justify-center gap-2"
-                : "px-4 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 flex-1 flex items-center justify-center gap-2"
-              }
+              className={`inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap leading-none px-4 py-2 sm:text-sm text-[13px] rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                activeTab === 'signin' 
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10"
+              }`}
             >
-              <LogIn className="h-4 w-4" />
-              Entrar
+              <LogIn className="h-4 w-4 shrink-0" />
+              <span>Entrar</span>
             </button>
             <button
               role="tab"
               onClick={() => setActiveTab('signup')}
-              className={activeTab === 'signup'
-                ? "px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 flex-1 flex items-center justify-center gap-2"
-                : "px-4 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 flex-1 flex items-center justify-center gap-2"
-              }
+              className={`inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap leading-none px-4 py-2 sm:text-sm text-[13px] rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                activeTab === 'signup'
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10"
+              }`}
             >
-              <UserPlus className="h-4 w-4" />
-              Criar Conta
+              <UserPlus className="h-4 w-4 shrink-0" />
+              <span>Criar Conta</span>
             </button>
           </div>
 
