@@ -52,7 +52,7 @@ const Navbar = () => {
   const navItems = [
     { title: 'Dashboard', path: '/', icon: Home },
     { title: 'Contatos', path: '/contatos', icon: Users },
-    { title: 'Disparo', path: '/telegram', icon: Send },
+    { title: 'Disparos', path: '/telegram', icon: Send },
     { title: 'Boas-Vindas', path: '/welcome', icon: Wand2 },
     { title: 'Mensagens', path: '/mensagens', icon: MessageSquare },
     { title: 'Financeiro', path: '/financeiro', icon: Wallet },
