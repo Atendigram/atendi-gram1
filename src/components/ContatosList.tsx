@@ -8,6 +8,8 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { Search, ChevronLeft, ChevronRight, Users, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
+import { scopedSelectWithColumns, scopedCount } from '@/lib/scoped-queries';
 
 interface Contact {
   user_id: number;
@@ -20,6 +22,8 @@ interface Contact {
 const ITEMS_PER_PAGE = 25;
 
 const ContatosList = () => {
+  const { profile } = useAuth();
+  const accountId = profile?.account_id;
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,15 +33,20 @@ const ContatosList = () => {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    loadContacts();
-  }, [currentPage, searchTerm]);
+    if (accountId) {
+      loadContacts();
+    }
+  }, [currentPage, searchTerm, accountId]);
 
   const loadContacts = async () => {
+    if (!accountId) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      let query = supabase
-        .from('contatos_luna')
-        .select('user_id, first_name, last_name, username, created_at', { count: 'exact' });
+      let query = scopedSelectWithColumns('contatos_luna', 'user_id, first_name, last_name, username, created_at', accountId);
 
       // Apply search filter if exists
       if (searchTerm) {
@@ -54,7 +63,7 @@ const ContatosList = () => {
 
       if (error) throw error;
 
-      setContacts(data || []);
+      setContacts((data as Contact[]) || []);
       setFilteredCount(count || 0);
       
       // Get total count without filters for statistics
@@ -62,9 +71,7 @@ const ContatosList = () => {
         setTotalCount(count || 0);
       } else if (currentPage === 1) {
         // Only fetch total count on first page when searching
-        const { count: total } = await supabase
-          .from('contatos_luna')
-          .select('*', { count: 'exact', head: true });
+        const { count: total } = await scopedCount('contatos_luna', accountId);
         setTotalCount(total || 0);
       }
     } catch (error) {
@@ -122,6 +129,8 @@ const ContatosList = () => {
   };
 
   const exportToCSV = async () => {
+    if (!accountId) return;
+    
     setExporting(true);
     try {
       const BATCH_SIZE = 2000;
@@ -131,9 +140,7 @@ const ContatosList = () => {
 
       // Fetch all filtered data in batches
       while (hasMore) {
-        let query = supabase
-          .from('contatos_luna')
-          .select('user_id, first_name, last_name, username, created_at');
+        let query = scopedSelectWithColumns('contatos_luna', 'user_id, first_name, last_name, username, created_at', accountId);
 
         // Apply the same search filter
         if (searchTerm) {
@@ -149,7 +156,7 @@ const ContatosList = () => {
         if (!data || data.length === 0) {
           hasMore = false;
         } else {
-          allContacts = [...allContacts, ...data];
+          allContacts = [...allContacts, ...(data as Contact[])];
           offset += BATCH_SIZE;
           hasMore = data.length === BATCH_SIZE;
         }
@@ -210,6 +217,16 @@ const ContatosList = () => {
       setExporting(false);
     }
   };
+
+  if (!accountId) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-center">
+          <p className="text-muted-foreground">Carregando informações da conta...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

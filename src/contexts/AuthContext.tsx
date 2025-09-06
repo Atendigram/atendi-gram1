@@ -40,12 +40,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchProfile = async (userId: string, currentUser: any): Promise<Profile | null> => {
     try {
-      // Since profiles table might not exist, just create profile from user data
-      return {
-        id: userId,
-        email: currentUser?.email || null,
-        display_name: currentUser?.user_metadata?.display_name || null,
-      };
+      const { data: profile, error } = await (supabase as any)
+        .from('profiles')
+        .select('id, account_id, email, display_name')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error || !profile) {
+        console.log('Error fetching profile from database:', error);
+        // Fallback to user data if profile doesn't exist
+        return {
+          id: userId,
+          email: currentUser?.email || null,
+          display_name: currentUser?.user_metadata?.display_name || null,
+        };
+      }
+
+      return profile;
     } catch (error) {
       console.log('Error creating profile, using basic data:', error);
       return {

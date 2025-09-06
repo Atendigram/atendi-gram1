@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { Send, Search, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { scopedSelectWithColumns, scopedInsert } from '@/lib/scoped-queries';
 
 interface Contact {
   user_id: number;
@@ -20,6 +22,8 @@ interface Contact {
 const ITEMS_PER_PAGE = 25;
 
 const Disparo = () => {
+  const { profile } = useAuth();
+  const accountId = profile?.account_id;
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<number>>(new Set());
@@ -37,8 +41,10 @@ const Disparo = () => {
 
   // Load contacts
   useEffect(() => {
-    loadContacts();
-  }, []);
+    if (accountId) {
+      loadContacts();
+    }
+  }, [accountId]);
 
   // Filter contacts based on search
   useEffect(() => {
@@ -57,14 +63,17 @@ const Disparo = () => {
   }, [contacts, searchTerm]);
 
   const loadContacts = async () => {
+    if (!accountId) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { data, error } = await supabase
-        .from('contatos_luna')
-        .select('user_id, first_name, last_name, username, created_at')
+      const { data, error } = await scopedSelectWithColumns('contatos_luna', 'user_id, first_name, last_name, username, created_at', accountId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setContacts(data || []);
+      setContacts((data as Contact[]) || []);
     } catch (error) {
       console.error('Error loading contacts:', error);
       toast({
@@ -158,7 +167,7 @@ const Disparo = () => {
         setAudioUploading(false);
       }
 
-      // Insert disparo
+      // Insert disparo (Note: disparos table doesn't seem to have account_id field based on RLS)
       const { data: disparo, error: disparoError } = await supabase
         .from('disparos')
         .insert({
@@ -172,7 +181,7 @@ const Disparo = () => {
 
       if (disparoError) throw disparoError;
 
-      // Insert disparo_items in chunks of 500
+      // Insert disparo_items in chunks of 500 (Note: disparo_items also doesn't have account_id)
       const contactIds = Array.from(selectedContacts);
       const chunkSize = 500;
       
@@ -216,6 +225,16 @@ const Disparo = () => {
       setAudioUploading(false);
     }
   };
+
+  if (!accountId) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-center">
+          <p className="text-muted-foreground">Carregando informações da conta...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className="flex justify-center p-8">Carregando contatos...</div>;

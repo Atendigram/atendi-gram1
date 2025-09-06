@@ -4,6 +4,8 @@ import { Calendar } from "lucide-react";
 import { EditableField } from "./ui/editable-field";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
+import { useAuth } from '@/contexts/AuthContext';
+import { scopedCount } from '@/lib/scoped-queries';
 
 /* ---------------- CONFIG ---------------- */
 const CONTACTS_TABLE = "contatos_luna";
@@ -16,11 +18,11 @@ const onSaveString =
 
 const nf = new Intl.NumberFormat("pt-BR");
 
-async function countTable(table: string) {
-  const r1 = await supabase.from(table).select("*", { count: "exact", head: true });
+async function countTable(table: string, accountId: string) {
+  const r1 = await scopedCount(table, accountId);
   if (!r1.error && typeof r1.count === "number") return r1.count ?? 0;
 
-  const r2 = await supabase.from(table).select("id", { count: "exact" }).range(0, 0);
+  const r2 = await (supabase as any).from(table).select("id", { count: "exact" }).eq('account_id', accountId).range(0, 0);
   if (!r2.error && typeof r2.count === "number") return r2.count ?? 0;
 
   throw r1.error || r2.error || new Error(`Falha ao contar ${table}`);
@@ -28,6 +30,8 @@ async function countTable(table: string) {
 
 /* ---------------- COMPONENT ---------------- */
 const Dashboard = () => {
+  const { profile } = useAuth();
+  const accountId = profile?.account_id;
   const [title, setTitle] = useState("Olá 👋");
   const [description, setDescription] = useState(
     "Aqui está uma visão geral do seu atendimento no AtendiGram"
@@ -39,11 +43,13 @@ const Dashboard = () => {
 
   // Load inicial
   useEffect(() => {
+    if (!accountId) return;
+    
     (async () => {
       try {
         const [totalContacts, totalLogs] = await Promise.all([
-          countTable(CONTACTS_TABLE),
-          countTable(LOGS_TABLE),
+          countTable(CONTACTS_TABLE, accountId),
+          countTable(LOGS_TABLE, accountId),
         ]);
         setContactsTotal(totalContacts);
         setAttendedConversations(totalLogs);
@@ -52,34 +58,36 @@ const Dashboard = () => {
         toast.error(`Erro ao carregar: ${err?.message || "ver console"}`);
       }
     })();
-  }, []);
+  }, [accountId]);
 
   // Realtime (sem F5)
   useEffect(() => {
+    if (!accountId) return;
+    
     const chContacts = supabase
-      .channel(`rt:${CONTACTS_TABLE}`)
+      .channel(`rt:${CONTACTS_TABLE}:${accountId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: CONTACTS_TABLE },
+        { event: "INSERT", schema: "public", table: CONTACTS_TABLE, filter: `account_id=eq.${accountId}` },
         () => setContactsTotal((n) => n + 1)
       )
       .on(
         "postgres_changes",
-        { event: "DELETE", schema: "public", table: CONTACTS_TABLE },
+        { event: "DELETE", schema: "public", table: CONTACTS_TABLE, filter: `account_id=eq.${accountId}` },
         () => setContactsTotal((n) => Math.max(0, n - 1))
       )
       .subscribe();
 
     const chLogs = supabase
-      .channel(`rt:${LOGS_TABLE}`)
+      .channel(`rt:${LOGS_TABLE}:${accountId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: LOGS_TABLE },
+        { event: "INSERT", schema: "public", table: LOGS_TABLE, filter: `account_id=eq.${accountId}` },
         () => setAttendedConversations((n) => n + 1)
       )
       .on(
         "postgres_changes",
-        { event: "DELETE", schema: "public", table: LOGS_TABLE },
+        { event: "DELETE", schema: "public", table: LOGS_TABLE, filter: `account_id=eq.${accountId}` },
         () => setAttendedConversations((n) => Math.max(0, n - 1))
       )
       .subscribe();
@@ -88,7 +96,17 @@ const Dashboard = () => {
       supabase.removeChannel(chContacts);
       supabase.removeChannel(chLogs);
     };
-  }, []);
+  }, [accountId]);
+
+  if (!accountId) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-center">
+          <p className="text-muted-foreground">Carregando informações da conta...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 animate-enter">
