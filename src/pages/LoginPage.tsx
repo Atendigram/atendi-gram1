@@ -218,7 +218,7 @@ const LoginPage = () => {
             bg-[radial-gradient(ellipse_at_center,rgba(255,45,85,.18),transparent_45%),radial-gradient(ellipse_at_bottom,rgba(34,158,217,.18),transparent_60%)]" />
           <div className="absolute inset-0 bg-white/45 dark:bg-black/45 backdrop-blur-[2px]" />
         </div>
-        <Card className="max-w-[420px] md:max-w-[440px] w-full p-6 md:p-8 rounded-2xl border border-white/30 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl shadow-xl">
+        <Card className="max-w-[360px] md:max-w-[380px] w-full p-4 md:p-6 rounded-2xl border border-white/30 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Resetar Senha</CardTitle>
             <CardDescription>
@@ -281,7 +281,7 @@ const LoginPage = () => {
           bg-[radial-gradient(ellipse_at_center,rgba(255,45,85,.18),transparent_45%),radial-gradient(ellipse_at_bottom,rgba(34,158,217,.18),transparent_60%)]" />
         <div className="absolute inset-0 bg-white/45 dark:bg-black/45 backdrop-blur-[2px]" />
       </div>
-      <Card className="max-w-[420px] md:max-w-[440px] w-full p-6 md:p-8 rounded-2xl border border-white/30 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl shadow-xl">
+      <Card className="max-w-[360px] md:max-w-[380px] w-full p-4 md:p-6 rounded-2xl border border-white/30 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl flex items-center justify-center gap-2">
             <Send className="h-6 w-6 text-primary" />
