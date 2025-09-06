@@ -293,7 +293,7 @@ const LoginPage = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-card/90 backdrop-blur-sm border border-border shadow-lg p-1 rounded-lg">
+            <TabsList className="grid w-full grid-cols-2 bg-card/90 backdrop-blur-sm border border-border shadow-lg p-2 gap-2 rounded-lg">
               <TabsTrigger value="signin">Entrar</TabsTrigger>
               <TabsTrigger value="signup">Criar Conta</TabsTrigger>
             </TabsList>
