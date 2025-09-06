@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, Eye, EyeOff, Send } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, Send, LogIn, UserPlus } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -29,6 +29,9 @@ const LoginPage = () => {
   // Password reset
   const [resetEmail, setResetEmail] = useState('');
   const [showResetForm, setShowResetForm] = useState(false);
+
+  // Active tab state
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
 
   // Check if user is already logged in
   useEffect(() => {
@@ -288,14 +291,35 @@ const LoginPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-card/90 backdrop-blur-sm border border-border shadow-lg p-1 rounded-lg">
-              <TabsTrigger value="signin">Entrar</TabsTrigger>
-              <TabsTrigger value="signup">Criar Conta</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="signin" className="space-y-4">
-              <form onSubmit={handleSignIn} className="space-y-4">
+          {/* Custom Segmented Control */}
+          <div className="inline-flex items-center gap-1 rounded-xl p-1 bg-white/60 dark:bg-neutral-900/50 backdrop-blur ring-1 ring-black/5 w-full mb-6">
+            <button
+              role="tab"
+              onClick={() => setActiveTab('signin')}
+              className={activeTab === 'signin' 
+                ? "px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 flex-1 flex items-center justify-center gap-2"
+                : "px-4 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 flex-1 flex items-center justify-center gap-2"
+              }
+            >
+              <LogIn className="h-4 w-4" />
+              Entrar
+            </button>
+            <button
+              role="tab"
+              onClick={() => setActiveTab('signup')}
+              className={activeTab === 'signup'
+                ? "px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 flex-1 flex items-center justify-center gap-2"
+                : "px-4 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 flex-1 flex items-center justify-center gap-2"
+              }
+            >
+              <UserPlus className="h-4 w-4" />
+              Criar Conta
+            </button>
+          </div>
+
+          {/* Sign In Form */}
+          {activeTab === 'signin' && (
+            <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">Email</Label>
                   <div className="relative">
@@ -371,9 +395,10 @@ const LoginPage = () => {
                   Entrar
                 </Button>
               </form>
-            </TabsContent>
-            
-            <TabsContent value="signup" className="space-y-4">
+            )}
+
+            {/* Sign Up Form */} 
+            {activeTab === 'signup' && (
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
@@ -456,8 +481,7 @@ const LoginPage = () => {
                   Criar Conta
                 </Button>
               </form>
-            </TabsContent>
-          </Tabs>
+            )}
         </CardContent>
       </Card>
     </div>
