@@ -14,6 +14,9 @@ import TelegramPage from "./pages/TelegramPage";
 import Contatos from "./pages/Contatos";
 import WelcomePage from "./pages/WelcomePage";
 import NotFound from "./pages/NotFound";
+import LoginPage from "./pages/LoginPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import RequireAuth from "./components/auth/RequireAuth";
 import { useEffect } from "react";
 import { CRMProvider } from "./contexts/CRMContext";
 import { StatisticsProvider } from "./contexts/StatisticsContext";
@@ -22,20 +25,38 @@ import { trackPageView } from "./utils/analytics";
 
 // Define routes configuration with redirects
 const routes = [
-  { path: "/", element: <Index /> },
-  { path: "/parcelles", element: <ParcelsPage /> },
-  { path: "/parcelles/:id", element: <ParcelsDetailsPage /> },
-  { path: "/cultures", element: <CropsPage /> },
-  { path: "/inventaire", element: <InventoryPage /> },
-  { path: "/finances", element: <FinancePage /> },
-  { path: "/statistiques", element: <StatisticsProvider><StatsPage /></StatisticsProvider> },
-  { path: "/disparo", element: <DisparoPage /> },
-  { path: "/telegram", element: <TelegramPage /> },
-  { path: "/contatos", element: <Contatos /> },
-  { path: "/welcome", element: <WelcomePage /> },
-  { path: "/rapports", element: <Navigate to="/statistiques" replace /> },
-  { path: "/parametres", element: <Navigate to="/" replace /> },
-  { path: "/dashboard", element: <Navigate to="/" replace /> },
+  // Public routes
+  { path: "/login", element: <LoginPage /> },
+  { path: "/reset-password", element: <ResetPasswordPage /> },
+  
+  // Protected routes
+  { path: "/", element: <RequireAuth><Index /></RequireAuth> },
+  { path: "/dashboard", element: <RequireAuth><Index /></RequireAuth> },
+  { path: "/contatos", element: <RequireAuth><Contatos /></RequireAuth> },
+  { path: "/disparos", element: <RequireAuth><TelegramPage /></RequireAuth> },
+  { path: "/welcome", element: <RequireAuth><WelcomePage /></RequireAuth> },
+  { path: "/boas-vindas", element: <RequireAuth><WelcomePage /></RequireAuth> },
+  { path: "/mensagens", element: <RequireAuth><DisparoPage /></RequireAuth> },
+  { path: "/financeiro", element: <RequireAuth><FinancePage /></RequireAuth> },
+  { path: "/estatisticas", element: <RequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></RequireAuth> },
+  { path: "/relatorios", element: <RequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></RequireAuth> },
+  
+  // Legacy routes (keeping old paths for backward compatibility)
+  { path: "/parcelles", element: <RequireAuth><ParcelsPage /></RequireAuth> },
+  { path: "/parcelles/:id", element: <RequireAuth><ParcelsDetailsPage /></RequireAuth> },
+  { path: "/cultures", element: <RequireAuth><CropsPage /></RequireAuth> },
+  { path: "/inventaire", element: <RequireAuth><InventoryPage /></RequireAuth> },
+  { path: "/finances", element: <RequireAuth><FinancePage /></RequireAuth> },
+  { path: "/statistiques", element: <RequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></RequireAuth> },
+  { path: "/disparo", element: <RequireAuth><DisparoPage /></RequireAuth> },
+  { path: "/telegram", element: <RequireAuth><TelegramPage /></RequireAuth> },
+  
+  // Redirects
+  { path: "/rapports", element: <Navigate to="/relatorios" replace /> },
+  { path: "/parametres", element: <Navigate to="/dashboard" replace /> },
+  { path: "/configuracoes", element: <Navigate to="/dashboard" replace /> },
+  
+  // 404
   { path: "*", element: <NotFound /> }
 ];
 

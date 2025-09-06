@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import {
   Home,
   Users,
@@ -15,12 +17,14 @@ import {
   Settings,
   FileText,
   Wand2,
+  LogOut,
 } from 'lucide-react';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsOpen(false);
@@ -49,11 +53,36 @@ const Navbar = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Erro ao fazer logout",
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso",
+      });
+      navigate('/login', { replace: true });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
+    }
+  };
+
   const navItems = [
     { title: 'Dashboard', path: '/', icon: Home },
     { title: 'Contatos', path: '/contatos', icon: Users },
-    { title: 'Disparos', path: '/telegram', icon: Send },
-    { title: 'Boas-Vindas', path: '/welcome', icon: Wand2 },
+    { title: 'Disparos', path: '/disparos', icon: Send },
+    { title: 'Boas-Vindas', path: '/boas-vindas', icon: Wand2 },
     { title: 'Mensagens', path: '/mensagens', icon: MessageSquare },
     { title: 'Financeiro', path: '/financeiro', icon: Wallet },
     { title: 'Estatísticas', path: '/estatisticas', icon: BarChart2 },
@@ -127,7 +156,7 @@ const Navbar = () => {
         </nav>
 
         <div className="p-4 border-t border-border">
-          <div className="flex items-center space-x-3 px-3 py-2">
+          <div className="flex items-center space-x-3 px-3 py-2 mb-3">
             <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
               <span className="text-sm font-medium">AD</span>
             </div>
@@ -136,6 +165,14 @@ const Navbar = () => {
               <p className="text-xs text-muted-foreground truncate">usuario@atendigram.com</p>
             </div>
           </div>
+          
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="text-sm">Sair</span>
+          </button>
         </div>
       </aside>
 
