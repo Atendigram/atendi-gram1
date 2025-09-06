@@ -277,7 +277,7 @@ const LoginPage = () => {
             fetchPriority="high"
           />
         </div>
-      <Card className="max-w-[360px] md:max-w-[380px] w-full p-4 md:p-6 rounded-2xl border border-white/30 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl shadow-xl">
+      <Card className="max-w-[320px] md:max-w-[340px] w-full p-4 md:p-6 rounded-2xl border border-white/30 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl flex items-center justify-center gap-2">
             <Send className="h-6 w-6 text-primary" />
