@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, Send } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -257,7 +257,10 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">AtendiGram</CardTitle>
+          <CardTitle className="text-2xl flex items-center justify-center gap-2">
+            <Send className="h-6 w-6 text-primary" />
+            AtendiGram
+          </CardTitle>
           <CardDescription>
             Entre na sua conta ou crie uma nova
           </CardDescription>
