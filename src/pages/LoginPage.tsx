@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Mail, Lock, Eye, EyeOff, Send, LogIn, UserPlus } from 'lucide-react';
 
 const LoginPage = () => {
@@ -15,6 +16,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { session, loading: authLoading } = useAuth();
 
   // Sign in form
   const [signInEmail, setSignInEmail] = useState('');
@@ -35,14 +37,10 @@ const LoginPage = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/dashboard', { replace: true });
-      }
-    };
-    checkSession();
-  }, [navigate]);
+    if (!authLoading && session) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [session, authLoading, navigate]);
 
   // Sign in handler
   const handleSignIn = async (e: React.FormEvent) => {

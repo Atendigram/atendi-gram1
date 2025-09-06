@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Home,
   Users,
@@ -25,6 +25,7 @@ const Navbar = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { profile, signOut } = useAuth();
 
   useEffect(() => {
     setIsOpen(false);
@@ -54,28 +55,8 @@ const Navbar = () => {
   };
 
   const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Erro ao fazer logout",
-          variant: "destructive",
-        });
-        return;
-      }
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso",
-      });
-      navigate('/login', { replace: true });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
-    }
+    await signOut();
+    navigate('/login', { replace: true });
   };
 
   const navItems = [
@@ -158,11 +139,22 @@ const Navbar = () => {
         <div className="p-4 border-t border-border">
           <div className="flex items-center space-x-3 px-3 py-2 mb-3">
             <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium">AD</span>
+              <span className="text-sm font-medium">
+                {profile?.display_name 
+                  ? profile.display_name.substring(0, 2).toUpperCase()
+                  : profile?.email 
+                    ? profile.email.substring(0, 2).toUpperCase()
+                    : 'AD'
+                }
+              </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">Usuário</p>
-              <p className="text-xs text-muted-foreground truncate">usuario@atendigram.com</p>
+              <p className="text-sm font-medium truncate">
+                {profile?.display_name || 'Usuário'}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {profile?.email || 'usuario@atendigram.com'}
+              </p>
             </div>
           </div>
           

@@ -16,12 +16,14 @@ import WelcomePage from "./pages/WelcomePage";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import RequireAuth from "./components/auth/RequireAuth";
+import AuthRequireAuth from "./components/auth/AuthRequireAuth";
 import { useEffect } from "react";
 import { CRMProvider } from "./contexts/CRMContext";
 import { StatisticsProvider } from "./contexts/StatisticsContext";
 import { AppSettingsProvider } from "./contexts/AppSettingsContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { trackPageView } from "./utils/analytics";
+import { Toaster } from "@/components/ui/toaster";
 
 // Define routes configuration with redirects
 const routes = [
@@ -30,26 +32,26 @@ const routes = [
   { path: "/reset-password", element: <ResetPasswordPage /> },
   
   // Protected routes
-  { path: "/", element: <RequireAuth><Index /></RequireAuth> },
-  { path: "/dashboard", element: <RequireAuth><Index /></RequireAuth> },
-  { path: "/contatos", element: <RequireAuth><Contatos /></RequireAuth> },
-  { path: "/disparos", element: <RequireAuth><TelegramPage /></RequireAuth> },
-  { path: "/welcome", element: <RequireAuth><WelcomePage /></RequireAuth> },
-  { path: "/boas-vindas", element: <RequireAuth><WelcomePage /></RequireAuth> },
-  { path: "/mensagens", element: <RequireAuth><DisparoPage /></RequireAuth> },
-  { path: "/financeiro", element: <RequireAuth><FinancePage /></RequireAuth> },
-  { path: "/estatisticas", element: <RequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></RequireAuth> },
-  { path: "/relatorios", element: <RequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></RequireAuth> },
+  { path: "/", element: <AuthRequireAuth><Index /></AuthRequireAuth> },
+  { path: "/dashboard", element: <AuthRequireAuth><Index /></AuthRequireAuth> },
+  { path: "/contatos", element: <AuthRequireAuth><Contatos /></AuthRequireAuth> },
+  { path: "/disparos", element: <AuthRequireAuth><TelegramPage /></AuthRequireAuth> },
+  { path: "/welcome", element: <AuthRequireAuth><WelcomePage /></AuthRequireAuth> },
+  { path: "/boas-vindas", element: <AuthRequireAuth><WelcomePage /></AuthRequireAuth> },
+  { path: "/mensagens", element: <AuthRequireAuth><DisparoPage /></AuthRequireAuth> },
+  { path: "/financeiro", element: <AuthRequireAuth><FinancePage /></AuthRequireAuth> },
+  { path: "/estatisticas", element: <AuthRequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></AuthRequireAuth> },
+  { path: "/relatorios", element: <AuthRequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></AuthRequireAuth> },
   
   // Legacy routes (keeping old paths for backward compatibility)
-  { path: "/parcelles", element: <RequireAuth><ParcelsPage /></RequireAuth> },
-  { path: "/parcelles/:id", element: <RequireAuth><ParcelsDetailsPage /></RequireAuth> },
-  { path: "/cultures", element: <RequireAuth><CropsPage /></RequireAuth> },
-  { path: "/inventaire", element: <RequireAuth><InventoryPage /></RequireAuth> },
-  { path: "/finances", element: <RequireAuth><FinancePage /></RequireAuth> },
-  { path: "/statistiques", element: <RequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></RequireAuth> },
-  { path: "/disparo", element: <RequireAuth><DisparoPage /></RequireAuth> },
-  { path: "/telegram", element: <RequireAuth><TelegramPage /></RequireAuth> },
+  { path: "/parcelles", element: <AuthRequireAuth><ParcelsPage /></AuthRequireAuth> },
+  { path: "/parcelles/:id", element: <AuthRequireAuth><ParcelsDetailsPage /></AuthRequireAuth> },
+  { path: "/cultures", element: <AuthRequireAuth><CropsPage /></AuthRequireAuth> },
+  { path: "/inventaire", element: <AuthRequireAuth><InventoryPage /></AuthRequireAuth> },
+  { path: "/finances", element: <AuthRequireAuth><FinancePage /></AuthRequireAuth> },
+  { path: "/statistiques", element: <AuthRequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></AuthRequireAuth> },
+  { path: "/disparo", element: <AuthRequireAuth><DisparoPage /></AuthRequireAuth> },
+  { path: "/telegram", element: <AuthRequireAuth><TelegramPage /></AuthRequireAuth> },
   
   // Redirects
   { path: "/rapports", element: <Navigate to="/relatorios" replace /> },
@@ -91,24 +93,27 @@ const RouterChangeHandler = () => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppSettingsProvider>
-        <CRMProvider>
-          <BrowserRouter>
-            <TooltipProvider>
-              <RouterChangeHandler />
-              <Routes>
-                {routes.map((route) => (
-                  <Route 
-                    key={route.path} 
-                    path={route.path} 
-                    element={route.element} 
-                  />
-                ))}
-              </Routes>
-            </TooltipProvider>
-          </BrowserRouter>
-        </CRMProvider>
-      </AppSettingsProvider>
+      <AuthProvider>
+        <AppSettingsProvider>
+          <CRMProvider>
+            <BrowserRouter>
+              <TooltipProvider>
+                <RouterChangeHandler />
+                <Routes>
+                  {routes.map((route) => (
+                    <Route 
+                      key={route.path} 
+                      path={route.path} 
+                      element={route.element} 
+                    />
+                  ))}
+                </Routes>
+                <Toaster />
+              </TooltipProvider>
+            </BrowserRouter>
+          </CRMProvider>
+        </AppSettingsProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
