@@ -38,7 +38,7 @@ const routes = [
   { path: "/disparos", element: <ProtectedRoute><TelegramPage /></ProtectedRoute> },
   { path: "/welcome", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
   { path: "/boas-vindas", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
-  { path: "/mensagens", element: <ProtectedRoute><DisparoPage /></ProtectedRoute> },
+  
   { path: "/financeiro", element: <ProtectedRoute><FinancePage /></ProtectedRoute> },
   { path: "/estatisticas", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },
   { path: "/relatorios", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },

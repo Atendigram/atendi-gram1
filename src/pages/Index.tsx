@@ -148,10 +148,6 @@ const Index = () => {
     label: 'Telegram',
     content: <GuadeloupeHarvestTracking />
   }, {
-    value: 'weather',
-    label: 'Mensagens',
-    content: <GuadeloupeWeatherAlerts />
-  }, {
     value: 'tasks',
     label: 'Tarefas',
     content: <TaskList />
