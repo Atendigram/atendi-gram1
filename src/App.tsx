@@ -16,7 +16,7 @@ import WelcomePage from "./pages/WelcomePage";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import AuthRequireAuth from "./components/auth/AuthRequireAuth";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import { useEffect } from "react";
 import { CRMProvider } from "./contexts/CRMContext";
 import { StatisticsProvider } from "./contexts/StatisticsContext";
@@ -32,26 +32,26 @@ const routes = [
   { path: "/reset-password", element: <ResetPasswordPage /> },
   
   // Protected routes
-  { path: "/", element: <AuthRequireAuth><Index /></AuthRequireAuth> },
-  { path: "/dashboard", element: <AuthRequireAuth><Index /></AuthRequireAuth> },
-  { path: "/contatos", element: <AuthRequireAuth><Contatos /></AuthRequireAuth> },
-  { path: "/disparos", element: <AuthRequireAuth><TelegramPage /></AuthRequireAuth> },
-  { path: "/welcome", element: <AuthRequireAuth><WelcomePage /></AuthRequireAuth> },
-  { path: "/boas-vindas", element: <AuthRequireAuth><WelcomePage /></AuthRequireAuth> },
-  { path: "/mensagens", element: <AuthRequireAuth><DisparoPage /></AuthRequireAuth> },
-  { path: "/financeiro", element: <AuthRequireAuth><FinancePage /></AuthRequireAuth> },
-  { path: "/estatisticas", element: <AuthRequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></AuthRequireAuth> },
-  { path: "/relatorios", element: <AuthRequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></AuthRequireAuth> },
+  { path: "/", element: <ProtectedRoute><Index /></ProtectedRoute> },
+  { path: "/dashboard", element: <ProtectedRoute><Index /></ProtectedRoute> },
+  { path: "/contatos", element: <ProtectedRoute><Contatos /></ProtectedRoute> },
+  { path: "/disparos", element: <ProtectedRoute><TelegramPage /></ProtectedRoute> },
+  { path: "/welcome", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
+  { path: "/boas-vindas", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
+  { path: "/mensagens", element: <ProtectedRoute><DisparoPage /></ProtectedRoute> },
+  { path: "/financeiro", element: <ProtectedRoute><FinancePage /></ProtectedRoute> },
+  { path: "/estatisticas", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },
+  { path: "/relatorios", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },
   
   // Legacy routes (keeping old paths for backward compatibility)
-  { path: "/parcelles", element: <AuthRequireAuth><ParcelsPage /></AuthRequireAuth> },
-  { path: "/parcelles/:id", element: <AuthRequireAuth><ParcelsDetailsPage /></AuthRequireAuth> },
-  { path: "/cultures", element: <AuthRequireAuth><CropsPage /></AuthRequireAuth> },
-  { path: "/inventaire", element: <AuthRequireAuth><InventoryPage /></AuthRequireAuth> },
-  { path: "/finances", element: <AuthRequireAuth><FinancePage /></AuthRequireAuth> },
-  { path: "/statistiques", element: <AuthRequireAuth><StatisticsProvider><StatsPage /></StatisticsProvider></AuthRequireAuth> },
-  { path: "/disparo", element: <AuthRequireAuth><DisparoPage /></AuthRequireAuth> },
-  { path: "/telegram", element: <AuthRequireAuth><TelegramPage /></AuthRequireAuth> },
+  { path: "/parcelles", element: <ProtectedRoute><ParcelsPage /></ProtectedRoute> },
+  { path: "/parcelles/:id", element: <ProtectedRoute><ParcelsDetailsPage /></ProtectedRoute> },
+  { path: "/cultures", element: <ProtectedRoute><CropsPage /></ProtectedRoute> },
+  { path: "/inventaire", element: <ProtectedRoute><InventoryPage /></ProtectedRoute> },
+  { path: "/finances", element: <ProtectedRoute><FinancePage /></ProtectedRoute> },
+  { path: "/statistiques", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },
+  { path: "/disparo", element: <ProtectedRoute><DisparoPage /></ProtectedRoute> },
+  { path: "/telegram", element: <ProtectedRoute><TelegramPage /></ProtectedRoute> },
   
   // Redirects
   { path: "/rapports", element: <Navigate to="/relatorios" replace /> },
