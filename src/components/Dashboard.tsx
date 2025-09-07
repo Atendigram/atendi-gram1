@@ -30,7 +30,7 @@ async function countTable(table: string, accountId: string) {
 
 /* ---------------- COMPONENT ---------------- */
 const Dashboard = () => {
-  const { profile, loading: authLoading } = useAuth();
+  const { profile, loading: authLoading, loadAccountData } = useAuth();
   const accountId = profile?.account_id;
   
   console.log('Dashboard - profile:', profile, 'accountId:', accountId, 'authLoading:', authLoading);
@@ -44,6 +44,14 @@ const Dashboard = () => {
   const [contactsTotal, setContactsTotal] = useState<number>(0);
   const [attendedConversations, setAttendedConversations] = useState<number>(0);
   const [dataLoading, setDataLoading] = useState(true);
+
+  // Tentar carregar account_id se ainda não tiver
+  useEffect(() => {
+    if (profile && !profile.account_id && !authLoading) {
+      console.log('🔄 Trying to load account data...');
+      loadAccountData();
+    }
+  }, [profile, authLoading, loadAccountData]);
 
   // Load inicial
   useEffect(() => {

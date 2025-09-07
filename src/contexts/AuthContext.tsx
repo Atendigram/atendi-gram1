@@ -16,6 +16,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  loadAccountData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,48 +40,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string, currentUser: any): Promise<Profile | null> => {
-    try {
-      console.log('🔍 Fetching profile for user:', userId);
-      
-      // Primeiro tenta buscar do banco usando o supabase client
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('id, account_id, email, display_name')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (error) {
-        console.log('❌ Error fetching profile:', error);
-        // Se houver erro RLS, usar fallback com dados do usuário
-        return {
-          id: userId,
-          email: currentUser?.email || null,
-          display_name: currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || null,
-          account_id: undefined,
-        };
-      }
-
-      if (profile) {
-        console.log('✅ Profile fetched successfully:', profile);
-        return profile;
-      }
-
-      console.log('⚠️ No profile found, creating fallback');
-      // Se não encontrar profile, usar dados básicos
-      return {
-        id: userId,
-        email: currentUser?.email || null,
-        display_name: currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || null,
-        account_id: undefined,
-      };
-    } catch (error) {
-      console.log('💥 Exception fetching profile:', error);
-      return {
-        id: userId,
-        email: currentUser?.email || null,
-        display_name: null,
-      };
-    }
+    // Simplificação para evitar loops - não busca do banco por enquanto
+    console.log('🔍 Creating profile from user data:', userId);
+    
+    return {
+      id: userId,
+      email: currentUser?.email || null,
+      display_name: currentUser?.user_metadata?.display_name || 
+                   currentUser?.email?.split('@')[0] || 
+                   'Usuário',
+      account_id: undefined, // Será buscado depois se necessário
+    };
   };
 
   const signOut = async () => {
@@ -104,6 +74,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         description: "Ocorreu um erro inesperado",
         variant: "destructive",
       });
+    }
+  };
+
+  // Função separada para carregar dados da conta (não durante auth)
+  const loadAccountData = async () => {
+    if (!session?.user?.id || !profile) return;
+    
+    try {
+      console.log('🔄 Loading account data for user:', session.user.id);
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('id, account_id, email, display_name')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (!error && profileData) {
+        console.log('✅ Account data loaded:', profileData);
+        setProfile({
+          ...profile,
+          account_id: profileData.account_id,
+          display_name: profileData.display_name || profile.display_name,
+        });
+      }
+    } catch (error) {
+      console.log('❌ Error loading account data:', error);
     }
   };
 
@@ -185,6 +180,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     profile,
     loading,
     signOut,
+    loadAccountData,
   };
 
   return (

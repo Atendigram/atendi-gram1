@@ -34,13 +34,13 @@ const LoginPage = () => {
   // Active tab state
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
 
-  // Se já estiver logado, manda pro dashboard
+  // Se já estiver logado, manda pro dashboard (simplificado para evitar loops)
   useEffect(() => {
-    if (session && !authLoading) {
-      console.log('🔀 Redirecting to dashboard, session exists');
+    if (session) {
+      console.log('🔀 User is logged in, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
-  }, [session, authLoading, navigate]);
+  }, [session]);  // Removido authLoading e navigate das dependências
 
   // ========= SIGN IN =========
   const handleSignIn = async (e: React.FormEvent) => {
