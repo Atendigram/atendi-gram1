@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
@@ -35,22 +34,19 @@ const LoginPage = () => {
   // Active tab state
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
 
-  // Check if user is already logged in
+  // Se já estiver logado, manda pro dashboard
   useEffect(() => {
     if (!authLoading && session) {
       navigate('/dashboard', { replace: true });
     }
   }, [session, authLoading, navigate]);
 
-  // Sign in handler
+  // ========= SIGN IN =========
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!signInEmail || !signInPassword) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos",
-        variant: "destructive",
-      });
+      toast({ title: 'Erro', description: 'Preencha email e senha.', variant: 'destructive' });
       return;
     }
 
@@ -62,59 +58,43 @@ const LoginPage = () => {
       });
 
       if (error) {
-        toast({
-          title: "Erro no login",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast({ title: 'Erro no login', description: error.message, variant: 'destructive' });
         return;
       }
 
-      if (data.session) {
-        toast({
-          title: "Sucesso!",
-          description: "Login realizado com sucesso",
-        });
-        navigate('/dashboard', { replace: true });
+      if (!data?.session) {
+        toast({ title: 'Erro no login', description: 'Sessão não retornada pela API.', variant: 'destructive' });
+        return;
       }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
+
+      // ✅ sucesso
+      if (rememberMe) {
+        // opcional: persistir último email
+        try { localStorage.setItem('last_login_email', signInEmail); } catch {}
+      }
+      toast({ title: 'Sucesso!', description: 'Login realizado com sucesso.' });
+      navigate('/dashboard', { replace: true });
+    } catch (err: any) {
+      toast({ title: 'Erro inesperado', description: err?.message ?? 'Falha desconhecida', variant: 'destructive' });
     } finally {
-      setLoading(false);
+      setLoading(false); // 🔒 SEMPRE destrava o botão
     }
   };
 
-  // Sign up handler
+  // ========= SIGN UP =========
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!signUpEmail || !signUpPassword || !confirmPassword) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos",
-        variant: "destructive",
-      });
+      toast({ title: 'Erro', description: 'Preencha todos os campos.', variant: 'destructive' });
       return;
     }
-
     if (signUpPassword.length < 8) {
-      toast({
-        title: "Erro",
-        description: "A senha deve ter pelo menos 8 caracteres",
-        variant: "destructive",
-      });
+      toast({ title: 'Erro', description: 'A senha deve ter pelo menos 8 caracteres.', variant: 'destructive' });
       return;
     }
-
     if (signUpPassword !== confirmPassword) {
-      toast({
-        title: "Erro",
-        description: "As senhas não coincidem",
-        variant: "destructive",
-      });
+      toast({ title: 'Erro', description: 'As senhas não coincidem.', variant: 'destructive' });
       return;
     }
 
@@ -124,51 +104,34 @@ const LoginPage = () => {
         email: signUpEmail,
         password: signUpPassword,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`
-        }
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
       });
 
       if (error) {
-        toast({
-          title: "Erro no cadastro",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast({ title: 'Erro no cadastro', description: error.message, variant: 'destructive' });
         return;
       }
 
       if (data.session) {
-        toast({
-          title: "Conta criada!",
-          description: "Sua conta foi criada com sucesso",
-        });
+        toast({ title: 'Conta criada!', description: 'Login automático realizado.' });
         navigate('/dashboard', { replace: true });
       } else if (data.user && !data.session) {
-        toast({
-          title: "Verifique seu email",
-          description: "Enviamos um link de confirmação para seu email",
-        });
+        toast({ title: 'Verifique seu email', description: 'Enviamos um link de confirmação.' });
       }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
+    } catch (err: any) {
+      toast({ title: 'Erro inesperado', description: err?.message ?? 'Falha desconhecida', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // Password reset handler
+  // ========= RESET PASSWORD =========
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!resetEmail) {
-      toast({
-        title: "Erro",
-        description: "Por favor, informe seu email",
-        variant: "destructive",
-      });
+      toast({ title: 'Erro', description: 'Informe seu email.', variant: 'destructive' });
       return;
     }
 
@@ -179,25 +142,14 @@ const LoginPage = () => {
       });
 
       if (error) {
-        toast({
-          title: "Erro",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast({ title: 'Erro', description: error.message, variant: 'destructive' });
         return;
       }
 
-      toast({
-        title: "Email enviado!",
-        description: "Verifique seu email para resetar sua senha",
-      });
+      toast({ title: 'Email enviado!', description: 'Cheque sua caixa de entrada.' });
       setShowResetForm(false);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
+    } catch (err: any) {
+      toast({ title: 'Erro inesperado', description: err?.message ?? 'Falha desconhecida', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -214,17 +166,12 @@ const LoginPage = () => {
             loading="eager"
             fetchPriority="high"
           />
-          {/* gentle glow + vignette for legibility */}
-          <div className="absolute inset-0 pointer-events-none
-            bg-[radial-gradient(ellipse_at_center,rgba(255,45,85,.18),transparent_45%),radial-gradient(ellipse_at_bottom,rgba(34,158,217,.18),transparent_60%)]" />
           <div className="absolute inset-0 bg-white/45 dark:bg-black/45 backdrop-blur-[2px]" />
         </div>
         <Card className="max-w-[360px] md:max-w-[380px] w-full p-4 md:p-6 rounded-2xl border border-white/30 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Resetar Senha</CardTitle>
-            <CardDescription>
-              Informe seu email para receber as instruções
-            </CardDescription>
+            <CardDescription>Informe seu email para receber as instruções</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordReset} className="space-y-4">
@@ -243,13 +190,13 @@ const LoginPage = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Enviar Instruções
                 </Button>
-                
+
                 <Button
                   type="button"
                   variant="ghost"
@@ -268,36 +215,36 @@ const LoginPage = () => {
   }
 
   return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="fixed inset-0 -z-10">
-          <img
-            src="/lovable-uploads/b7c800d7-b10e-4dfe-99ca-130e1c18b8e0.png"
-            alt=""
-            className="h-full w-full object-cover"
-            loading="eager"
-            fetchPriority="high"
-          />
-        </div>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="fixed inset-0 -z-10">
+        <img
+          src="/lovable-uploads/b7c800d7-b10e-4dfe-99ca-130e1c18b8e0.png"
+          alt=""
+          className="h-full w-full object-cover"
+          loading="eager"
+          fetchPriority="high"
+        />
+      </div>
+
       <Card className="max-w-[320px] md:max-w-[340px] w-full p-4 md:p-6 rounded-2xl border border-white/30 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl flex items-center justify-center gap-2">
             <Send className="h-6 w-6 text-primary" />
             AtendiGram
           </CardTitle>
-          <CardDescription>
-            Entre na sua conta ou crie uma nova
-          </CardDescription>
+          <CardDescription>Entre na sua conta ou crie uma nova</CardDescription>
         </CardHeader>
+
         <CardContent>
-          {/* Custom Segmented Control */}
+          {/* Segmented control simples */}
           <div className="flex w-full max-w-[360px] items-center gap-1 rounded-xl p-1 bg-white/60 dark:bg-neutral-900/50 backdrop-blur ring-1 ring-black/5 mb-6">
             <button
               role="tab"
               onClick={() => setActiveTab('signin')}
               className={`inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap leading-none px-4 py-2 sm:text-sm text-[13px] rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-                activeTab === 'signin' 
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10"
+                activeTab === 'signin'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10'
               }`}
             >
               <LogIn className="h-4 w-4 shrink-0" />
@@ -308,8 +255,8 @@ const LoginPage = () => {
               onClick={() => setActiveTab('signup')}
               className={`inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap leading-none px-4 py-2 sm:text-sm text-[13px] rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                 activeTab === 'signup'
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10"
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-white/70 dark:hover:bg-white/10'
               }`}
             >
               <UserPlus className="h-4 w-4 shrink-0" />
@@ -317,171 +264,159 @@ const LoginPage = () => {
             </button>
           </div>
 
-          {/* Sign In Form */}
+          {/* Sign In */}
           {activeTab === 'signin' && (
             <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={signInEmail}
-                      onChange={(e) => setSignInEmail(e.target.value)}
-                      className="pl-10"
-                      disabled={loading}
-                    />
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="signin-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={signInEmail}
+                    onChange={(e) => setSignInEmail(e.target.value)}
+                    className="pl-10"
+                    disabled={loading || authLoading}
+                  />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signin-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Sua senha"
-                      value={signInPassword}
-                      onChange={(e) => setSignInPassword(e.target.value)}
-                      className="pl-10 pr-10"
-                      disabled={loading}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2"
-                      onClick={() => setShowPassword(!showPassword)}
-                      disabled={loading}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
+              </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) => setRememberMe(checked === true)}
-                      disabled={loading}
-                    />
-                    <Label htmlFor="remember" className="text-sm">
-                      Lembrar-me
-                    </Label>
-                  </div>
-                  
+              <div className="space-y-2">
+                <Label htmlFor="signin-password">Senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="signin-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Sua senha"
+                    value={signInPassword}
+                    onChange={(e) => setSignInPassword(e.target.value)}
+                    className="pl-10 pr-10"
+                    disabled={loading || authLoading}
+                  />
                   <Button
                     type="button"
-                    variant="link"
-                    className="p-0 h-auto text-sm"
-                    onClick={() => setShowResetForm(true)}
-                    disabled={loading}
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading || authLoading}
                   >
-                    Esqueci a senha
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Entrar
-                </Button>
-              </form>
-            )}
+              </div>
 
-            {/* Sign Up Form */} 
-            {activeTab === 'signup' && (
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={signUpEmail}
-                      onChange={(e) => setSignUpEmail(e.target.value)}
-                      className="pl-10"
-                      disabled={loading}
-                    />
-                  </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    disabled={loading || authLoading}
+                  />
+                  <Label htmlFor="remember" className="text-sm">
+                    Lembrar-me
+                  </Label>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Mínimo 8 caracteres"
-                      value={signUpPassword}
-                      onChange={(e) => setSignUpPassword(e.target.value)}
-                      className="pl-10 pr-10"
-                      disabled={loading}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2"
-                      onClick={() => setShowPassword(!showPassword)}
-                      disabled={loading}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirmar Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="confirm-password"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirme sua senha"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-10 pr-10"
-                      disabled={loading}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      disabled={loading}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Criar Conta
+
+                <Button
+                  type="button"
+                  variant="link"
+                  className="p-0 h-auto text-sm"
+                  onClick={() => setShowResetForm(true)}
+                  disabled={loading || authLoading}
+                >
+                  Esqueci a senha
                 </Button>
-              </form>
-            )}
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading || authLoading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Entrar
+              </Button>
+            </form>
+          )}
+
+          {/* Sign Up */}
+          {activeTab === 'signup' && (
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={signUpEmail}
+                    onChange={(e) => setSignUpEmail(e.target.value)}
+                    className="pl-10"
+                    disabled={loading || authLoading}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">Senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="signup-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Mínimo 8 caracteres"
+                    value={signUpPassword}
+                    onChange={(e) => setSignUpPassword(e.target.value)}
+                    className="pl-10 pr-10"
+                    disabled={loading || authLoading}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading || authLoading}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirmar Senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirm-password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirme sua senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 pr-10"
+                    disabled={loading || authLoading}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={loading || authLoading}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading || authLoading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Criar Conta
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>
