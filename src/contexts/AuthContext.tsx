@@ -39,6 +39,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string, currentUser: any): Promise<Profile | null> => {
+    console.log('🔍 Fetching profile for user:', userId);
     try {
       const { data: profile, error } = await (supabase as any)
         .from('profiles')
@@ -46,8 +47,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', userId)
         .maybeSingle();
 
-      if (error || !profile) {
-        console.log('Error fetching profile from database:', error);
+      if (error) {
+        console.log('❌ Error fetching profile from database:', error);
         // Fallback to user data if profile doesn't exist
         return {
           id: userId,
@@ -56,9 +57,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
       }
 
+      if (!profile) {
+        console.log('⚠️ No profile found, using fallback');
+        return {
+          id: userId,
+          email: currentUser?.email || null,
+          display_name: currentUser?.user_metadata?.display_name || null,
+        };
+      }
+
+      console.log('✅ Profile fetched successfully:', profile);
       return profile;
     } catch (error) {
-      console.log('Error creating profile, using basic data:', error);
+      console.log('💥 Exception fetching profile, using basic data:', error);
       return {
         id: userId,
         email: currentUser?.email || null,
@@ -92,52 +103,90 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    console.log('🚀 AuthProvider useEffect started');
+    
+    // Timeout de segurança para evitar loading infinito
+    const loadingTimeout = setTimeout(() => {
+      console.log('⏰ Loading timeout reached, forcing loading to false');
+      setLoading(false);
+    }, 5000); // 5 segundos de timeout
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 Auth state change:', event, !!session);
+        clearTimeout(loadingTimeout); // Limpar timeout se auth responder
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          const profileData = await fetchProfile(session.user.id, session.user);
-          setProfile(profileData);
+          try {
+            const profileData = await fetchProfile(session.user.id, session.user);
+            setProfile(profileData);
+          } catch (error) {
+            console.log('Error in profile fetch, continuing with fallback');
+            setProfile({
+              id: session.user.id,
+              email: session.user.email || null,
+              display_name: null,
+            });
+          }
         } else {
           setProfile(null);
         }
         
+        console.log('✅ Auth state processing complete, setting loading false');
         setLoading(false);
       }
     );
 
     // Get initial session
     const getInitialSession = async () => {
+      console.log('📋 Getting initial session...');
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
+        clearTimeout(loadingTimeout); // Limpar timeout se session responder
+        
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('❌ Error getting session:', error);
           setLoading(false);
           return;
         }
 
+        console.log('📋 Initial session result:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          const profileData = await fetchProfile(session.user.id, session.user);
-          setProfile(profileData);
+          try {
+            const profileData = await fetchProfile(session.user.id, session.user);
+            setProfile(profileData);
+          } catch (error) {
+            console.log('Error in initial profile fetch, using fallback');
+            setProfile({
+              id: session.user.id,
+              email: session.user.email || null,
+              display_name: null,
+            });
+          }
         }
         
+        console.log('✅ Initial session processing complete, setting loading false');
         setLoading(false);
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('💥 Exception getting initial session:', error);
         setLoading(false);
       }
     };
 
     getInitialSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(loadingTimeout);
+    };
   }, []);
 
   const value: AuthContextType = {
