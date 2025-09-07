@@ -18,29 +18,24 @@ export const supabase =
     },
   }))
 
-// Helper function to get account_id from the current user session
+// Helper function to get account_id from session
 export const getAccountId = async (): Promise<string | null> => {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session?.user) {
-      console.error('Error getting session:', error);
+    if (error || !session?.user?.id) {
       return null;
     }
 
-    const { data: profile, error: profileError } = await supabase
+    // Get account_id from profiles table
+    const { data: profile } = await supabase
       .from('profiles')
       .select('account_id')
       .eq('id', session.user.id)
       .single();
 
-    if (profileError || !profile) {
-      console.error('Error getting profile:', profileError);
-      return null;
-    }
-
-    return profile.account_id;
+    return profile?.account_id || null;
   } catch (error) {
-    console.error('Error in getAccountId:', error);
+    console.error('Error getting account_id:', error);
     return null;
   }
 }
