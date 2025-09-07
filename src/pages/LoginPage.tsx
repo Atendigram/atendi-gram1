@@ -17,6 +17,9 @@ const LoginPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { session, loading: authLoading } = useAuth();
 
+  // Debug logs
+  console.log('🔍 LoginPage - authLoading:', authLoading, 'session:', !!session);
+
   // Sign in form
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
@@ -278,7 +281,8 @@ const LoginPage = () => {
                     value={signInEmail}
                     onChange={(e) => setSignInEmail(e.target.value)}
                     className="pl-10"
-                    disabled={loading || authLoading}
+                    autoComplete="email"
+                    disabled={false}
                   />
                 </div>
               </div>
@@ -294,7 +298,8 @@ const LoginPage = () => {
                     value={signInPassword}
                     onChange={(e) => setSignInPassword(e.target.value)}
                     className="pl-10 pr-10"
-                    disabled={loading || authLoading}
+                    autoComplete="current-password"
+                    disabled={false}
                   />
                   <Button
                     type="button"
@@ -302,7 +307,6 @@ const LoginPage = () => {
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2"
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading || authLoading}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -315,7 +319,6 @@ const LoginPage = () => {
                     id="remember"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
-                    disabled={loading || authLoading}
                   />
                   <Label htmlFor="remember" className="text-sm">
                     Lembrar-me
@@ -327,13 +330,12 @@ const LoginPage = () => {
                   variant="link"
                   className="p-0 h-auto text-sm"
                   onClick={() => setShowResetForm(true)}
-                  disabled={loading || authLoading}
                 >
                   Esqueci a senha
                 </Button>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading || authLoading}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Entrar
               </Button>
@@ -354,7 +356,6 @@ const LoginPage = () => {
                     value={signUpEmail}
                     onChange={(e) => setSignUpEmail(e.target.value)}
                     className="pl-10"
-                    disabled={loading || authLoading}
                   />
                 </div>
               </div>
@@ -370,7 +371,6 @@ const LoginPage = () => {
                     value={signUpPassword}
                     onChange={(e) => setSignUpPassword(e.target.value)}
                     className="pl-10 pr-10"
-                    disabled={loading || authLoading}
                   />
                   <Button
                     type="button"
@@ -378,7 +378,6 @@ const LoginPage = () => {
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2"
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading || authLoading}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -396,7 +395,6 @@ const LoginPage = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10 pr-10"
-                    disabled={loading || authLoading}
                   />
                   <Button
                     type="button"
@@ -404,14 +402,13 @@ const LoginPage = () => {
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    disabled={loading || authLoading}
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading || authLoading}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Criar Conta
               </Button>
