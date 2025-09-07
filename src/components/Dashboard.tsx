@@ -30,8 +30,11 @@ async function countTable(table: string, accountId: string) {
 
 /* ---------------- COMPONENT ---------------- */
 const Dashboard = () => {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const accountId = profile?.account_id;
+  
+  console.log('Dashboard - profile:', profile, 'accountId:', accountId, 'authLoading:', authLoading);
+  
   const [title, setTitle] = useState("Olá 👋");
   const [description, setDescription] = useState(
     "Aqui está uma visão geral do seu atendimento no AtendiGram"
@@ -40,13 +43,18 @@ const Dashboard = () => {
 
   const [contactsTotal, setContactsTotal] = useState<number>(0);
   const [attendedConversations, setAttendedConversations] = useState<number>(0);
+  const [dataLoading, setDataLoading] = useState(true);
 
   // Load inicial
   useEffect(() => {
-    if (!accountId) return;
+    if (!accountId) {
+      setDataLoading(true);
+      return;
+    }
     
     (async () => {
       try {
+        setDataLoading(true);
         const [totalContacts, totalLogs] = await Promise.all([
           countTable(CONTACTS_TABLE, accountId),
           countTable(LOGS_TABLE, accountId),
@@ -54,8 +62,10 @@ const Dashboard = () => {
         setContactsTotal(totalContacts);
         setAttendedConversations(totalLogs);
       } catch (err: any) {
-        console.error(err);
+        console.error('Error loading dashboard data:', err);
         toast.error(`Erro ao carregar: ${err?.message || "ver console"}`);
+      } finally {
+        setDataLoading(false);
       }
     })();
   }, [accountId]);
@@ -98,22 +108,27 @@ const Dashboard = () => {
     };
   }, [accountId]);
 
-  if (!accountId) {
+  // Mostrar loading se ainda não tiver accountId ou se estiver carregando dados
+  if (!accountId || dataLoading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-4">
           <div className="animate-pulse">
-            <div className="w-8 h-8 bg-primary/20 rounded-full mx-auto mb-3"></div>
-            <p className="text-muted-foreground">Carregando informações da conta...</p>
+            <div className="w-12 h-12 bg-primary/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <div className="w-6 h-6 bg-primary/40 rounded-full animate-bounce"></div>
+            </div>
+            <p className="text-muted-foreground">
+              {!accountId ? 'Carregando informações da conta...' : 'Carregando dados do dashboard...'}
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 max-w-md mx-auto">
-            <div className="bg-card p-4 rounded-lg border">
-              <p className="text-sm text-muted-foreground">Total de Contatos 👥</p>
-              <p className="text-2xl font-bold">--</p>
+            <div className="bg-card p-4 rounded-lg border animate-pulse">
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-8 bg-gray-300 rounded"></div>
             </div>
-            <div className="bg-card p-4 rounded-lg border">
-              <p className="text-sm text-muted-foreground">Conversas Atendidas 💬</p>
-              <p className="text-2xl font-bold">--</p>
+            <div className="bg-card p-4 rounded-lg border animate-pulse">
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-8 bg-gray-300 rounded"></div>
             </div>
           </div>
         </div>

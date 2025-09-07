@@ -40,28 +40,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchProfile = async (userId: string, currentUser: any): Promise<Profile | null> => {
     try {
-      // Primeiro tenta buscar do banco
+      console.log('🔍 Fetching profile for user:', userId);
+      
+      // Primeiro tenta buscar do banco usando o supabase client
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('id, account_id, email, display_name')
         .eq('id', userId)
         .maybeSingle();
 
-      if (!error && profile) {
-        console.log('✅ Profile fetched from database:', profile);
+      if (error) {
+        console.log('❌ Error fetching profile:', error);
+        // Se houver erro RLS, usar fallback com dados do usuário
+        return {
+          id: userId,
+          email: currentUser?.email || null,
+          display_name: currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || null,
+          account_id: undefined,
+        };
+      }
+
+      if (profile) {
+        console.log('✅ Profile fetched successfully:', profile);
         return profile;
       }
 
-      console.log('⚠️ No profile in database, using user data fallback');
-      // Fallback para dados básicos do usuário
+      console.log('⚠️ No profile found, creating fallback');
+      // Se não encontrar profile, usar dados básicos
       return {
         id: userId,
         email: currentUser?.email || null,
         display_name: currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || null,
-        account_id: undefined, // Será preenchido depois se necessário
+        account_id: undefined,
       };
     } catch (error) {
-      console.log('💥 Error fetching profile, using fallback:', error);
+      console.log('💥 Exception fetching profile:', error);
       return {
         id: userId,
         email: currentUser?.email || null,
