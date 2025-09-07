@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_members: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_members_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounts: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string | null
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          owner_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          owner_id?: string
+        }
+        Relationships: []
+      }
       boas_vindas_settings: {
         Row: {
           audio1_path: string | null
@@ -64,27 +117,39 @@ export type Database = {
       }
       contacts: {
         Row: {
+          account_id: string
           created_at: string | null
           id: string
           name: string | null
           phone: string | null
         }
         Insert: {
+          account_id: string
           created_at?: string | null
           id?: string
           name?: string | null
           phone?: string | null
         }
         Update: {
+          account_id?: string
           created_at?: string | null
           id?: string
           name?: string | null
           phone?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_account_fk"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contatos_luna: {
         Row: {
+          account_id: string
           chat_id: number | null
           created_at: string | null
           date_first_seen: string | null
@@ -100,6 +165,7 @@ export type Database = {
           welcomed_at: string | null
         }
         Insert: {
+          account_id: string
           chat_id?: number | null
           created_at?: string | null
           date_first_seen?: string | null
@@ -115,6 +181,7 @@ export type Database = {
           welcomed_at?: string | null
         }
         Update: {
+          account_id?: string
           chat_id?: number | null
           created_at?: string | null
           date_first_seen?: string | null
@@ -129,7 +196,15 @@ export type Database = {
           username?: string | null
           welcomed_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contatos_luna_account_fk"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -162,33 +237,57 @@ export type Database = {
       }
       disparo_items: {
         Row: {
+          account_id: string | null
+          attempts: number | null
+          campaign_id: string
+          contact_id: string | null
           created_at: string
-          disparo_id: string
           error: string | null
+          fail_reason: string | null
           id: string
+          payload: Json | null
+          scheduled_at: string | null
+          sent_at: string | null
           status: string
+          tg_id: string | null
           user_id: string
         }
         Insert: {
+          account_id?: string | null
+          attempts?: number | null
+          campaign_id: string
+          contact_id?: string | null
           created_at?: string
-          disparo_id: string
           error?: string | null
+          fail_reason?: string | null
           id?: string
+          payload?: Json | null
+          scheduled_at?: string | null
+          sent_at?: string | null
           status?: string
-          user_id: string
+          tg_id?: string | null
+          user_id?: string
         }
         Update: {
+          account_id?: string | null
+          attempts?: number | null
+          campaign_id?: string
+          contact_id?: string | null
           created_at?: string
-          disparo_id?: string
           error?: string | null
+          fail_reason?: string | null
           id?: string
+          payload?: Json | null
+          scheduled_at?: string | null
+          sent_at?: string | null
           status?: string
+          tg_id?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "disparo_items_disparo_id_fkey"
-            columns: ["disparo_id"]
+            foreignKeyName: "disparo_items_campaign_fk"
+            columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "disparos"
             referencedColumns: ["id"]
@@ -197,36 +296,67 @@ export type Database = {
       }
       disparos: {
         Row: {
+          account_id: string | null
           audio_url: string | null
           author: string | null
+          content: string | null
           created_at: string
+          created_by: string | null
+          failed_count: number | null
           id: string
           interval_seconds: number
+          media_url: string | null
+          name: string | null
+          queued_count: number | null
+          scheduled_at: string | null
+          sent_count: number | null
           status: string
           text_message: string | null
+          total_targets: number | null
         }
         Insert: {
+          account_id?: string | null
           audio_url?: string | null
           author?: string | null
+          content?: string | null
           created_at?: string
+          created_by?: string | null
+          failed_count?: number | null
           id?: string
           interval_seconds?: number
+          media_url?: string | null
+          name?: string | null
+          queued_count?: number | null
+          scheduled_at?: string | null
+          sent_count?: number | null
           status?: string
           text_message?: string | null
+          total_targets?: number | null
         }
         Update: {
+          account_id?: string | null
           audio_url?: string | null
           author?: string | null
+          content?: string | null
           created_at?: string
+          created_by?: string | null
+          failed_count?: number | null
           id?: string
           interval_seconds?: number
+          media_url?: string | null
+          name?: string | null
+          queued_count?: number | null
+          scheduled_at?: string | null
+          sent_count?: number | null
           status?: string
           text_message?: string | null
+          total_targets?: number | null
         }
         Relationships: []
       }
       logsluna: {
         Row: {
+          account_id: string
           created_at: string
           data_hora: string | null
           id: number
@@ -234,6 +364,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          account_id: string
           created_at?: string
           data_hora?: string | null
           id?: number
@@ -241,16 +372,26 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          account_id?: string
           created_at?: string
           data_hora?: string | null
           id?: number
           mensagem?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "logsluna_account_fk"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
+          account_id: string
           body: string | null
           conversation_id: string | null
           created_at: string | null
@@ -258,6 +399,7 @@ export type Database = {
           id: string
         }
         Insert: {
+          account_id: string
           body?: string | null
           conversation_id?: string | null
           created_at?: string | null
@@ -265,6 +407,7 @@ export type Database = {
           id?: string
         }
         Update: {
+          account_id?: string
           body?: string | null
           conversation_id?: string | null
           created_at?: string | null
@@ -273,10 +416,49 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "messages_account_fk"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "messages_conversation_id_fkey"
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -360,7 +542,41 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ack_disparo_item: {
+        Args: { _err?: string; _item_id: string; _ok: boolean }
+        Returns: undefined
+      }
+      create_campaign_and_enqueue: {
+        Args: {
+          p_content: string
+          p_media_url: string
+          p_name: string
+          p_scheduled_at: string
+        }
+        Returns: {
+          campaign_id: string
+          enqueued: number
+        }[]
+      }
+      dequeue_disparo_item: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          account_id: string
+          campaign_id: string
+          contact_id: string
+          item_id: string
+          payload: Json
+          tg_id: number
+        }[]
+      }
+      is_account_member_or_owner: {
+        Args: { account_id: string }
+        Returns: boolean
+      }
+      is_member_of: {
+        Args: { account_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
