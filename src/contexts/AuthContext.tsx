@@ -40,15 +40,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchProfile = async (userId: string, currentUser: any): Promise<Profile | null> => {
     try {
-      // Simples fallback para evitar problemas com RLS
+      // Primeiro tenta buscar do banco
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id, account_id, email, display_name')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (!error && profile) {
+        console.log('✅ Profile fetched from database:', profile);
+        return profile;
+      }
+
+      console.log('⚠️ No profile in database, using user data fallback');
+      // Fallback para dados básicos do usuário
       return {
         id: userId,
         email: currentUser?.email || null,
         display_name: currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || null,
-        account_id: undefined, // Será definido posteriormente se necessário
+        account_id: undefined, // Será preenchido depois se necessário
       };
     } catch (error) {
-      console.log('Error in fetchProfile, using fallback');
+      console.log('💥 Error fetching profile, using fallback:', error);
       return {
         id: userId,
         email: currentUser?.email || null,

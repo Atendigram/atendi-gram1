@@ -101,8 +101,21 @@ const Dashboard = () => {
   if (!accountId) {
     return (
       <div className="flex justify-center items-center p-8">
-        <div className="text-center">
-          <p className="text-muted-foreground">Carregando informações da conta...</p>
+        <div className="text-center space-y-3">
+          <div className="animate-pulse">
+            <div className="w-8 h-8 bg-primary/20 rounded-full mx-auto mb-3"></div>
+            <p className="text-muted-foreground">Carregando informações da conta...</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 max-w-md mx-auto">
+            <div className="bg-card p-4 rounded-lg border">
+              <p className="text-sm text-muted-foreground">Total de Contatos 👥</p>
+              <p className="text-2xl font-bold">--</p>
+            </div>
+            <div className="bg-card p-4 rounded-lg border">
+              <p className="text-sm text-muted-foreground">Conversas Atendidas 💬</p>
+              <p className="text-2xl font-bold">--</p>
+            </div>
+          </div>
         </div>
       </div>
     );
