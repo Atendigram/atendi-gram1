@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { supabase, getAccountId } from '@/lib/supabase';
 import { Send, Search, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { scopedSelectWithColumns, scopedInsert } from '@/lib/scoped-queries';
@@ -16,6 +16,7 @@ interface Contact {
   first_name?: string;
   last_name?: string;
   username?: string;
+  chat_id?: number;
   created_at: string;
 }
 
@@ -69,7 +70,7 @@ const Disparo = () => {
     }
 
     try {
-      const { data, error } = await scopedSelectWithColumns('contatos_luna', 'user_id, first_name, last_name, username, created_at', accountId)
+      const { data, error } = await scopedSelectWithColumns('contatos_luna', 'user_id, first_name, last_name, username, chat_id, created_at', accountId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -148,6 +149,12 @@ const Disparo = () => {
 
     setSubmitting(true);
     try {
+      // Get account_id from session
+      const currentAccountId = await getAccountId();
+      if (!currentAccountId) {
+        throw new Error('Não foi possível obter o ID da conta');
+      }
+
       let finalAudioUrl: string | null = audioUrl ?? null;
       
       // Upload audio if provided
@@ -167,43 +174,82 @@ const Disparo = () => {
         setAudioUploading(false);
       }
 
-      // Insert disparo (Note: disparos table doesn't seem to have account_id field based on RLS)
-      const { data: disparo, error: disparoError } = await supabase
+      // Step 1: Create disparo record
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: campaign, error: campaignError } = await supabase
         .from('disparos')
         .insert({
+          account_id: currentAccountId,
+          name: `Disparo ${new Date().toLocaleDateString()}`,
+          content: textMessage.trim() || null,
           text_message: textMessage.trim() || null,
           audio_url: finalAudioUrl,
+          media_url: finalAudioUrl,
           interval_seconds: intervalSeconds,
-          status: 'pending'
+          status: 'scheduled',
+          created_by: session.user.id
         })
         .select()
         .single();
 
-      if (disparoError) throw disparoError;
+      if (campaignError) {
+        console.error('Campaign error:', campaignError);
+        throw new Error(campaignError.message || 'Erro ao criar disparo');
+      }
 
-      // Insert disparo_items in chunks of 500 (Note: disparo_items also doesn't have account_id)
-      const contactIds = Array.from(selectedContacts);
+      // Step 2: Get selected contacts with chat_id
+      const selectedContactsList = contacts.filter(contact => 
+        selectedContacts.has(contact.user_id) && contact.chat_id
+      );
+
+      if (selectedContactsList.length === 0) {
+        throw new Error('Nenhum dos contatos selecionados possui chat_id válido');
+      }
+
+      // Step 3: Create disparo_items in chunks of 500
       const chunkSize = 500;
+      const now = new Date();
       
-      for (let i = 0; i < contactIds.length; i += chunkSize) {
-        const chunk = contactIds.slice(i, i + chunkSize);
-        const disparoItems = chunk.map(userId => ({
-          disparo_id: disparo.id,
-          user_id: userId.toString(),
-          status: 'pending'
-        }));
+      for (let i = 0; i < selectedContactsList.length; i += chunkSize) {
+        const chunk = selectedContactsList.slice(i, i + chunkSize);
+        const disparoItems = chunk.map((contact, index) => {
+          // Calculate scheduled time with interval
+          const scheduledAt = new Date(now.getTime() + (index * intervalSeconds * 1000));
+          
+          return {
+            account_id: currentAccountId,
+            campaign_id: campaign.id,
+            user_id: session.user.id,
+            tg_id: contact.chat_id?.toString() || contact.user_id.toString(),
+            payload: {
+              type: textMessage ? 'text' : 'audio',
+              text: textMessage.trim() || undefined,
+              media_url: finalAudioUrl || undefined
+            },
+            status: 'queued',
+            scheduled_at: scheduledAt.toISOString(),
+            created_at: new Date().toISOString()
+          };
+        });
 
         const { error: itemsError } = await supabase
           .from('disparo_items')
           .insert(disparoItems);
 
-        if (itemsError) throw itemsError;
+        if (itemsError) {
+          console.error('Items error:', itemsError);
+          throw new Error(itemsError.message || 'Erro ao criar itens do disparo');
+        }
       }
 
       // Success
       toast({
         title: "Sucesso",
-        description: `Disparo criado com sucesso para ${selectedContacts.size} contatos`,
+        description: `Disparo criado com sucesso para ${selectedContactsList.length} contatos`,
       });
 
       // Clear form
@@ -213,11 +259,11 @@ const Disparo = () => {
       setIntervalSeconds(0);
       setSelectedContacts(new Set());
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating disparo:', error);
       toast({
         title: "Erro",
-        description: "Erro ao criar disparo",
+        description: error.message || "Erro ao criar disparo",
         variant: "destructive",
       });
     } finally {

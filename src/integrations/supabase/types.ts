@@ -242,6 +242,7 @@ export type Database = {
           campaign_id: string
           contact_id: string | null
           created_at: string
+          created_minute_epoch: number | null
           error: string | null
           fail_reason: string | null
           id: string
@@ -258,6 +259,7 @@ export type Database = {
           campaign_id: string
           contact_id?: string | null
           created_at?: string
+          created_minute_epoch?: number | null
           error?: string | null
           fail_reason?: string | null
           id?: string
@@ -274,6 +276,7 @@ export type Database = {
           campaign_id?: string
           contact_id?: string | null
           created_at?: string
+          created_minute_epoch?: number | null
           error?: string | null
           fail_reason?: string | null
           id?: string
@@ -356,7 +359,7 @@ export type Database = {
       }
       logsluna: {
         Row: {
-          account_id: string
+          account_id: string | null
           created_at: string
           data_hora: string | null
           id: number
@@ -364,7 +367,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           created_at?: string
           data_hora?: string | null
           id?: number
@@ -372,7 +375,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           created_at?: string
           data_hora?: string | null
           id?: number
