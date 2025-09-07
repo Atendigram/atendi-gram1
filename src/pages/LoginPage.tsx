@@ -17,9 +17,6 @@ const LoginPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { session, loading: authLoading } = useAuth();
 
-  // Debug logs
-  console.log('🔍 LoginPage - authLoading:', authLoading, 'session:', !!session);
-
   // Sign in form
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
@@ -39,7 +36,8 @@ const LoginPage = () => {
 
   // Se já estiver logado, manda pro dashboard
   useEffect(() => {
-    if (!authLoading && session) {
+    if (session && !authLoading) {
+      console.log('🔀 Redirecting to dashboard, session exists');
       navigate('/dashboard', { replace: true });
     }
   }, [session, authLoading, navigate]);
