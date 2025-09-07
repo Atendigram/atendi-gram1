@@ -41,7 +41,7 @@ const routes = [
   
   
   { path: "/estatisticas", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },
-  { path: "/relatorios", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },
+  
   
   // Legacy routes (keeping old paths for backward compatibility)
   { path: "/parcelles", element: <ProtectedRoute><ParcelsPage /></ProtectedRoute> },
@@ -54,7 +54,7 @@ const routes = [
   { path: "/telegram", element: <ProtectedRoute><TelegramPage /></ProtectedRoute> },
   
   // Redirects
-  { path: "/rapports", element: <Navigate to="/relatorios" replace /> },
+  { path: "/rapports", element: <Navigate to="/estatisticas" replace /> },
   { path: "/parametres", element: <Navigate to="/dashboard" replace /> },
   { path: "/configuracoes", element: <Navigate to="/dashboard" replace /> },
   
