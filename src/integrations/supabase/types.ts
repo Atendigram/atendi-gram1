@@ -264,11 +264,14 @@ export type Database = {
           error: string | null
           fail_reason: string | null
           id: string
+          media_url: string | null
+          message: string | null
           payload: Json | null
           scheduled_at: string | null
           sent_at: string | null
           status: string
           tg_id: string | null
+          type: string | null
           updated_at: string
           user_id: string
         }
@@ -282,11 +285,14 @@ export type Database = {
           error?: string | null
           fail_reason?: string | null
           id?: string
+          media_url?: string | null
+          message?: string | null
           payload?: Json | null
           scheduled_at?: string | null
           sent_at?: string | null
           status?: string
           tg_id?: string | null
+          type?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -300,11 +306,14 @@ export type Database = {
           error?: string | null
           fail_reason?: string | null
           id?: string
+          media_url?: string | null
+          message?: string | null
           payload?: Json | null
           scheduled_at?: string | null
           sent_at?: string | null
           status?: string
           tg_id?: string | null
+          type?: string | null
           updated_at?: string
           user_id?: string
         }

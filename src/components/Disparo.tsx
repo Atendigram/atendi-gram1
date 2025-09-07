@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import { supabase, getAccountId } from '@/lib/supabase';
-import { Send, Search, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Send, Search, Upload, ChevronLeft, ChevronRight, Type, Mic, Image } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { scopedSelectWithColumns, scopedInsert } from '@/lib/scoped-queries';
 
@@ -34,11 +36,16 @@ const Disparo = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // Form state
+  const [messageType, setMessageType] = useState<'text' | 'audio' | 'photo'>('text');
   const [textMessage, setTextMessage] = useState('');
   const [intervalSeconds, setIntervalSeconds] = useState(0);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioUploading, setAudioUploading] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [caption, setCaption] = useState('');
 
   // Load contacts
   useEffect(() => {
@@ -92,6 +99,11 @@ const Disparo = () => {
     setAudioFile(file || null);
   };
 
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setPhotoFile(file || null);
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const currentPageContacts = getCurrentPageContacts();
@@ -128,11 +140,29 @@ const Disparo = () => {
     currentPageContacts.every(contact => selectedContacts.has(contact.user_id));
 
   const handleSubmit = async () => {
-    // Validation
-    if (!textMessage.trim() && !audioFile) {
+    // Validation based on message type
+    if (messageType === 'text' && !textMessage.trim()) {
       toast({
         title: "Erro de validação",
-        description: "Você deve fornecer uma mensagem de texto ou um áudio",
+        description: "Você deve fornecer uma mensagem de texto",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (messageType === 'audio' && !audioFile) {
+      toast({
+        title: "Erro de validação",
+        description: "Você deve selecionar um arquivo de áudio",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (messageType === 'photo' && !photoFile) {
+      toast({
+        title: "Erro de validação",
+        description: "Você deve selecionar uma imagem",
         variant: "destructive",
       });
       return;
@@ -155,10 +185,10 @@ const Disparo = () => {
         throw new Error('Não foi possível obter o ID da conta');
       }
 
-      let finalAudioUrl: string | null = audioUrl ?? null;
+      let finalMediaUrl: string | null = null;
       
-      // Upload audio if provided
-      if (audioFile) {
+      // Upload media file based on type
+      if (messageType === 'audio' && audioFile) {
         setAudioUploading(true);
         const ext = audioFile.name.split(".").pop() || "ogg";
         const path = `voices/${crypto.randomUUID()}.${ext}`;
@@ -169,9 +199,25 @@ const Disparo = () => {
         if (uploadError) throw uploadError;
         
         const { data } = supabase.storage.from("audios").getPublicUrl(path);
-        finalAudioUrl = data.publicUrl;
+        finalMediaUrl = data.publicUrl;
         setAudioUrl(data.publicUrl);
         setAudioUploading(false);
+      }
+
+      if (messageType === 'photo' && photoFile) {
+        setPhotoUploading(true);
+        const ext = photoFile.name.split(".").pop() || "jpg";
+        const path = `images/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("photos").upload(path, photoFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+        if (uploadError) throw uploadError;
+        
+        const { data } = supabase.storage.from("photos").getPublicUrl(path);
+        finalMediaUrl = data.publicUrl;
+        setPhotoUrl(data.publicUrl);
+        setPhotoUploading(false);
       }
 
       // Step 1: Create disparo record
@@ -180,15 +226,18 @@ const Disparo = () => {
         throw new Error('Usuário não autenticado');
       }
 
+      const messageContent = messageType === 'text' ? textMessage.trim() : 
+                            messageType === 'photo' ? caption.trim() : null;
+
       const { data: campaign, error: campaignError } = await supabase
         .from('disparos')
         .insert({
           account_id: currentAccountId,
-          name: `Disparo ${new Date().toLocaleDateString()}`,
-          content: textMessage.trim() || null,
-          text_message: textMessage.trim() || null,
-          audio_url: finalAudioUrl,
-          media_url: finalAudioUrl,
+          name: `Disparo ${messageType.toUpperCase()} ${new Date().toLocaleDateString()}`,
+          content: messageContent || null,
+          text_message: messageContent || null,
+          audio_url: messageType === 'audio' ? finalMediaUrl : null,
+          media_url: finalMediaUrl,
           interval_seconds: intervalSeconds,
           status: 'scheduled',
           created_by: session.user.id
@@ -225,10 +274,13 @@ const Disparo = () => {
             campaign_id: campaign.id,
             user_id: session.user.id,
             tg_id: contact.chat_id?.toString() || contact.user_id.toString(),
+            type: messageType,
+            message: messageContent || null,
+            media_url: finalMediaUrl || null,
             payload: {
-              type: textMessage ? 'text' : 'audio',
-              text: textMessage.trim() || undefined,
-              media_url: finalAudioUrl || undefined
+              type: messageType,
+              text: messageContent || undefined,
+              media_url: finalMediaUrl || undefined
             },
             status: 'queued',
             scheduled_at: scheduledAt.toISOString(),
@@ -253,9 +305,13 @@ const Disparo = () => {
       });
 
       // Clear form
+      setMessageType('text');
       setTextMessage('');
       setAudioFile(null);
       setAudioUrl(null);
+      setPhotoFile(null);
+      setPhotoUrl(null);
+      setCaption('');
       setIntervalSeconds(0);
       setSelectedContacts(new Set());
 
@@ -269,6 +325,7 @@ const Disparo = () => {
     } finally {
       setSubmitting(false);
       setAudioUploading(false);
+      setPhotoUploading(false);
     }
   };
 
@@ -415,65 +472,153 @@ const Disparo = () => {
             Configure e envie mensagens para os contatos selecionados
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Message Type Selection */}
           <div>
-            <label className="text-sm font-medium">Mensagem de Texto (Opcional)</label>
-            <Textarea
-              placeholder="Digite sua mensagem..."
-              value={textMessage}
-              onChange={(e) => setTextMessage(e.target.value)}
-              className="mt-1"
-            />
+            <label className="text-sm font-medium mb-3 block">Tipo de Mensagem</label>
+            <RadioGroup value={messageType} onValueChange={(value: 'text' | 'audio' | 'photo') => setMessageType(value)} className="flex gap-6">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="text" id="text" />
+                <Label htmlFor="text" className="flex items-center gap-2 cursor-pointer">
+                  <Type className="h-4 w-4" />
+                  Texto
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="audio" id="audio" />
+                <Label htmlFor="audio" className="flex items-center gap-2 cursor-pointer">
+                  <Mic className="h-4 w-4" />
+                  Áudio
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="photo" id="photo" />
+                <Label htmlFor="photo" className="flex items-center gap-2 cursor-pointer">
+                  <Image className="h-4 w-4" />
+                  Foto
+                </Label>
+              </div>
+            </RadioGroup>
           </div>
 
+          {/* Content based on message type */}
+          {messageType === 'text' && (
+            <div>
+              <label className="text-sm font-medium">Mensagem de Texto</label>
+              <Textarea
+                placeholder="Digite sua mensagem..."
+                value={textMessage}
+                onChange={(e) => setTextMessage(e.target.value)}
+                className="mt-1"
+                rows={4}
+              />
+            </div>
+          )}
+
+          {messageType === 'audio' && (
+            <div>
+              <label className="text-sm font-medium">Arquivo de Áudio</label>
+              <div className="mt-1 space-y-2">
+                <Input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleAudioSelect}
+                  disabled={audioUploading}
+                  className="max-w-sm"
+                />
+                {audioUploading && <p className="text-sm text-muted-foreground">Carregando áudio...</p>}
+                {audioFile && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-green-600">Áudio selecionado: {audioFile.name}</p>
+                    <audio src={URL.createObjectURL(audioFile)} controls className="w-full max-w-md" />
+                  </div>
+                )}
+                {audioUrl && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-blue-600">Áudio carregado com sucesso</p>
+                    <audio src={audioUrl} controls className="w-full max-w-md" />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {messageType === 'photo' && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Arquivo de Imagem</label>
+                <div className="mt-1 space-y-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoSelect}
+                    disabled={photoUploading}
+                    className="max-w-sm"
+                  />
+                  {photoUploading && <p className="text-sm text-muted-foreground">Carregando imagem...</p>}
+                  {photoFile && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-green-600">Imagem selecionada: {photoFile.name}</p>
+                      <img 
+                        src={URL.createObjectURL(photoFile)} 
+                        alt="Preview" 
+                        className="w-full max-w-md rounded-md border"
+                      />
+                    </div>
+                  )}
+                  {photoUrl && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-blue-600">Imagem carregada com sucesso</p>
+                      <img 
+                        src={photoUrl} 
+                        alt="Uploaded" 
+                        className="w-full max-w-md rounded-md border"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Legenda (Opcional)</label>
+                <Textarea
+                  placeholder="Digite uma legenda para a imagem..."
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="text-sm font-medium">Intervalo (segundos)</label>
+            <label className="text-sm font-medium">Intervalo entre envios (segundos)</label>
             <Input
               type="number"
               min="0"
               value={intervalSeconds}
               onChange={(e) => setIntervalSeconds(parseInt(e.target.value) || 0)}
               className="mt-1 max-w-xs"
+              placeholder="0"
             />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Áudio (Opcional)</label>
-            <div className="mt-1 space-y-2">
-              <Input
-                type="file"
-                accept="audio/*"
-                onChange={handleAudioSelect}
-                disabled={audioUploading}
-                className="max-w-sm"
-              />
-              {audioUploading && <p className="text-sm text-muted-foreground">Carregando áudio...</p>}
-              {audioFile && (
-                <div className="space-y-2">
-                  <p className="text-sm text-green-600">Áudio selecionado: {audioFile.name}</p>
-                  <audio src={URL.createObjectURL(audioFile)} controls className="w-full max-w-md" />
-                </div>
-              )}
-              {audioUrl && (
-                <div className="space-y-2">
-                  <p className="text-sm text-blue-600">Áudio carregado com sucesso</p>
-                  <audio src={audioUrl} controls className="w-full max-w-md" />
-                </div>
-              )}
-            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Tempo de espera entre cada envio (0 = envio imediato)
+            </p>
           </div>
 
           <Button
             onClick={handleSubmit}
-            disabled={submitting || selectedContacts.size === 0}
+            disabled={submitting || selectedContacts.size === 0 || audioUploading || photoUploading}
             className="w-full"
           >
             {submitting ? (
               "Enviando..."
+            ) : audioUploading || photoUploading ? (
+              "Carregando arquivo..."
             ) : (
               <>
                 <Send className="mr-2 h-4 w-4" />
-                Enviar Disparo ({selectedContacts.size} contatos)
+                Enviar {messageType === 'text' ? 'Texto' : messageType === 'audio' ? 'Áudio' : 'Foto'} ({selectedContacts.size} contatos)
               </>
             )}
           </Button>
