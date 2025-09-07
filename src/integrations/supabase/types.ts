@@ -153,15 +153,21 @@ export type Database = {
           chat_id: number | null
           created_at: string | null
           date_first_seen: string | null
+          fail_count: number
           first_name: string | null
+          invalid_at: string | null
+          invalid_reason: string | null
           is_bot: string | null
           is_premium: string | null
           language_code: string | null
           last_name: string | null
           mensagem: string | null
           source: string | null
+          status: string
+          tg_id: string | null
           user_id: number
           username: string | null
+          welcome_opt_out: boolean
           welcomed_at: string | null
         }
         Insert: {
@@ -169,15 +175,21 @@ export type Database = {
           chat_id?: number | null
           created_at?: string | null
           date_first_seen?: string | null
+          fail_count?: number
           first_name?: string | null
+          invalid_at?: string | null
+          invalid_reason?: string | null
           is_bot?: string | null
           is_premium?: string | null
           language_code?: string | null
           last_name?: string | null
           mensagem?: string | null
           source?: string | null
+          status?: string
+          tg_id?: string | null
           user_id: number
           username?: string | null
+          welcome_opt_out?: boolean
           welcomed_at?: string | null
         }
         Update: {
@@ -185,15 +197,21 @@ export type Database = {
           chat_id?: number | null
           created_at?: string | null
           date_first_seen?: string | null
+          fail_count?: number
           first_name?: string | null
+          invalid_at?: string | null
+          invalid_reason?: string | null
           is_bot?: string | null
           is_premium?: string | null
           language_code?: string | null
           last_name?: string | null
           mensagem?: string | null
           source?: string | null
+          status?: string
+          tg_id?: string | null
           user_id?: number
           username?: string | null
+          welcome_opt_out?: boolean
           welcomed_at?: string | null
         }
         Relationships: [
@@ -251,6 +269,7 @@ export type Database = {
           sent_at: string | null
           status: string
           tg_id: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -268,6 +287,7 @@ export type Database = {
           sent_at?: string | null
           status?: string
           tg_id?: string | null
+          updated_at?: string
           user_id?: string
         }
         Update: {
@@ -285,6 +305,7 @@ export type Database = {
           sent_at?: string | null
           status?: string
           tg_id?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -433,6 +454,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      messages_log: {
+        Row: {
+          id: string
+          kind: string
+          payload: Json | null
+          sent_at: string
+          tg_id: string
+        }
+        Insert: {
+          id?: string
+          kind: string
+          payload?: Json | null
+          sent_at?: string
+          tg_id: string
+        }
+        Update: {
+          id?: string
+          kind?: string
+          payload?: Json | null
+          sent_at?: string
+          tg_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
