@@ -40,7 +40,7 @@ const routes = [
   { path: "/boas-vindas", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
   
   
-  { path: "/estatisticas", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },
+  
   
   
   // Legacy routes (keeping old paths for backward compatibility)
@@ -54,7 +54,7 @@ const routes = [
   { path: "/telegram", element: <ProtectedRoute><TelegramPage /></ProtectedRoute> },
   
   // Redirects
-  { path: "/rapports", element: <Navigate to="/estatisticas" replace /> },
+  { path: "/rapports", element: <Navigate to="/dashboard" replace /> },
   { path: "/parametres", element: <Navigate to="/dashboard" replace /> },
   { path: "/configuracoes", element: <Navigate to="/dashboard" replace /> },
   

@@ -66,7 +66,7 @@ const Navbar = () => {
     { title: 'Boas-Vindas', path: '/boas-vindas', icon: Wand2 },
     
     
-    { title: 'Estatísticas', path: '/estatisticas', icon: BarChart2 },
+    
     
     { title: 'Configurações', path: '/configuracoes', icon: Settings },
   ];
