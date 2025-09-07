@@ -39,7 +39,7 @@ const routes = [
   { path: "/welcome", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
   { path: "/boas-vindas", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
   
-  { path: "/financeiro", element: <ProtectedRoute><FinancePage /></ProtectedRoute> },
+  
   { path: "/estatisticas", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },
   { path: "/relatorios", element: <ProtectedRoute><StatisticsProvider><StatsPage /></StatisticsProvider></ProtectedRoute> },
   

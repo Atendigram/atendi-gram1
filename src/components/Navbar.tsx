@@ -65,7 +65,7 @@ const Navbar = () => {
     { title: 'Disparos', path: '/disparos', icon: Send },
     { title: 'Boas-Vindas', path: '/boas-vindas', icon: Wand2 },
     
-    { title: 'Financeiro', path: '/financeiro', icon: Wallet },
+    
     { title: 'Estatísticas', path: '/estatisticas', icon: BarChart2 },
     { title: 'Relatórios', path: '/relatorios', icon: FileText },
     { title: 'Configurações', path: '/configuracoes', icon: Settings },
