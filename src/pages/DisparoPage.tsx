@@ -15,7 +15,6 @@ const DisparoPage = () => {
       />
       <div className="mt-6">
         <Disparo />
-        <UploadAudioTest />
       </div>
     </PageLayout>
   );

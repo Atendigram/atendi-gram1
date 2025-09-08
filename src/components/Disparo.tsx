@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from '@/hooks/use-toast';
 import { supabase, getAccountId } from '@/lib/supabase';
-import { Send, Search, Upload, ChevronLeft, ChevronRight, Type, Mic, Image } from 'lucide-react';
+import { Send, Search, Upload, ChevronLeft, ChevronRight, FileText, Mic, Image } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { scopedSelectWithColumns, scopedInsert } from '@/lib/scoped-queries';
 
@@ -40,12 +40,9 @@ const Disparo = () => {
   const [textMessage, setTextMessage] = useState('');
   const [intervalSeconds, setIntervalSeconds] = useState(0);
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [audioUploading, setAudioUploading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [photoUploading, setPhotoUploading] = useState(false);
-  const [caption, setCaption] = useState('');
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // Load contacts
   useEffect(() => {
@@ -97,11 +94,21 @@ const Disparo = () => {
   const handleAudioSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setAudioFile(file || null);
+    setMediaUrl(null); // Reset previous uploads
   };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setPhotoFile(file || null);
+    setMediaUrl(null); // Reset previous uploads
+  };
+
+  const handleMessageTypeChange = (type: 'text' | 'audio' | 'photo') => {
+    setMessageType(type);
+    // Reset files when changing type
+    setAudioFile(null);
+    setPhotoFile(null);
+    setMediaUrl(null);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -185,11 +192,11 @@ const Disparo = () => {
         throw new Error('Não foi possível obter o ID da conta');
       }
 
-      let finalMediaUrl: string | null = null;
+      let finalMediaUrl: string | null = mediaUrl;
       
-      // Upload media file based on type
+      // Upload media file if provided
       if (messageType === 'audio' && audioFile) {
-        setAudioUploading(true);
+        setUploading(true);
         const ext = audioFile.name.split(".").pop() || "ogg";
         const path = `voices/${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage.from("audios").upload(path, audioFile, {
@@ -200,12 +207,12 @@ const Disparo = () => {
         
         const { data } = supabase.storage.from("audios").getPublicUrl(path);
         finalMediaUrl = data.publicUrl;
-        setAudioUrl(data.publicUrl);
-        setAudioUploading(false);
+        setMediaUrl(data.publicUrl);
+        setUploading(false);
       }
 
       if (messageType === 'photo' && photoFile) {
-        setPhotoUploading(true);
+        setUploading(true);
         const ext = photoFile.name.split(".").pop() || "jpg";
         const path = `images/${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage.from("photos").upload(path, photoFile, {
@@ -216,8 +223,8 @@ const Disparo = () => {
         
         const { data } = supabase.storage.from("photos").getPublicUrl(path);
         finalMediaUrl = data.publicUrl;
-        setPhotoUrl(data.publicUrl);
-        setPhotoUploading(false);
+        setMediaUrl(data.publicUrl);
+        setUploading(false);
       }
 
       // Step 1: Create disparo record
@@ -226,16 +233,13 @@ const Disparo = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      const messageContent = messageType === 'text' ? textMessage.trim() : 
-                            messageType === 'photo' ? caption.trim() : null;
-
       const { data: campaign, error: campaignError } = await supabase
         .from('disparos')
         .insert({
           account_id: currentAccountId,
-          name: `Disparo ${messageType.toUpperCase()} ${new Date().toLocaleDateString()}`,
-          content: messageContent || null,
-          text_message: messageContent || null,
+          name: `Disparo ${messageType} ${new Date().toLocaleDateString()}`,
+          content: messageType === 'text' ? textMessage.trim() : null,
+          text_message: messageType === 'text' ? textMessage.trim() : null,
           audio_url: messageType === 'audio' ? finalMediaUrl : null,
           media_url: finalMediaUrl,
           interval_seconds: intervalSeconds,
@@ -275,11 +279,11 @@ const Disparo = () => {
             user_id: session.user.id,
             tg_id: contact.chat_id?.toString() || contact.user_id.toString(),
             type: messageType,
-            message: messageContent || null,
-            media_url: finalMediaUrl || null,
+            message: messageType === 'text' ? textMessage.trim() : textMessage.trim() || null, // Caption for media
+            media_url: finalMediaUrl,
             payload: {
               type: messageType,
-              text: messageContent || undefined,
+              text: messageType === 'text' ? textMessage.trim() : (textMessage.trim() || undefined),
               media_url: finalMediaUrl || undefined
             },
             status: 'queued',
@@ -305,13 +309,10 @@ const Disparo = () => {
       });
 
       // Clear form
-      setMessageType('text');
       setTextMessage('');
       setAudioFile(null);
-      setAudioUrl(null);
       setPhotoFile(null);
-      setPhotoUrl(null);
-      setCaption('');
+      setMediaUrl(null);
       setIntervalSeconds(0);
       setSelectedContacts(new Set());
 
@@ -324,8 +325,7 @@ const Disparo = () => {
       });
     } finally {
       setSubmitting(false);
-      setAudioUploading(false);
-      setPhotoUploading(false);
+      setUploading(false);
     }
   };
 
@@ -475,12 +475,16 @@ const Disparo = () => {
         <CardContent className="space-y-6">
           {/* Message Type Selection */}
           <div>
-            <label className="text-sm font-medium mb-3 block">Tipo de Mensagem</label>
-            <RadioGroup value={messageType} onValueChange={(value: 'text' | 'audio' | 'photo') => setMessageType(value)} className="flex gap-6">
+            <Label className="text-sm font-medium">Tipo de Mensagem</Label>
+            <RadioGroup 
+              value={messageType} 
+              onValueChange={handleMessageTypeChange}
+              className="mt-2"
+            >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="text" id="text" />
                 <Label htmlFor="text" className="flex items-center gap-2 cursor-pointer">
-                  <Type className="h-4 w-4" />
+                  <FileText className="h-4 w-4" />
                   Texto
                 </Label>
               </div>
@@ -501,120 +505,127 @@ const Disparo = () => {
             </RadioGroup>
           </div>
 
-          {/* Content based on message type */}
+          {/* Text Message */}
           {messageType === 'text' && (
             <div>
-              <label className="text-sm font-medium">Mensagem de Texto</label>
+              <Label className="text-sm font-medium">Mensagem de Texto</Label>
               <Textarea
                 placeholder="Digite sua mensagem..."
                 value={textMessage}
                 onChange={(e) => setTextMessage(e.target.value)}
                 className="mt-1"
-                rows={4}
+                required={messageType === 'text'}
               />
             </div>
           )}
 
+          {/* Audio Upload */}
           {messageType === 'audio' && (
             <div>
-              <label className="text-sm font-medium">Arquivo de Áudio</label>
+              <Label className="text-sm font-medium">Arquivo de Áudio</Label>
               <div className="mt-1 space-y-2">
                 <Input
                   type="file"
                   accept="audio/*"
                   onChange={handleAudioSelect}
-                  disabled={audioUploading}
+                  disabled={uploading}
                   className="max-w-sm"
+                  required={messageType === 'audio'}
                 />
-                {audioUploading && <p className="text-sm text-muted-foreground">Carregando áudio...</p>}
+                {uploading && <p className="text-sm text-muted-foreground">Carregando áudio...</p>}
                 {audioFile && (
                   <div className="space-y-2">
                     <p className="text-sm text-green-600">Áudio selecionado: {audioFile.name}</p>
                     <audio src={URL.createObjectURL(audioFile)} controls className="w-full max-w-md" />
                   </div>
                 )}
-                {audioUrl && (
+                {mediaUrl && messageType === 'audio' && (
                   <div className="space-y-2">
                     <p className="text-sm text-blue-600">Áudio carregado com sucesso</p>
-                    <audio src={audioUrl} controls className="w-full max-w-md" />
+                    <audio src={mediaUrl} controls className="w-full max-w-md" />
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {messageType === 'photo' && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Arquivo de Imagem</label>
-                <div className="mt-1 space-y-2">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoSelect}
-                    disabled={photoUploading}
-                    className="max-w-sm"
+                {/* Optional caption for audio */}
+                <div>
+                  <Label className="text-sm font-medium">Legenda (Opcional)</Label>
+                  <Textarea
+                    placeholder="Digite uma legenda para o áudio..."
+                    value={textMessage}
+                    onChange={(e) => setTextMessage(e.target.value)}
+                    className="mt-1"
                   />
-                  {photoUploading && <p className="text-sm text-muted-foreground">Carregando imagem...</p>}
-                  {photoFile && (
-                    <div className="space-y-2">
-                      <p className="text-sm text-green-600">Imagem selecionada: {photoFile.name}</p>
-                      <img 
-                        src={URL.createObjectURL(photoFile)} 
-                        alt="Preview" 
-                        className="w-full max-w-md rounded-md border"
-                      />
-                    </div>
-                  )}
-                  {photoUrl && (
-                    <div className="space-y-2">
-                      <p className="text-sm text-blue-600">Imagem carregada com sucesso</p>
-                      <img 
-                        src={photoUrl} 
-                        alt="Uploaded" 
-                        className="w-full max-w-md rounded-md border"
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-medium">Legenda (Opcional)</label>
-                <Textarea
-                  placeholder="Digite uma legenda para a imagem..."
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  className="mt-1"
-                  rows={3}
+            </div>
+          )}
+
+          {/* Photo Upload */}
+          {messageType === 'photo' && (
+            <div>
+              <Label className="text-sm font-medium">Arquivo de Imagem</Label>
+              <div className="mt-1 space-y-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoSelect}
+                  disabled={uploading}
+                  className="max-w-sm"
+                  required={messageType === 'photo'}
                 />
+                {uploading && <p className="text-sm text-muted-foreground">Carregando imagem...</p>}
+                {photoFile && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-green-600">Imagem selecionada: {photoFile.name}</p>
+                    <img 
+                      src={URL.createObjectURL(photoFile)} 
+                      alt="Preview" 
+                      className="max-w-md max-h-48 object-contain rounded-lg border"
+                    />
+                  </div>
+                )}
+                {mediaUrl && messageType === 'photo' && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-blue-600">Imagem carregada com sucesso</p>
+                    <img 
+                      src={mediaUrl} 
+                      alt="Uploaded" 
+                      className="max-w-md max-h-48 object-contain rounded-lg border"
+                    />
+                  </div>
+                )}
+                {/* Optional caption for photo */}
+                <div>
+                  <Label className="text-sm font-medium">Legenda (Opcional)</Label>
+                  <Textarea
+                    placeholder="Digite uma legenda para a imagem..."
+                    value={textMessage}
+                    onChange={(e) => setTextMessage(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
               </div>
             </div>
           )}
 
+          {/* Interval Setting */}
           <div>
-            <label className="text-sm font-medium">Intervalo entre envios (segundos)</label>
+            <Label className="text-sm font-medium">Intervalo entre envios (segundos)</Label>
             <Input
               type="number"
               min="0"
               value={intervalSeconds}
               onChange={(e) => setIntervalSeconds(parseInt(e.target.value) || 0)}
               className="mt-1 max-w-xs"
-              placeholder="0"
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Tempo de espera entre cada envio (0 = envio imediato)
-            </p>
           </div>
 
           <Button
             onClick={handleSubmit}
-            disabled={submitting || selectedContacts.size === 0 || audioUploading || photoUploading}
+            disabled={submitting || uploading || selectedContacts.size === 0}
             className="w-full"
           >
-            {submitting ? (
-              "Enviando..."
-            ) : audioUploading || photoUploading ? (
-              "Carregando arquivo..."
+            {submitting || uploading ? (
+              uploading ? "Carregando arquivo..." : "Enviando..."
             ) : (
               <>
                 <Send className="mr-2 h-4 w-4" />
