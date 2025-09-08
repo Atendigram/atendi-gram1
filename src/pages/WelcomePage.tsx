@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getAccountId } from '@/lib/supabase';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
 import PageLayout from '@/components/layout/PageLayout';
@@ -45,11 +46,21 @@ const WelcomePage = () => {
   const loadWelcomeFlow = async () => {
     setLoading(true);
     try {
-      // Load the default welcome flow
+      const accountId = await getAccountId();
+      if (!accountId) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro de autenticação',
+          description: 'Não foi possível obter os dados da conta.',
+        });
+        return;
+      }
+
+      // Load the default welcome flow for this account
       const { data: flowData, error: flowError } = await supabase
         .from('welcome_flows')
         .select('id, name, enabled')
-        .eq('workspace_id', 'default')
+        .eq('account_id', accountId)
         .eq('is_default', true)
         .limit(1)
         .single();
@@ -168,6 +179,16 @@ const WelcomePage = () => {
   const handleSaveStep = async (stepData: Partial<WelcomeStep>) => {
     if (!flow) return;
 
+    const accountId = await getAccountId();
+    if (!accountId) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de autenticação',
+        description: 'Não foi possível obter os dados da conta.',
+      });
+      return;
+    }
+
     const isEditing = !!editingStep;
     let optimisticStep: WelcomeStep;
 
@@ -210,6 +231,7 @@ const WelcomePage = () => {
           .from('welcome_flow_steps')
           .insert({
             ...stepData,
+            account_id: accountId,
             flow_id: flow.id,
             order_index: maxOrder + 1,
             kind: stepData.kind!,

@@ -69,6 +69,7 @@ export type Database = {
       }
       boas_vindas_settings: {
         Row: {
+          account_id: string
           audio1_path: string | null
           audio2_path: string | null
           delay_after_audio1_sec: number | null
@@ -84,6 +85,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          account_id: string
           audio1_path?: string | null
           audio2_path?: string | null
           delay_after_audio1_sec?: number | null
@@ -99,6 +101,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          account_id?: string
           audio1_path?: string | null
           audio2_path?: string | null
           delay_after_audio1_sec?: number | null
@@ -113,7 +116,15 @@ export type Database = {
           updated_at?: string | null
           workspace_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "boas_vindas_settings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contacts: {
         Row: {
@@ -522,6 +533,7 @@ export type Database = {
       }
       welcome_flow_steps: {
         Row: {
+          account_id: string
           created_at: string | null
           delay_after_sec: number
           flow_id: string
@@ -534,6 +546,7 @@ export type Database = {
           text_content: string | null
         }
         Insert: {
+          account_id: string
           created_at?: string | null
           delay_after_sec?: number
           flow_id: string
@@ -546,6 +559,7 @@ export type Database = {
           text_content?: string | null
         }
         Update: {
+          account_id?: string
           created_at?: string | null
           delay_after_sec?: number
           flow_id?: string
@@ -559,6 +573,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "welcome_flow_steps_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "welcome_flow_steps_flow_id_fkey"
             columns: ["flow_id"]
             isOneToOne: false
@@ -569,6 +590,7 @@ export type Database = {
       }
       welcome_flows: {
         Row: {
+          account_id: string
           enabled: boolean
           id: string
           is_default: boolean
@@ -577,6 +599,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          account_id: string
           enabled?: boolean
           id?: string
           is_default?: boolean
@@ -585,6 +608,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          account_id?: string
           enabled?: boolean
           id?: string
           is_default?: boolean
@@ -592,7 +616,15 @@ export type Database = {
           updated_at?: string | null
           workspace_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "welcome_flows_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
