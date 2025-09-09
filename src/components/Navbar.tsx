@@ -70,7 +70,7 @@ const Navbar = () => {
     
     
     
-    { title: 'Configurações', path: '/configuracoes', icon: Settings },
+    { title: 'Conectar Perfil', path: '/conectar-perfil', icon: Settings },
   ];
 
   const isActive = (path: string) => {
