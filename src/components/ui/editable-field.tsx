@@ -143,7 +143,7 @@ export const EditableField = ({
     >
       <div className="flex items-center gap-2">
         {icon && <span className="text-muted-foreground">{icon}</span>}
-        <span className="text-xs">
+        <span>
           {value ? formatValue(value) : (
             <span className="text-muted-foreground italic">{placeholder}</span>
           )}
