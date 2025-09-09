@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { scopedCount } from '@/lib/scoped-queries';
 
 /* ---------------- CONFIG ---------------- */
-const CONTACTS_TABLE = "contatos_luna";
+const CONTACTS_TABLE = "contatos_geral";
 const LOGS_TABLE = "logsluna";
 
 /* ---------------- HELPERS ---------------- */

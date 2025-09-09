@@ -46,7 +46,7 @@ const ContatosList = () => {
 
     setLoading(true);
     try {
-      let query = scopedSelectWithColumns('contatos_luna', 'user_id, first_name, last_name, username, created_at', accountId);
+      let query = scopedSelectWithColumns('contatos_geral', 'user_id, first_name, last_name, username, created_at', accountId);
 
       // Apply search filter if exists
       if (searchTerm) {
@@ -78,7 +78,7 @@ const ContatosList = () => {
         setTotalCount(count || 0);
       } else if (currentPage === 1) {
         // Only fetch total count on first page when searching
-        const { count: total } = await scopedCount('contatos_luna', accountId);
+        const { count: total } = await scopedCount('contatos_geral', accountId);
         setTotalCount(total || 0);
       }
     } catch (error) {
@@ -147,7 +147,7 @@ const ContatosList = () => {
 
       // Fetch all filtered data in batches
       while (hasMore) {
-        let query = scopedSelectWithColumns('contatos_luna', 'user_id, first_name, last_name, username, created_at', accountId);
+        let query = scopedSelectWithColumns('contatos_geral', 'user_id, first_name, last_name, username, created_at', accountId);
 
         // Apply the same search filter
         if (searchTerm) {
