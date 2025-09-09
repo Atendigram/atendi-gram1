@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Save, Wand2 } from 'lucide-react';
+import { Plus, Save, Wand2, RefreshCw } from 'lucide-react';
 
 interface WelcomeFlow {
   id: string;
@@ -15,6 +15,7 @@ interface WelcomeFlowHeaderProps {
   onToggleEnabled: () => void;
   onCreateStep: () => void;
   onSaveOrder: () => void;
+  onRefresh: () => void;
   isSaving: boolean;
 }
 
@@ -23,6 +24,7 @@ const WelcomeFlowHeader: React.FC<WelcomeFlowHeaderProps> = ({
   onToggleEnabled,
   onCreateStep,
   onSaveOrder,
+  onRefresh,
   isSaving,
 }) => {
   return (
@@ -56,6 +58,15 @@ const WelcomeFlowHeader: React.FC<WelcomeFlowHeaderProps> = ({
             </p>
           </div>
           <div className="flex flex-col space-y-2 md:flex-row md:items-center md:space-y-0 md:space-x-2">
+            <Button
+              onClick={onRefresh}
+              variant="outline"
+              size="sm"
+              className="w-full md:w-auto"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
             <Button
               onClick={onSaveOrder}
               disabled={isSaving}

@@ -407,6 +407,7 @@ const WelcomePage = () => {
             onToggleEnabled={toggleFlowEnabled}
             onCreateStep={handleCreateStep}
             onSaveOrder={handleSaveOrder}
+            onRefresh={() => flow && loadSteps(flow.id)}
             isSaving={isSaving}
           />
 
