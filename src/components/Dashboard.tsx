@@ -149,22 +149,22 @@ const Dashboard = () => {
       {/* Header */}
       <header className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold mb-1">
-            <EditableField
-              value={title}
-              onSave={onSaveString(setTitle)}
-              className="inline-block"
-              showEditIcon
-            />
-          </h1>
-          <p className="text-muted-foreground">
-            <EditableField
-              value={description}
-              onSave={onSaveString(setDescription)}
-              className="inline-block"
-              showEditIcon
-            />
-          </p>
+           <h1 className="text-2xl font-bold mb-1 text-foreground">
+             <EditableField
+               value={title}
+               onSave={onSaveString(setTitle)}
+               className="inline-block"
+               showEditIcon
+             />
+           </h1>
+           <p className="text-muted-foreground">
+             <EditableField
+               value={description}
+               onSave={onSaveString(setDescription)}
+               className="inline-block text-muted-foreground"
+               showEditIcon
+             />
+           </p>
         </div>
 
         <div className="flex items-center space-x-4">
