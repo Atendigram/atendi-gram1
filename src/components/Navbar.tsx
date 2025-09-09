@@ -18,6 +18,7 @@ import {
   FileText,
   Wand2,
   LogOut,
+  HelpCircle,
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -64,6 +65,7 @@ const Navbar = () => {
     { title: 'Contatos', path: '/contatos', icon: Users },
     { title: 'Disparos', path: '/disparos', icon: Send },
     { title: 'Boas-Vindas', path: '/boas-vindas', icon: Wand2 },
+    { title: 'Suporte', path: '/suporte', icon: HelpCircle },
     
     
     

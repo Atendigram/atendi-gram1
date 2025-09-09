@@ -13,6 +13,7 @@ import DisparoPage from "./pages/DisparoPage";
 import TelegramPage from "./pages/TelegramPage";
 import Contatos from "./pages/Contatos";
 import WelcomePage from "./pages/WelcomePage";
+import SuportePage from "./pages/SuportePage";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -38,6 +39,7 @@ const routes = [
   { path: "/disparos", element: <ProtectedRoute><TelegramPage /></ProtectedRoute> },
   { path: "/welcome", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
   { path: "/boas-vindas", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
+  { path: "/suporte", element: <ProtectedRoute><SuportePage /></ProtectedRoute> },
   
   
   
