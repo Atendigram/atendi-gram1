@@ -108,9 +108,25 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
     setUploadProgress(0);
     
     try {
+      // Get user's account_id for folder structure
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('account_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile) {
+        throw new Error('Não foi possível carregar o perfil do usuário');
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const filePath = `${profile.account_id}/${fileName}`;
 
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
@@ -142,7 +158,7 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
       toast({
         variant: 'destructive',
         title: 'Erro no upload',
-        description: 'Não foi possível enviar o arquivo.',
+        description: error instanceof Error ? error.message : 'Não foi possível enviar o arquivo.',
       });
     } finally {
       setUploading(false);
