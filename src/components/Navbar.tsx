@@ -64,7 +64,7 @@ const Navbar = () => {
     { title: 'Dashboard', path: '/', icon: Home },
     { title: 'Contatos', path: '/contatos', icon: Users },
     { title: 'Disparos', path: '/disparos', icon: Send },
-    { title: 'Boas-Vindas', path: '/boas-vindas', icon: Wand2 },
+    { title: 'Boas-Vindas', path: '/?tab=tasks', icon: Wand2 },
     { title: 'Suporte', path: '/suporte', icon: HelpCircle },
     
     
@@ -74,7 +74,15 @@ const Navbar = () => {
   ];
 
   const isActive = (path: string) => {
-    if (path === '/' && location.pathname === '/') return true;
+    // Handle special case for Boas-Vindas tab
+    if (path === '/?tab=tasks') {
+      return location.pathname === '/' && new URLSearchParams(location.search).get('tab') === 'tasks';
+    }
+    if (path === '/' && location.pathname === '/') {
+      // Only consider root active if no tab parameter or tab is dashboard
+      const tab = new URLSearchParams(location.search).get('tab');
+      return !tab || tab === 'dashboard';
+    }
     if (path !== '/' && location.pathname.startsWith(path)) return true;
     return false;
   };
