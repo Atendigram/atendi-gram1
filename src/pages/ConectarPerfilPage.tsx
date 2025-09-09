@@ -25,7 +25,6 @@ const ConectarPerfilPage = () => {
   const { profile } = useAuth();
   const [step, setStep] = useState<'form' | 'verification'>('form');
   const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<FormData>({
     apiId: '',
@@ -84,7 +83,6 @@ const ConectarPerfilPage = () => {
         throw new Error(data.error);
       }
 
-      setSessionId(data.sessionId);
       setStep('verification');
       toast.success('Dados salvos! Agora insira o código de verificação.');
     } catch (err: any) {
@@ -125,7 +123,6 @@ const ConectarPerfilPage = () => {
       setStep('form');
       setFormData({ apiId: '', apiHash: '', phoneNumber: '+55' });
       setVerificationData({ code: '', password: '' });
-      setSessionId(null);
     } catch (err: any) {
       console.error('Erro ao finalizar login:', err);
       setError(err.message || 'Erro ao confirmar código. Verifique os dados e tente novamente.');
