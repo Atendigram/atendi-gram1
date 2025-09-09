@@ -21,14 +21,14 @@ const NotFound = () => {
         </div>
         <h1 className="text-4xl font-bold mb-4">404</h1>
         <p className="text-xl text-muted-foreground mb-6">
-          La page que vous recherchez n'existe pas ou a été déplacée.
+          A página que você procura não existe ou foi movida.
         </p>
         <Link 
           to="/" 
-          className="inline-flex items-center px-4 py-2 bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark transition-colors"
+          className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour à l'accueil
+          Voltar ao início
         </Link>
       </div>
     </div>

@@ -6,7 +6,7 @@ import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeWeatherAlerts from '../components/GuadeloupeWeatherAlerts';
 import TaskList from '../components/cultures/TaskList';
 import Disparo from '../components/Disparo';
-import WelcomePage from './WelcomePage';
+import SimpleWelcome from '../components/SimpleWelcome';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Download, Filter, RefreshCw, Upload, Printer } from 'lucide-react';
 import { StatisticsProvider } from '../contexts/StatisticsContext';
@@ -152,7 +152,7 @@ const Index = () => {
   }, {
     value: 'tasks',
     label: 'Boas Vindas',
-    content: <WelcomePage />
+    content: <SimpleWelcome />
   }];
   return <StatisticsProvider>
       <PageLayout>
