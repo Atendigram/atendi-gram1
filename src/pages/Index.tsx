@@ -13,7 +13,9 @@ import { StatisticsProvider } from '../contexts/StatisticsContext';
 import { useCRM } from '../contexts/CRMContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router-dom';
 const Index = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [userName, setUserName] = useState('Atendente');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -81,6 +83,11 @@ const Index = () => {
     }
   };
   const handleTabChange = (value: string) => {
+    // If it's the welcome tab, navigate to the welcome page
+    if (value === 'tasks') {
+      navigate('/boas-vindas');
+      return;
+    }
     setActiveTab(value);
     console.log(`Mudança de aba para: ${value}`);
   };
