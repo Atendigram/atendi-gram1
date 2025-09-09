@@ -55,17 +55,18 @@ const WelcomeFlowHeader: React.FC<WelcomeFlowHeaderProps> = ({
               Gerencie os passos do fluxo de boas-vindas
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col space-y-2 md:flex-row md:items-center md:space-y-0 md:space-x-2">
             <Button
               onClick={onSaveOrder}
               disabled={isSaving}
               variant="outline"
               size="sm"
+              className="w-full md:w-auto"
             >
               <Save className="h-4 w-4 mr-2" />
               {isSaving ? 'Salvando...' : 'Salvar Ordem'}
             </Button>
-            <Button onClick={onCreateStep} size="sm">
+            <Button onClick={onCreateStep} size="sm" className="w-full md:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Novo Passo
             </Button>
