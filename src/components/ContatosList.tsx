@@ -50,7 +50,14 @@ const ContatosList = () => {
 
       // Apply search filter if exists
       if (searchTerm) {
-        query = query.or(`user_id.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+        const isNumeric = /^\d+$/.test(searchTerm);
+        if (isNumeric) {
+          // If search term is numeric, search user_id as exact match and text fields with ilike
+          query = query.or(`user_id.eq.${searchTerm},first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+        } else {
+          // If search term is not numeric, only search text fields
+          query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+        }
       }
 
       // Apply pagination and ordering
@@ -144,7 +151,14 @@ const ContatosList = () => {
 
         // Apply the same search filter
         if (searchTerm) {
-          query = query.or(`user_id.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+          const isNumeric = /^\d+$/.test(searchTerm);
+          if (isNumeric) {
+            // If search term is numeric, search user_id as exact match and text fields with ilike
+            query = query.or(`user_id.eq.${searchTerm},first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+          } else {
+            // If search term is not numeric, only search text fields
+            query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+          }
         }
 
         const { data, error } = await query
