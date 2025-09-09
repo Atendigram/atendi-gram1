@@ -149,7 +149,7 @@ const Dashboard = () => {
       {/* Header */}
       <header className="flex justify-between items-center mb-6">
         <div>
-           <h1 className="text-2xl md:text-9xl font-bold mb-1 text-foreground dark:text-black">
+           <h1 className="text-2xl md:text-[12rem] font-bold mb-1 text-foreground dark:text-black leading-none">
              <EditableField
                value={title}
                onSave={onSaveString(setTitle)}
@@ -157,7 +157,7 @@ const Dashboard = () => {
                showEditIcon
              />
            </h1>
-           <p className="text-muted-foreground text-sm md:text-3xl">
+           <p className="text-muted-foreground text-sm md:text-5xl">
              <EditableField
                value={description}
                onSave={onSaveString(setDescription)}
