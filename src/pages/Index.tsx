@@ -5,6 +5,8 @@ import TabContainer, { TabItem } from '../components/layout/TabContainer';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeWeatherAlerts from '../components/GuadeloupeWeatherAlerts';
 import TaskList from '../components/cultures/TaskList';
+import Disparo from '../components/Disparo';
+import WelcomePage from './WelcomePage';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Download, Filter, RefreshCw, Upload, Printer } from 'lucide-react';
 import { StatisticsProvider } from '../contexts/StatisticsContext';
@@ -146,11 +148,11 @@ const Index = () => {
   }, {
     value: 'harvest',
     label: 'Disparos',
-    content: <GuadeloupeHarvestTracking />
+    content: <Disparo />
   }, {
     value: 'tasks',
     label: 'Boas Vindas',
-    content: <TaskList />
+    content: <WelcomePage />
   }];
   return <StatisticsProvider>
       <PageLayout>
