@@ -196,21 +196,21 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-32px)] max-w-[380px] sm:max-w-[750px] h-auto max-h-[90vh] sm:max-h-[80vh] overflow-y-auto p-3 sm:p-6 mx-2 sm:mx-auto">
-        <DialogHeader className="pb-3 sm:pb-4">
-          <DialogTitle className="text-base sm:text-xl">
+      <DialogContent className="w-[calc(100vw-32px)] max-w-[380px] sm:max-w-[650px] h-fit max-h-[90vh] sm:max-h-[85vh] overflow-y-auto p-3 sm:p-4 mx-2 sm:mx-auto">
+        <DialogHeader className="pb-2 sm:pb-3">
+          <DialogTitle className="text-base sm:text-lg">
             {editingStep ? 'Editar Passo' : 'Criar Novo Passo'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-3 sm:gap-4 pb-3 sm:pb-4">
+        <div className="grid gap-2 sm:gap-3 pb-2 sm:pb-3">
           {validationErrors.length > 0 && (
-            <div className="p-2 sm:p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+            <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-md">
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-destructive mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-xs sm:text-sm font-medium text-destructive">Erros de validação:</p>
-                  <ul className="text-xs sm:text-sm text-destructive space-y-1">
+                <div className="space-y-0.5">
+                  <p className="text-xs font-medium text-destructive">Erros de validação:</p>
+                  <ul className="text-xs text-destructive space-y-0.5">
                     {validationErrors.map((error, index) => (
                       <li key={index}>• {error}</li>
                     ))}
@@ -219,7 +219,7 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
               </div>
             </div>
           )}
-          <div className="grid gap-1 sm:gap-2">
+          <div className="grid gap-1">
             <Label htmlFor="kind" className="text-sm">Tipo do Passo</Label>
             <Select
               value={formData.kind}
@@ -239,7 +239,7 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
             </Select>
           </div>
 
-          <div className="grid gap-1 sm:gap-2">
+          <div className="grid gap-1">
             <Label htmlFor="text_content" className="text-sm">
               Conteúdo do Texto
               {requiresMedia && ' (Legenda/Descrição)'}
@@ -251,15 +251,15 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
               onChange={(e) =>
                 setFormData(prev => ({ ...prev, text_content: e.target.value }))
               }
-              rows={3}
-              className="min-h-[60px] sm:min-h-[80px] text-sm resize-none"
+              rows={2}
+              className="min-h-[50px] text-sm resize-none"
             />
             <p className="text-xs text-muted-foreground">
               Placeholders disponíveis: {'{first_name}, {username}, {today}'}
             </p>
           </div>
 
-          <div className="grid gap-1 sm:gap-2">
+          <div className="grid gap-1">
             <Label htmlFor="parse_mode" className="text-sm">Modo de Parse</Label>
             <Select
               value={formData.parse_mode}
@@ -279,11 +279,11 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
           </div>
 
           {requiresMedia && (
-            <div className="grid gap-1 sm:gap-2">
+            <div className="grid gap-1">
               <Label htmlFor="media" className="text-sm">Arquivo de Mídia</Label>
-              <div className="space-y-2">
-                  <div className="space-y-2">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <div className="space-y-1">
+                  <div className="space-y-1">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1">
                       <Input
                         id="media"
                         type="file"
@@ -296,31 +296,31 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
                         }
                         onChange={handleFileUpload}
                         disabled={uploading}
-                        className="h-8 sm:h-10 text-xs sm:text-sm file:text-xs sm:file:text-sm"
+                        className="h-8 text-xs sm:text-sm file:text-xs"
                       />
                       {uploading && (
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                          <Upload className="h-3 w-3 sm:h-4 sm:w-4 animate-pulse" />
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Upload className="h-3 w-3 animate-pulse" />
                           Enviando...
                         </div>
                       )}
                     </div>
                     {uploading && uploadProgress > 0 && (
-                      <Progress value={uploadProgress} className="w-full h-1 sm:h-2" />
+                      <Progress value={uploadProgress} className="w-full h-1" />
                     )}
                   </div>
                 {formData.media_url && (
-                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                    <span className="text-xs sm:text-sm truncate flex-1">{formData.media_url}</span>
+                  <div className="flex items-center gap-2 p-1.5 bg-muted rounded-md">
+                    <span className="text-xs truncate flex-1">{formData.media_url}</span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 sm:h-8 sm:w-8 p-0"
+                      className="h-6 w-6 p-0"
                       onClick={() =>
                         setFormData(prev => ({ ...prev, media_url: '' }))
                       }
                     >
-                      <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <X className="h-3 w-3" />
                     </Button>
                   </div>
                 )}
@@ -328,7 +328,7 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
             </div>
           )}
 
-          <div className="grid gap-1 sm:gap-2">
+          <div className="grid gap-1">
             <Label htmlFor="delay" className="text-sm">Delay Após Envio (segundos)</Label>
             <Input
               id="delay"
@@ -342,12 +342,12 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
                   delay_after_sec: parseInt(e.target.value) || 0,
                 }))
               }
-              className="h-8 sm:h-10 text-sm"
+              className="h-8 text-sm"
             />
           </div>
         </div>
 
-        <DialogFooter className="pt-3 sm:pt-4 flex flex-col gap-2 sm:flex-row sm:gap-0">
+        <DialogFooter className="pt-2 flex flex-col gap-2 sm:flex-row sm:gap-0">
           <Button 
             onClick={handleSave} 
             disabled={saving || uploading || !isFormValid}
