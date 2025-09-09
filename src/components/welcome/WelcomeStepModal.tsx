@@ -255,9 +255,6 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
               rows={2}
               className="min-h-[50px] text-sm resize-none"
             />
-            <p className="text-xs text-muted-foreground">
-              Placeholders disponíveis: {'{first_name}, {username}, {today}'}
-            </p>
           </div>
 
           {requiresMedia && (
