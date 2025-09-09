@@ -37,7 +37,7 @@ const Dashboard = () => {
   
   const [title, setTitle] = useState("Olá 👋");
   const [description, setDescription] = useState(
-    "Aqui está uma visão geral do seu atendimento no AtendiGram"
+    "Aqui está uma visão geral do seu perfil ❤️"
   );
   const [currentMonth, setCurrentMonth] = useState("Agosto 2023");
 
