@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import Dashboard from '../components/Dashboard';
 import TabContainer, { TabItem } from '../components/layout/TabContainer';
@@ -15,19 +14,10 @@ import { useCRM } from '../contexts/CRMContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 const Index = () => {
-  const [searchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<string>(tabFromUrl || 'dashboard');
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [userName, setUserName] = useState('Atendente');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  // Update active tab when URL parameters change
-  useEffect(() => {
-    if (tabFromUrl && tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
-    }
-  }, [tabFromUrl, activeTab]);
 
   // Contexto CRM
   const {
@@ -92,13 +82,6 @@ const Index = () => {
   };
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    // Update URL to reflect active tab
-    const params = new URLSearchParams();
-    if (value !== 'dashboard') {
-      params.set('tab', value);
-    }
-    const newUrl = value === 'dashboard' ? '/' : `/?${params.toString()}`;
-    window.history.replaceState({}, '', newUrl);
     console.log(`Mudança de aba para: ${value}`);
   };
 
