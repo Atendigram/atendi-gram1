@@ -311,7 +311,9 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
                   </div>
                 {formData.media_url && (
                   <div className="flex items-center gap-2 p-1.5 bg-muted rounded-md">
-                    <span className="text-xs truncate flex-1">{formData.media_url}</span>
+                    <span className="text-xs truncate flex-1">
+                      {formData.media_url.split('/').pop()?.split('?')[0] || 'Arquivo enviado'}
+                    </span>
                     <Button
                       variant="ghost"
                       size="sm"
