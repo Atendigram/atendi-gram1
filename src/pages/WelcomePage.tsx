@@ -57,15 +57,33 @@ const WelcomePage = () => {
         return;
       }
 
-      // Load enabled welcome flows for this user, prioritizing default flow
-      console.log('Loading welcome flow for user:', user.id);
+      // First get the user's profile to get their account_id
+      console.log('Loading profile for user:', user.id);
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('account_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('Error loading user profile:', profileError);
+        toast({
+          variant: 'destructive',
+          title: 'Erro de perfil',
+          description: 'Não foi possível carregar o perfil do usuário.',
+        });
+        return;
+      }
+
+      // Load enabled welcome flows for this account, prioritizing default flow
+      console.log('Loading welcome flow for account:', profile.account_id);
       const { data: flowsData, error: flowError } = await supabase
         .from('welcome_flows')
         .select('id, name, enabled, is_default')
-        .eq('account_id', user.id)
+        .eq('account_id', profile.account_id)
         .eq('enabled', true)
         .order('is_default', { ascending: false })
-        .order('created_at', { ascending: true });
+        .order('updated_at', { ascending: true });
 
       if (flowError) {
         console.error('Error loading welcome flows:', flowError);
@@ -78,7 +96,7 @@ const WelcomePage = () => {
       const selectedFlow = flowsData && flowsData.length > 0 ? flowsData[0] : null;
       
       if (!selectedFlow) {
-        console.log('No enabled welcome flow found for user:', user.id);
+        console.log('No enabled welcome flow found for account:', profile.account_id);
         setFlow(null);
         setSteps([]);
         return;
@@ -200,6 +218,22 @@ const WelcomePage = () => {
       return;
     }
 
+    // Get user's account_id from profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('account_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de perfil',
+        description: 'Não foi possível carregar o perfil do usuário.',
+      });
+      return;
+    }
+
     const isEditing = !!editingStep;
     let optimisticStep: WelcomeStep;
 
@@ -242,7 +276,7 @@ const WelcomePage = () => {
           .from('welcome_flow_steps')
           .insert({
             ...stepData,
-            account_id: user.id,
+            account_id: profile.account_id,
             flow_id: flow.id,
             order_index: maxOrder + 1,
             kind: stepData.kind!,
