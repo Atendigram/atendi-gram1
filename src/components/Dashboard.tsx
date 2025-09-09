@@ -149,7 +149,7 @@ const Dashboard = () => {
       {/* Header */}
       <header className="flex justify-between items-center mb-6">
         <div>
-           <h1 className="text-2xl md:text-4xl font-bold mb-1 text-foreground dark:text-black leading-none">
+           <h1 className="text-3xl md:text-4xl font-bold mb-1 text-foreground dark:text-black leading-none">
              <EditableField
                value={title}
                onSave={onSaveString(setTitle)}
