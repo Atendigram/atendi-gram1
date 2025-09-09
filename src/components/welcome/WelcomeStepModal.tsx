@@ -196,14 +196,14 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-16px)] max-w-[95vw] sm:max-w-[600px] max-h-[95vh] overflow-y-auto p-3 sm:p-6 mx-2 sm:m-0">
-        <DialogHeader className="pb-2 sm:pb-4">
-          <DialogTitle className="text-lg sm:text-xl">
+      <DialogContent className="w-[calc(100vw-32px)] max-w-[400px] sm:max-w-[600px] h-auto max-h-[85vh] overflow-y-auto p-4 sm:p-6 mx-4 sm:mx-auto">
+        <DialogHeader className="pb-3 sm:pb-4">
+          <DialogTitle className="text-base sm:text-xl">
             {editingStep ? 'Editar Passo' : 'Criar Novo Passo'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-3 sm:gap-4 py-2 sm:py-4">
+        <div className="grid gap-3 sm:gap-4 pb-3 sm:pb-4">
           {validationErrors.length > 0 && (
             <div className="p-2 sm:p-3 bg-destructive/10 border border-destructive/20 rounded-md">
               <div className="flex items-start gap-2">
@@ -347,16 +347,20 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="pt-2 sm:pt-4 gap-2 sm:gap-0">
-          <Button variant="outline" onClick={onClose} className="h-8 sm:h-10 text-sm">
-            Cancelar
-          </Button>
+        <DialogFooter className="pt-3 sm:pt-4 flex flex-col gap-2 sm:flex-row sm:gap-0">
           <Button 
             onClick={handleSave} 
             disabled={saving || uploading || !isFormValid}
-            className="h-8 sm:h-10 text-sm"
+            className="w-full sm:w-auto order-2 sm:order-2 h-10 text-sm font-medium"
           >
             {saving ? 'Salvando...' : editingStep ? 'Atualizar' : 'Criar'}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={onClose} 
+            className="w-full sm:w-auto order-1 sm:order-1 h-10 text-sm"
+          >
+            Cancelar
           </Button>
         </DialogFooter>
       </DialogContent>
