@@ -196,21 +196,21 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="sm:max-w-[600px] max-h-screen overflow-y-auto p-4 sm:p-6 m-2 sm:m-0">
+        <DialogHeader className="pb-2 sm:pb-4">
+          <DialogTitle className="text-lg sm:text-xl">
             {editingStep ? 'Editar Passo' : 'Criar Novo Passo'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-3 sm:gap-4 py-2 sm:py-4">
           {validationErrors.length > 0 && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+            <div className="p-2 sm:p-3 bg-destructive/10 border border-destructive/20 rounded-md">
               <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+                <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-destructive mt-0.5" />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-destructive">Erros de validação:</p>
-                  <ul className="text-sm text-destructive space-y-1">
+                  <p className="text-xs sm:text-sm font-medium text-destructive">Erros de validação:</p>
+                  <ul className="text-xs sm:text-sm text-destructive space-y-1">
                     {validationErrors.map((error, index) => (
                       <li key={index}>• {error}</li>
                     ))}
@@ -219,15 +219,15 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
               </div>
             </div>
           )}
-          <div className="grid gap-2">
-            <Label htmlFor="kind">Tipo do Passo</Label>
+          <div className="grid gap-1 sm:gap-2">
+            <Label htmlFor="kind" className="text-sm">Tipo do Passo</Label>
             <Select
               value={formData.kind}
               onValueChange={(value: 'text' | 'photo' | 'voice' | 'audio') =>
                 setFormData(prev => ({ ...prev, kind: value }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-8 sm:h-10 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -239,8 +239,8 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
             </Select>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="text_content">
+          <div className="grid gap-1 sm:gap-2">
+            <Label htmlFor="text_content" className="text-sm">
               Conteúdo do Texto
               {requiresMedia && ' (Legenda/Descrição)'}
             </Label>
@@ -251,22 +251,23 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
               onChange={(e) =>
                 setFormData(prev => ({ ...prev, text_content: e.target.value }))
               }
-              rows={4}
+              rows={3}
+              className="min-h-[60px] sm:min-h-[80px] text-sm resize-none"
             />
             <p className="text-xs text-muted-foreground">
               Placeholders disponíveis: {'{first_name}, {username}, {today}'}
             </p>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="parse_mode">Modo de Parse</Label>
+          <div className="grid gap-1 sm:gap-2">
+            <Label htmlFor="parse_mode" className="text-sm">Modo de Parse</Label>
             <Select
               value={formData.parse_mode}
               onValueChange={(value: 'none' | 'html' | 'markdown') =>
                 setFormData(prev => ({ ...prev, parse_mode: value }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-8 sm:h-10 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -278,11 +279,11 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
           </div>
 
           {requiresMedia && (
-            <div className="grid gap-2">
-              <Label htmlFor="media">Arquivo de Mídia</Label>
+            <div className="grid gap-1 sm:gap-2">
+              <Label htmlFor="media" className="text-sm">Arquivo de Mídia</Label>
               <div className="space-y-2">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                       <Input
                         id="media"
                         type="file"
@@ -295,29 +296,31 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
                         }
                         onChange={handleFileUpload}
                         disabled={uploading}
+                        className="h-8 sm:h-10 text-xs sm:text-sm file:text-xs sm:file:text-sm"
                       />
                       {uploading && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Upload className="h-4 w-4 animate-pulse" />
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                          <Upload className="h-3 w-3 sm:h-4 sm:w-4 animate-pulse" />
                           Enviando...
                         </div>
                       )}
                     </div>
                     {uploading && uploadProgress > 0 && (
-                      <Progress value={uploadProgress} className="w-full" />
+                      <Progress value={uploadProgress} className="w-full h-1 sm:h-2" />
                     )}
                   </div>
                 {formData.media_url && (
                   <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                    <span className="text-sm truncate flex-1">{formData.media_url}</span>
+                    <span className="text-xs sm:text-sm truncate flex-1">{formData.media_url}</span>
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="h-6 w-6 sm:h-8 sm:w-8 p-0"
                       onClick={() =>
                         setFormData(prev => ({ ...prev, media_url: '' }))
                       }
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 )}
@@ -325,8 +328,8 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
             </div>
           )}
 
-          <div className="grid gap-2">
-            <Label htmlFor="delay">Delay Após Envio (segundos)</Label>
+          <div className="grid gap-1 sm:gap-2">
+            <Label htmlFor="delay" className="text-sm">Delay Após Envio (segundos)</Label>
             <Input
               id="delay"
               type="number"
@@ -339,17 +342,19 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
                   delay_after_sec: parseInt(e.target.value) || 0,
                 }))
               }
+              className="h-8 sm:h-10 text-sm"
             />
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="pt-2 sm:pt-4 gap-2 sm:gap-0">
+          <Button variant="outline" onClick={onClose} className="h-8 sm:h-10 text-sm">
             Cancelar
           </Button>
           <Button 
             onClick={handleSave} 
             disabled={saving || uploading || !isFormValid}
+            className="h-8 sm:h-10 text-sm"
           >
             {saving ? 'Salvando...' : editingStep ? 'Atualizar' : 'Criar'}
           </Button>
