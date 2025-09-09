@@ -46,49 +46,48 @@ const WelcomePage = () => {
   const loadWelcomeFlow = async () => {
     setLoading(true);
     try {
-      const accountId = await getAccountId();
-      console.log('Account ID retrieved:', accountId);
-      if (!accountId) {
-        console.error('Failed to get account ID');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        console.error('Authentication error:', authError);
         toast({
           variant: 'destructive',
           title: 'Erro de autenticação',
-          description: 'Não foi possível obter os dados da conta.',
+          description: 'Usuário não autenticado.',
         });
         return;
       }
 
-      // Load the default welcome flow for this account
-      console.log('Loading welcome flow for account:', accountId);
-      const { data: flowData, error: flowError } = await supabase
+      // Load enabled welcome flows for this user, prioritizing default flow
+      console.log('Loading welcome flow for user:', user.id);
+      const { data: flowsData, error: flowError } = await supabase
         .from('welcome_flows')
-        .select('id, name, enabled')
-        .eq('account_id', accountId)
-        .eq('is_default', true)
-        .limit(1)
-        .maybeSingle();
+        .select('id, name, enabled, is_default')
+        .eq('account_id', user.id)
+        .eq('enabled', true)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: true });
 
       if (flowError) {
-        console.error('Error loading welcome flow:', flowError);
+        console.error('Error loading welcome flows:', flowError);
         setFlow(null);
         setSteps([]);
         return;
       }
 
-      console.log('Welcome flow data:', flowData);
-      if (!flowData) {
-        console.log('No default welcome flow found for account:', accountId);
+      console.log('Welcome flows data:', flowsData);
+      const selectedFlow = flowsData && flowsData.length > 0 ? flowsData[0] : null;
+      
+      if (!selectedFlow) {
+        console.log('No enabled welcome flow found for user:', user.id);
         setFlow(null);
         setSteps([]);
         return;
       }
 
-      setFlow(flowData);
+      setFlow(selectedFlow);
 
       // Load steps for this flow
-      if (flowData?.id) {
-        await loadSteps(flowData.id);
-      }
+      await loadSteps(selectedFlow.id);
     } catch (error) {
       console.error('Error loading welcome flow:', error);
       toast({
@@ -104,7 +103,7 @@ const WelcomePage = () => {
   const loadSteps = async (flowId: string) => {
     const { data: stepsData, error: stepsError } = await supabase
       .from('welcome_flow_steps')
-      .select('*')
+      .select('id, flow_id, order_index, kind, text_content, media_url, delay_after_sec, parse_mode')
       .eq('flow_id', flowId)
       .order('order_index', { ascending: true });
 
@@ -113,6 +112,7 @@ const WelcomePage = () => {
       return;
     }
 
+    console.log('Loaded steps:', stepsData);
     const loadedSteps = (stepsData || []) as WelcomeStep[];
     setSteps(loadedSteps);
     setOptimisticSteps(loadedSteps);
@@ -190,12 +190,12 @@ const WelcomePage = () => {
   const handleSaveStep = async (stepData: Partial<WelcomeStep>) => {
     if (!flow) return;
 
-    const accountId = await getAccountId();
-    if (!accountId) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
       toast({
         variant: 'destructive',
         title: 'Erro de autenticação',
-        description: 'Não foi possível obter os dados da conta.',
+        description: 'Usuário não autenticado.',
       });
       return;
     }
@@ -242,7 +242,7 @@ const WelcomePage = () => {
           .from('welcome_flow_steps')
           .insert({
             ...stepData,
-            account_id: accountId,
+            account_id: user.id,
             flow_id: flow.id,
             order_index: maxOrder + 1,
             kind: stepData.kind!,
