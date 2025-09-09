@@ -70,21 +70,21 @@ const ConectarPerfilPage = () => {
     setError(null);
 
     try {
-      const { data, error } = await supabase
-        .from('telegram_sessions')
-        .insert({
-          account_id: profile.account_id,
-          api_id: formData.apiId,
-          api_hash: formData.apiHash,
-          phone_number: formData.phoneNumber,
-          status: 'pending_code'
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.functions.invoke('create-telegram-session', {
+        body: {
+          apiId: formData.apiId,
+          apiHash: formData.apiHash,
+          phoneNumber: formData.phoneNumber
+        }
+      });
 
       if (error) throw error;
 
-      setSessionId(data.id);
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setSessionId(data.sessionId);
       setStep('verification');
       toast.success('Dados salvos! Agora insira o código de verificação.');
     } catch (err: any) {
@@ -114,6 +114,10 @@ const ConectarPerfilPage = () => {
       });
 
       if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
       toast.success('Perfil conectado com sucesso!');
       

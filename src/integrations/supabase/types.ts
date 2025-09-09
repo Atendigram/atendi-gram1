@@ -531,6 +531,50 @@ export type Database = {
           },
         ]
       }
+      telegram_sessions: {
+        Row: {
+          account_id: string
+          api_hash: string
+          api_id: string
+          created_at: string | null
+          id: string
+          phone_number: string
+          session_string: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_id: string
+          api_hash: string
+          api_id: string
+          created_at?: string | null
+          id?: string
+          phone_number: string
+          session_string?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          api_hash?: string
+          api_id?: string
+          created_at?: string | null
+          id?: string
+          phone_number?: string
+          session_string?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_sessions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       welcome_flow_steps: {
         Row: {
           account_id: string
