@@ -20,6 +20,7 @@ interface Contact {
   username?: string;
   chat_id?: number;
   created_at: string;
+  name?: string; // Computed field from first_name + last_name
 }
 
 const ITEMS_PER_PAGE = 25;
@@ -74,11 +75,18 @@ const Disparo = () => {
     }
 
     try {
-      const { data, error } = await scopedSelectWithColumns('contatos_luna', 'user_id, first_name, last_name, username, chat_id, created_at', accountId)
+      const { data, error } = await scopedSelectWithColumns('contatos_geral', 'user_id, first_name, last_name, username, chat_id, created_at', accountId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setContacts((data as Contact[]) || []);
+      
+      // Add computed name field
+      const contactsWithName = (data as Contact[] || []).map(contact => ({
+        ...contact,
+        name: [contact.first_name, contact.last_name].filter(Boolean).join(' ') || ''
+      }));
+      
+      setContacts(contactsWithName);
     } catch (error) {
       console.error('Error loading contacts:', error);
       toast({
