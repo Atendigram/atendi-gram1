@@ -43,6 +43,31 @@ const WelcomePage = () => {
     loadWelcomeFlow();
   }, []);
 
+  // Set up real-time listening for welcome_flow_steps changes
+  useEffect(() => {
+    if (!flow) return;
+
+    const channel = supabase
+      .channel('welcome_flow_steps_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'welcome_flow_steps',
+          filter: `flow_id=eq.${flow.id}`,
+        },
+        () => {
+          loadSteps(flow.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [flow]);
+
   const loadWelcomeFlow = async () => {
     setLoading(true);
     try {
