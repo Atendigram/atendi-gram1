@@ -196,7 +196,7 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-32px)] max-w-[400px] sm:max-w-[600px] h-auto max-h-[85vh] overflow-y-auto p-4 sm:p-6 mx-4 sm:mx-auto">
+      <DialogContent className="w-[calc(100vw-32px)] max-w-[400px] sm:max-w-[600px] h-auto max-h-[70vh] overflow-y-auto p-4 sm:p-6 mx-4 sm:mx-auto">
         <DialogHeader className="pb-3 sm:pb-4">
           <DialogTitle className="text-base sm:text-xl">
             {editingStep ? 'Editar Passo' : 'Criar Novo Passo'}
