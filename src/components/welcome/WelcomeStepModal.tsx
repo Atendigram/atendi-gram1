@@ -178,7 +178,8 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
 
     setSaving(true);
     try {
-      await onSave(formData);
+      // Always set parse_mode to 'none' since we removed the field
+      await onSave({ ...formData, parse_mode: 'none' });
     } catch (error) {
       console.error('Error saving step:', error);
       toast({
@@ -257,25 +258,6 @@ const WelcomeStepModal: React.FC<WelcomeStepModalProps> = ({
             <p className="text-xs text-muted-foreground">
               Placeholders disponíveis: {'{first_name}, {username}, {today}'}
             </p>
-          </div>
-
-          <div className="grid gap-1">
-            <Label htmlFor="parse_mode" className="text-sm">Modo de Parse</Label>
-            <Select
-              value={formData.parse_mode}
-              onValueChange={(value: 'none' | 'html' | 'markdown') =>
-                setFormData(prev => ({ ...prev, parse_mode: value }))
-              }
-            >
-              <SelectTrigger className="h-8 sm:h-10 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                <SelectItem value="html">HTML</SelectItem>
-                <SelectItem value="markdown">Markdown</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           {requiresMedia && (
