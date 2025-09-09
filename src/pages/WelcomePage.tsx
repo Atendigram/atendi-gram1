@@ -47,7 +47,9 @@ const WelcomePage = () => {
     setLoading(true);
     try {
       const accountId = await getAccountId();
+      console.log('Account ID retrieved:', accountId);
       if (!accountId) {
+        console.error('Failed to get account ID');
         toast({
           variant: 'destructive',
           title: 'Erro de autenticação',
@@ -57,16 +59,25 @@ const WelcomePage = () => {
       }
 
       // Load the default welcome flow for this account
+      console.log('Loading welcome flow for account:', accountId);
       const { data: flowData, error: flowError } = await supabase
         .from('welcome_flows')
         .select('id, name, enabled')
         .eq('account_id', accountId)
         .eq('is_default', true)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (flowError) {
         console.error('Error loading welcome flow:', flowError);
+        setFlow(null);
+        setSteps([]);
+        return;
+      }
+
+      console.log('Welcome flow data:', flowData);
+      if (!flowData) {
+        console.log('No default welcome flow found for account:', accountId);
         setFlow(null);
         setSteps([]);
         return;
