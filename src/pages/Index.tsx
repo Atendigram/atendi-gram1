@@ -145,11 +145,11 @@ const Index = () => {
     content: <Dashboard />
   }, {
     value: 'harvest',
-    label: 'Telegram',
+    label: 'Disparos',
     content: <GuadeloupeHarvestTracking />
   }, {
     value: 'tasks',
-    label: 'Tarefas',
+    label: 'Boas Vindas',
     content: <TaskList />
   }];
   return <StatisticsProvider>
