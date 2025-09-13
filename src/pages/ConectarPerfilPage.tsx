@@ -73,22 +73,20 @@ const ConectarPerfilPage = () => {
     setError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-telegram-session', {
-        body: {
-          apiId: formData.apiId,
-          apiHash: formData.apiHash,
-          phoneNumber: formData.phoneNumber
-        }
-      });
+      const { error } = await supabase
+        .from('telegram_sessions')
+        .insert({
+          phone_number: formData.phoneNumber,
+          api_id: formData.apiId,
+          api_hash: formData.apiHash,
+          account_id: profile.account_id,
+          status: 'pending'
+        });
 
       if (error) throw error;
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
       setStep('verification');
-      toast.success('Dados salvos! Agora insira o código de verificação.');
+      toast.success('Profile registered, waiting for connection...');
     } catch (err: any) {
       console.error('Erro ao criar sessão:', err);
       setError(err.message || 'Erro ao salvar dados. Tente novamente.');
