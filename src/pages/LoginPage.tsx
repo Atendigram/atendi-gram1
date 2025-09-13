@@ -101,6 +101,8 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
+      console.log('🚀 Starting signup process for:', signUpEmail);
+      
       const { data, error } = await supabase.auth.signUp({
         email: signUpEmail,
         password: signUpPassword,
@@ -109,19 +111,50 @@ const LoginPage = () => {
         },
       });
 
+      console.log('📋 Signup response data:', data);
+      console.log('❌ Signup response error:', error);
+
       if (error) {
-        toast({ title: 'Erro no cadastro', description: error.message, variant: 'destructive' });
+        console.error('💥 Detailed signup error:', {
+          message: error.message,
+          status: error.status,
+          statusText: error?.status,
+          code: (error as any)?.code,
+          details: (error as any)?.details,
+          hint: (error as any)?.hint,
+          stack: error.stack,
+          fullError: error
+        });
+        
+        toast({ 
+          title: 'Erro no cadastro', 
+          description: `${error.message} (Code: ${(error as any)?.code || 'unknown'})`, 
+          variant: 'destructive' 
+        });
         return;
       }
 
       if (data.session) {
+        console.log('✅ Account created with immediate session');
         toast({ title: 'Conta criada!', description: 'Login automático realizado.' });
         navigate('/dashboard', { replace: true });
       } else if (data.user && !data.session) {
+        console.log('📧 Account created, email confirmation required');
         toast({ title: 'Verifique seu email', description: 'Enviamos um link de confirmação.' });
       }
     } catch (err: any) {
-      toast({ title: 'Erro inesperado', description: err?.message ?? 'Falha desconhecida', variant: 'destructive' });
+      console.error('🔥 Unexpected signup error:', {
+        message: err?.message,
+        name: err?.name,
+        stack: err?.stack,
+        fullError: err
+      });
+      
+      toast({ 
+        title: 'Erro inesperado', 
+        description: `${err?.message ?? 'Falha desconhecida'} (${err?.name || 'Unknown'})`, 
+        variant: 'destructive' 
+      });
     } finally {
       setLoading(false);
     }
