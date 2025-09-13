@@ -284,8 +284,8 @@ const Disparo = () => {
           return {
             account_id: currentAccountId,
             campaign_id: campaign.id,
-            user_id: session.user.id,
-            tg_id: contact.chat_id?.toString() || contact.user_id.toString(),
+            user_id: contact.user_id.toString(),
+            tg_id: contact.user_id.toString(),
             type: messageType,
             message: messageType === 'text' ? textMessage.trim() : textMessage.trim() || null, // Caption for media
             media_url: finalMediaUrl,
