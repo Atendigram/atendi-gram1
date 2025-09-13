@@ -51,15 +51,17 @@ serve(async (req) => {
       throw new Error('API ID, API Hash, and phone number are required');
     }
 
-    // Insert into telegram_sessions table
+    // Insert or update telegram_sessions table
     const { data, error } = await supabase
       .from('telegram_sessions')
-      .insert({
+      .upsert({
         account_id: profile.account_id,
         api_id: apiId,
         api_hash: apiHash,
         phone_number: phoneNumber,
-        status: 'pending_code'
+        status: 'verify_pending'
+      }, {
+        onConflict: 'account_id,phone_number'
       })
       .select()
       .single();
@@ -70,9 +72,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ 
-      success: true,
-      sessionId: data.id,
-      message: 'Telegram session created successfully'
+      success: true
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

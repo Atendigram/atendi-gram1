@@ -51,34 +51,33 @@ serve(async (req) => {
       throw new Error('Phone number and verification code are required');
     }
 
-    // Find the pending session for this phone number
+    // Find the session for this phone number
     const { data: session, error: sessionError } = await supabase
       .from('telegram_sessions')
       .select('*')
       .eq('account_id', profile.account_id)
       .eq('phone_number', phone)
-      .eq('status', 'pending_code')
+      .eq('status', 'verify_pending')
       .single();
 
     if (sessionError || !session) {
       throw new Error('No pending session found for this phone number');
     }
 
-    // Here you would implement the actual Telegram login logic
-    // For now, we'll just update the status to indicate success
-    // In a real implementation, you would:
-    // 1. Use the Telegram API to verify the code
-    // 2. If successful, get the session string
-    // 3. Store the session string in the database
+    // Update telegram_sessions with verification details
+    const updateData: any = {
+      verification_code: code,
+      status: 'active',
+      updated_at: new Date().toISOString()
+    };
 
-    // For demo purposes, we'll simulate success
+    if (password) {
+      updateData.twofa_password = password;
+    }
+
     const { error: updateError } = await supabase
       .from('telegram_sessions')
-      .update({
-        status: 'active',
-        session_string: 'demo_session_string_' + Date.now(),
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', session.id);
 
     if (updateError) {
@@ -87,8 +86,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ 
-      success: true,
-      message: 'Telegram login finalized successfully'
+      success: true
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
