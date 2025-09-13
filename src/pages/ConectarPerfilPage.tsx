@@ -9,6 +9,8 @@ import { Loader2, Phone, Key, Hash, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useOnboardingStatus } from '@/hooks/use-onboarding-status';
+import { useNavigate } from 'react-router-dom';
 
 interface FormData {
   apiId: string;
@@ -23,6 +25,8 @@ interface VerificationData {
 
 const ConectarPerfilPage = () => {
   const { profile } = useAuth();
+  const { refreshStatus } = useOnboardingStatus();
+  const navigate = useNavigate();
   const [step, setStep] = useState<'form' | 'verification'>('form');
   const [loading, setLoading] = useState(false);
   
@@ -118,6 +122,10 @@ const ConectarPerfilPage = () => {
       }
 
       toast.success('Perfil conectado com sucesso!');
+      
+      // Refresh onboarding status and redirect to welcome configuration
+      refreshStatus();
+      navigate('/boas-vindas');
       
       // Reset form
       setStep('form');

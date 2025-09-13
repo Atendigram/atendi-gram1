@@ -11,6 +11,7 @@ import WelcomePreviewPanel from '@/components/welcome/WelcomePreviewPanel';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { useOnboardingStatus } from '@/hooks/use-onboarding-status';
 
 interface WelcomeFlow {
   id: string;
@@ -30,6 +31,20 @@ interface WelcomeStep {
 }
 
 const WelcomePage = () => {
+  const { refreshStatus } = useOnboardingStatus();
+  // Auto-redirect to main dashboard when onboarding is complete
+  const { hasConnectedProfile, hasConfiguredWelcome, loading: onboardingLoading } = useOnboardingStatus();
+  
+  useEffect(() => {
+    if (!onboardingLoading && hasConnectedProfile && !hasConfiguredWelcome) {
+      // Show guidance message when user lands on welcome page after connecting profile
+      toast({
+        title: 'Configure suas boas-vindas',
+        description: 'Agora configure suas mensagens de boas-vindas para novos contatos.',
+      });
+    }
+  }, [onboardingLoading, hasConnectedProfile, hasConfiguredWelcome]);
+
   const [flow, setFlow] = useState<WelcomeFlow | null>(null);
   const [steps, setSteps] = useState<WelcomeStep[]>([]);
   const [loading, setLoading] = useState(true);
@@ -314,6 +329,10 @@ const WelcomePage = () => {
       await loadSteps(flow.id);
       setIsModalOpen(false);
       setEditingStep(null);
+      
+      // Refresh onboarding status when steps are added/updated
+      refreshStatus();
+      
       toast({
         title: isEditing ? 'Passo atualizado' : 'Passo criado',
         description: `O passo foi ${isEditing ? 'atualizado' : 'criado'} com sucesso.`,

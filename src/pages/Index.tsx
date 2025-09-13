@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import Dashboard from '../components/Dashboard';
 import TabContainer, { TabItem } from '../components/layout/TabContainer';
@@ -14,8 +14,24 @@ import { useCRM } from '../contexts/CRMContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
+import { useOnboardingStatus } from '@/hooks/use-onboarding-status';
 const Index = () => {
   const navigate = useNavigate();
+  const { hasConnectedProfile, hasConfiguredWelcome, loading: onboardingLoading } = useOnboardingStatus();
+  
+  // Redirect based on onboarding status
+  useEffect(() => {
+    if (!onboardingLoading) {
+      if (!hasConnectedProfile) {
+        navigate('/conectar-perfil');
+        return;
+      }
+      if (!hasConfiguredWelcome) {
+        navigate('/boas-vindas');
+        return;
+      }
+    }
+  }, [onboardingLoading, hasConnectedProfile, hasConfiguredWelcome, navigate]);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [userName, setUserName] = useState('Atendente');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
