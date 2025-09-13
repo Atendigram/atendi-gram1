@@ -24,7 +24,7 @@ interface VerificationData {
 }
 
 const ConectarPerfilPage = () => {
-  const { profile } = useAuth();
+  const { profile, loadAccountData } = useAuth();
   const { refreshStatus } = useOnboardingStatus();
   const navigate = useNavigate();
   const [step, setStep] = useState<'form' | 'verification'>('form');
@@ -54,11 +54,6 @@ const ConectarPerfilPage = () => {
   };
 
   const handleGerarConexao = async () => {
-    if (!profile?.account_id) {
-      setError('Conta não encontrada. Faça login novamente.');
-      return;
-    }
-
     if (!formData.apiId || !formData.apiHash || !formData.phoneNumber) {
       setError('Todos os campos são obrigatórios.');
       return;
@@ -73,13 +68,32 @@ const ConectarPerfilPage = () => {
     setError(null);
 
     try {
+      // Load account data first to ensure we have account_id
+      await loadAccountData();
+      
+      // Get fresh profile data from database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não encontrado. Faça login novamente.');
+      }
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('account_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profileData?.account_id) {
+        throw new Error('Conta não encontrada. Verifique seu cadastro.');
+      }
+
       const { error } = await supabase
         .from('telegram_sessions')
         .insert({
           phone_number: formData.phoneNumber,
           api_id: formData.apiId,
           api_hash: formData.apiHash,
-          account_id: profile.account_id,
+          account_id: profileData.account_id,
           status: 'pending'
         });
 
