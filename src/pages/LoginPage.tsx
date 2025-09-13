@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Mail, Lock, Eye, EyeOff, Send, LogIn, UserPlus } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, Send, LogIn, UserPlus, User } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -24,6 +24,7 @@ const LoginPage = () => {
 
   // Sign up form
   const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpUsername, setSignUpUsername] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -86,7 +87,7 @@ const LoginPage = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!signUpEmail || !signUpPassword || !confirmPassword) {
+    if (!signUpEmail || !signUpUsername || !signUpPassword || !confirmPassword) {
       toast({ title: 'Erro', description: 'Preencha todos os campos.', variant: 'destructive' });
       return;
     }
@@ -108,6 +109,9 @@ const LoginPage = () => {
         password: signUpPassword,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: {
+            username: signUpUsername,
+          },
         },
       });
 
@@ -386,6 +390,21 @@ const LoginPage = () => {
                     placeholder="seu@email.com"
                     value={signUpEmail}
                     onChange={(e) => setSignUpEmail(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-username">Nome de usuário</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="signup-username"
+                    type="text"
+                    placeholder="Seu nome de usuário"
+                    value={signUpUsername}
+                    onChange={(e) => setSignUpUsername(e.target.value)}
                     className="pl-10"
                   />
                 </div>
