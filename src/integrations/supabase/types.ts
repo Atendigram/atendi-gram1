@@ -126,39 +126,7 @@ export type Database = {
           },
         ]
       }
-      contacts: {
-        Row: {
-          account_id: string
-          created_at: string | null
-          id: string
-          name: string | null
-          phone: string | null
-        }
-        Insert: {
-          account_id: string
-          created_at?: string | null
-          id?: string
-          name?: string | null
-          phone?: string | null
-        }
-        Update: {
-          account_id?: string
-          created_at?: string | null
-          id?: string
-          name?: string | null
-          phone?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "contacts_account_fk"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      contatos_luna: {
+      contatos_geral: {
         Row: {
           account_id: string
           chat_id: number | null
@@ -254,15 +222,7 @@ export type Database = {
           id?: string
           status?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "conversations_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       disparo_items: {
         Row: {
@@ -395,6 +355,30 @@ export type Database = {
           status?: string
           text_message?: string | null
           total_targets?: number | null
+        }
+        Relationships: []
+      }
+      logsgeral: {
+        Row: {
+          account_id: string
+          data_hora: string | null
+          id: string
+          mensagem: string | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          data_hora?: string | null
+          id?: string
+          mensagem?: string | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          data_hora?: string | null
+          id?: string
+          mensagem?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -537,33 +521,42 @@ export type Database = {
           api_hash: string
           api_id: string
           created_at: string | null
+          error: string | null
           id: string
           phone_number: string
           session_string: string | null
           status: string | null
+          twofa_password: string | null
           updated_at: string | null
+          verification_code: string | null
         }
         Insert: {
           account_id: string
           api_hash: string
           api_id: string
           created_at?: string | null
+          error?: string | null
           id?: string
           phone_number: string
           session_string?: string | null
           status?: string | null
+          twofa_password?: string | null
           updated_at?: string | null
+          verification_code?: string | null
         }
         Update: {
           account_id?: string
           api_hash?: string
           api_id?: string
           created_at?: string | null
+          error?: string | null
           id?: string
           phone_number?: string
           session_string?: string | null
           status?: string | null
+          twofa_password?: string | null
           updated_at?: string | null
+          verification_code?: string | null
         }
         Relationships: [
           {
@@ -677,6 +670,21 @@ export type Database = {
     Functions: {
       ack_disparo_item: {
         Args: { _err?: string; _item_id: string; _ok: boolean }
+        Returns: undefined
+      }
+      claim_disparo_items: {
+        Args: { p_campaign: string; p_limit?: number }
+        Returns: {
+          id: string
+          media_url: string
+          msg_type: string
+          payload: Json
+          text: string
+          tg_id: number
+        }[]
+      }
+      cleanup_failed_disparos: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       create_campaign_and_enqueue: {
