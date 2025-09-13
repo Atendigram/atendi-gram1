@@ -135,7 +135,7 @@ const ConectarPerfilPage = () => {
         throw new Error('Conta não encontrada. Verifique seu cadastro.');
       }
 
-      // Update the telegram_sessions row
+      // Update the existing telegram_sessions row
       const { error } = await supabase
         .from('telegram_sessions')
         .update({
@@ -144,11 +144,12 @@ const ConectarPerfilPage = () => {
           status: 'verifying'
         })
         .eq('account_id', profileData.account_id)
-        .eq('phone_number', formData.phoneNumber);
+        .eq('phone_number', formData.phoneNumber)
+        .eq('status', 'pending');
 
       if (error) throw error;
 
-      toast.success('Perfil conectado com sucesso!');
+      toast.success('Código enviado para verificação!');
       
       // Refresh onboarding status and redirect to welcome configuration
       refreshStatus();
@@ -159,7 +160,7 @@ const ConectarPerfilPage = () => {
       setFormData({ apiId: '', apiHash: '', phoneNumber: '+55' });
       setVerificationData({ code: '', password: '' });
     } catch (err: any) {
-      console.error('Erro ao finalizar login:', err);
+      console.error('Erro ao confirmar código:', err);
       setError(err.message || 'Erro ao confirmar código. Verifique os dados e tente novamente.');
     } finally {
       setLoading(false);
