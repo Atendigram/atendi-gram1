@@ -119,19 +119,34 @@ const ConectarPerfilPage = () => {
     setError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('finalize-telegram-login', {
-        body: {
-          phone: formData.phoneNumber,
-          code: verificationData.code,
-          password: verificationData.password || undefined
-        }
-      });
+      // Get current user and account_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não encontrado. Faça login novamente.');
+      }
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('account_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profileData?.account_id) {
+        throw new Error('Conta não encontrada. Verifique seu cadastro.');
+      }
+
+      // Update the telegram_sessions row
+      const { error } = await supabase
+        .from('telegram_sessions')
+        .update({
+          verification_code: verificationData.code,
+          twofa_password: verificationData.password || null,
+          status: 'verifying'
+        })
+        .eq('account_id', profileData.account_id)
+        .eq('phone_number', formData.phoneNumber);
 
       if (error) throw error;
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
 
       toast.success('Perfil conectado com sucesso!');
       
