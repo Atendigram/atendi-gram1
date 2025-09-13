@@ -29,6 +29,7 @@ const ConectarPerfilPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<'form' | 'verification'>('form');
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<FormData>({
     apiId: '',
@@ -87,7 +88,7 @@ const ConectarPerfilPage = () => {
         throw new Error('Conta não encontrada. Verifique seu cadastro.');
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('telegram_sessions')
         .insert({
           phone_number: formData.phoneNumber,
@@ -95,9 +96,14 @@ const ConectarPerfilPage = () => {
           api_hash: formData.apiHash,
           account_id: profileData.account_id,
           status: 'pending'
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+      
+      // Store the session ID for step 2
+      setSessionId(data.id);
 
       setStep('verification');
       toast.success('Profile registered, waiting for connection...');
@@ -115,37 +121,25 @@ const ConectarPerfilPage = () => {
       return;
     }
 
+    if (!sessionId) {
+      setError('Sessão não encontrada. Reinicie o processo.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Get current user and account_id
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Usuário não encontrado. Faça login novamente.');
-      }
-
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('account_id')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError || !profileData?.account_id) {
-        throw new Error('Conta não encontrada. Verifique seu cadastro.');
-      }
-
-      // Update the existing telegram_sessions row
+      // Update the existing telegram_sessions row using the session_id
       const { error } = await supabase
         .from('telegram_sessions')
         .update({
           verification_code: verificationData.code,
           twofa_password: verificationData.password || null,
-          status: 'verifying'
+          status: 'verifying',
+          updated_at: new Date().toISOString()
         })
-        .eq('account_id', profileData.account_id)
-        .eq('phone_number', formData.phoneNumber)
-        .eq('status', 'pending');
+        .eq('id', sessionId);
 
       if (error) throw error;
 
