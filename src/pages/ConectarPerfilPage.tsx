@@ -122,25 +122,38 @@ const ConectarPerfilPage = () => {
       return;
     }
 
-    if (!sessionId) {
-      setError('Sessão não encontrada. Reinicie o processo.');
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
     try {
-      // Update the existing telegram_sessions row using the session_id
+      // Get current user's account_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não encontrado. Faça login novamente.');
+      }
+
+      const { data: accountData, error: accountError } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+
+      if (accountError || !accountData?.id) {
+        throw new Error('Conta não encontrada. Verifique seu cadastro.');
+      }
+
+      // Update the most recent telegram_sessions row for this account_id and phone_number
       const { error } = await supabase
         .from('telegram_sessions')
         .update({
           verification_code: verificationData.code,
           twofa_password: verificationData.password || null,
-          status: 'verifying',
-          updated_at: new Date().toISOString()
+          status: 'verifying'
         })
-        .eq('id', sessionId);
+        .eq('account_id', accountData.id)
+        .eq('phone_number', formData.phoneNumber)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       if (error) throw error;
 
