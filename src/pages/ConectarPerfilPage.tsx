@@ -69,8 +69,8 @@ const ConectarPerfilPage = () => {
     setError(null);
 
     try {
-      // Load account data first to ensure we have account_id
-      await loadAccountData();
+      // Try to load account data (non-blocking)
+      await loadAccountData().catch(() => {});
       
       // Get fresh profile data from database
       const { data: { user } } = await supabase.auth.getUser();
@@ -78,13 +78,14 @@ const ConectarPerfilPage = () => {
         throw new Error('Usuário não encontrado. Faça login novamente.');
       }
 
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('account_id')
-        .eq('id', user.id)
+      // Get account id from accounts table (owner_id = current user)
+      const { data: accountData, error: accountError } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('owner_id', user.id)
         .single();
 
-      if (profileError || !profileData?.account_id) {
+      if (accountError || !accountData?.id) {
         throw new Error('Conta não encontrada. Verifique seu cadastro.');
       }
 
@@ -94,7 +95,7 @@ const ConectarPerfilPage = () => {
           phone_number: formData.phoneNumber,
           api_id: formData.apiId,
           api_hash: formData.apiHash,
-          account_id: profileData.account_id,
+          account_id: accountData.id,
           status: 'pending'
         })
         .select('id')
@@ -153,6 +154,7 @@ const ConectarPerfilPage = () => {
       setStep('form');
       setFormData({ apiId: '', apiHash: '', phoneNumber: '+55' });
       setVerificationData({ code: '', password: '' });
+      setSessionId(null);
     } catch (err: any) {
       console.error('Erro ao confirmar código:', err);
       setError(err.message || 'Erro ao confirmar código. Verifique os dados e tente novamente.');
@@ -163,6 +165,7 @@ const ConectarPerfilPage = () => {
 
   const handleVoltar = () => {
     setStep('form');
+    setSessionId(null);
     setVerificationData({ code: '', password: '' });
     setError(null);
   };
