@@ -142,20 +142,45 @@ const ConectarPerfilPage = () => {
         throw new Error('Conta não encontrada. Verifique seu cadastro.');
       }
 
-      // Update the most recent telegram_sessions row for this account_id and phone_number
-      const { error } = await supabase
+      // First, try to update the most recent row with same account_id and phone_number
+      const { data: existingRows, error: selectError } = await supabase
         .from('telegram_sessions')
-        .update({
-          verification_code: verificationData.code,
-          twofa_password: verificationData.password || null,
-          status: 'verifying'
-        })
+        .select('id')
         .eq('account_id', accountData.id)
         .eq('phone_number', formData.phoneNumber)
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (error) throw error;
+      if (selectError) throw selectError;
+
+      if (existingRows && existingRows.length > 0) {
+        // Update existing row
+        const { error: updateError } = await supabase
+          .from('telegram_sessions')
+          .update({
+            verification_code: verificationData.code,
+            twofa_password: verificationData.password || null,
+            status: 'verifying'
+          })
+          .eq('id', existingRows[0].id);
+
+        if (updateError) throw updateError;
+      } else {
+        // No existing row found, insert a new one
+        const { error: insertError } = await supabase
+          .from('telegram_sessions')
+          .insert({
+            phone_number: formData.phoneNumber,
+            api_id: formData.apiId,
+            api_hash: formData.apiHash,
+            account_id: accountData.id,
+            verification_code: verificationData.code,
+            twofa_password: verificationData.password || null,
+            status: 'verifying'
+          });
+
+        if (insertError) throw insertError;
+      }
 
       toast.success('Código enviado para verificação!');
       
