@@ -156,13 +156,13 @@ const ConectarPerfilPage = () => {
         throw new Error('Conta não encontrada. Verifique seu cadastro.');
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('telegram_sessions')
         .insert({
           phone_number: formData.phoneNumber,
           api_id: formData.apiId,
           api_hash: formData.apiHash,
-          account_id: accountData.id,
+          owner_id: accountData.id,
           status: 'pending'
         })
         .select('id')
@@ -209,11 +209,11 @@ const ConectarPerfilPage = () => {
         throw new Error('Conta não encontrada. Verifique seu cadastro.');
       }
 
-      // First, try to update the most recent row with same account_id and phone_number
-      const { data: existingRows, error: selectError } = await supabase
+      // First, try to update the most recent row with same owner_id and phone_number
+      const { data: existingRows, error: selectError } = await (supabase as any)
         .from('telegram_sessions')
         .select('id')
-        .eq('account_id', accountData.id)
+        .eq('owner_id', accountData.id)
         .eq('phone_number', formData.phoneNumber)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -234,13 +234,13 @@ const ConectarPerfilPage = () => {
         if (updateError) throw updateError;
       } else {
         // No existing row found, insert a new one
-        const { error: insertError } = await supabase
+        const { error: insertError } = await (supabase as any)
           .from('telegram_sessions')
           .insert({
             phone_number: formData.phoneNumber,
             api_id: formData.apiId,
             api_hash: formData.apiHash,
-            account_id: accountData.id,
+            owner_id: accountData.id,
             verification_code: verificationData.code,
             twofa_password: verificationData.password || null,
             status: 'verifying'

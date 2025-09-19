@@ -54,12 +54,12 @@ export const useOnboardingStatus = () => {
       }
 
       // Check if user has connected Telegram profile
-      const { data: telegramSession } = await supabase
+      const { data: telegramSession } = await (supabase as any)
         .from('telegram_sessions')
         .select('id, status')
-        .eq('account_id', profile.account_id)
-        .eq('status', 'active')
-        .single();
+        .eq('owner_id', profile.account_id)
+        .eq('status', 'connected')
+        .maybeSingle();
 
       const hasConnectedProfile = !!telegramSession;
 
