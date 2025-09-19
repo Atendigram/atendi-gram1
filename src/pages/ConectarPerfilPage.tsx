@@ -67,13 +67,16 @@ const ConectarPerfilPage = () => {
           return;
         }
 
-        // Check for connected telegram session
-        const { data: sessionData, error: sessionError } = await supabase
+        // Check for connected telegram session  
+        const sessionResponse = await (supabase as any)
           .from('telegram_sessions')
           .select('id, status')
-          .eq('account_id', accountData.id)
+          .eq('owner_id', accountData.id)
           .eq('status', 'connected')
-          .maybeSingle();
+          .limit(1);
+
+        const sessionData = sessionResponse.data?.[0];
+        const sessionError = sessionResponse.error;
 
         if (sessionError) {
           console.error('Error checking telegram sessions:', sessionError);
