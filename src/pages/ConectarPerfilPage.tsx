@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ const ConectarPerfilPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<'form' | 'verification'>('form');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<FormData>({
@@ -43,6 +44,69 @@ const ConectarPerfilPage = () => {
   });
 
   const [error, setError] = useState<string | null>(null);
+
+  // Check for existing connected Telegram session on page load
+  useEffect(() => {
+    const checkExistingConnection = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setInitialLoading(false);
+          return;
+        }
+
+        // Get account id from accounts table
+        const { data: accountData, error: accountError } = await supabase
+          .from('accounts')
+          .select('id')
+          .eq('owner_id', user.id)
+          .single();
+
+        if (accountError || !accountData?.id) {
+          setInitialLoading(false);
+          return;
+        }
+
+        // Check for connected telegram session
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('telegram_sessions')
+          .select('id, status')
+          .eq('account_id', accountData.id)
+          .eq('status', 'connected')
+          .maybeSingle();
+
+        if (sessionError) {
+          console.error('Error checking telegram sessions:', sessionError);
+          setInitialLoading(false);
+          return;
+        }
+
+        // If connected session found, preload data and redirect to dashboard
+        if (sessionData) {
+          // Preload contatos_geral and disparos data in parallel
+          try {
+            await Promise.all([
+              supabase.from('contatos_geral').select('*').eq('account_id', accountData.id),
+              supabase.from('disparos').select('*').eq('account_id', accountData.id)
+            ]);
+          } catch (preloadError) {
+            console.error('Error preloading data:', preloadError);
+          }
+
+          // Redirect to dashboard
+          navigate('/', { replace: true });
+          return;
+        }
+
+        setInitialLoading(false);
+      } catch (error) {
+        console.error('Error checking existing connection:', error);
+        setInitialLoading(false);
+      }
+    };
+
+    checkExistingConnection();
+  }, [navigate]);
 
   const handleFormChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -207,6 +271,20 @@ const ConectarPerfilPage = () => {
     setVerificationData({ code: '', password: '' });
     setError(null);
   };
+
+  // Show loading screen during initial check
+  if (initialLoading) {
+    return (
+      <PageLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Verificando conexão existente...</p>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
