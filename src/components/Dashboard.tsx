@@ -1,249 +1,91 @@
-// src/components/Dashboard.tsx
-import React, { useEffect, useState } from "react";
-import { Calendar, ArrowUpRight } from "lucide-react";
-import { EditableField } from "./ui/editable-field";
-import { Card, CardContent } from "./ui/card";
-import { toast } from "sonner";
-import { supabase } from "../lib/supabase";
-import { useAuth } from '@/contexts/AuthContext';
-import { scopedCount } from '@/lib/scoped-queries';
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowUpRight } from "lucide-react";
 
-/* ---------------- CONFIG ---------------- */
-const CONTACTS_TABLE = "contatos_geral";
-const LOGS_TABLE = "logsluna";
+export default function Dashboard() {
+  const [metrics, setMetrics] = useState({
+    totalContacts: 0,
+    contactsToday: 0,
+    messagesMonth: 0,
+  });
 
-/* ---------------- HELPERS ---------------- */
-const onSaveString =
-  (setter: React.Dispatch<React.SetStateAction<string>>) => (v: string) =>
-    setter(v);
-
-const nf = new Intl.NumberFormat("pt-BR");
-
-async function countTable(table: string, accountId: string) {
-  const r1 = await scopedCount(table, accountId);
-  if (!r1.error && typeof r1.count === "number") return r1.count ?? 0;
-
-  const r2 = await (supabase as any).from(table).select("id", { count: "exact" }).eq('account_id', accountId).range(0, 0);
-  if (!r2.error && typeof r2.count === "number") return r2.count ?? 0;
-
-  throw r1.error || r2.error || new Error(`Falha ao contar ${table}`);
-}
-
-/* ---------------- COMPONENT ---------------- */
-const Dashboard = () => {
-  const { profile, loading: authLoading, loadAccountData } = useAuth();
-  const accountId = profile?.account_id;
-  
-  console.log('Dashboard - profile:', profile, 'accountId:', accountId, 'authLoading:', authLoading);
-  
-  const [title, setTitle] = useState("Olá 👋");
-  const [description, setDescription] = useState(
-    "Aqui está uma visão geral do seu perfil ❤️"
-  );
-  const [currentMonth, setCurrentMonth] = useState("Agosto 2023");
-
-  const [contactsTotal, setContactsTotal] = useState<number>(0);
-  const [contactsToday, setContactsToday] = useState<number>(0);
-  const [messagesMonth, setMessagesMonth] = useState<number>(0);
-  const [attendedConversations, setAttendedConversations] = useState<number>(0);
-  const [dataLoading, setDataLoading] = useState(true);
-
-  // Tentar carregar account_id se ainda não tiver
-  useEffect(() => {
-    if (profile && !profile.account_id && !authLoading) {
-      console.log('🔄 Trying to load account data...');
-      loadAccountData();
+  // 🔄 Função para buscar métricas
+  const fetchMetrics = async () => {
+    const { data, error } = await supabase.rpc("get_dashboard_metrics");
+    if (error) {
+      console.error("Error fetching metrics:", error);
+    } else if (data && data.length > 0) {
+      setMetrics({
+        totalContacts: data[0].total_contacts,
+        contactsToday: data[0].contacts_today,
+        messagesMonth: data[0].messages_month,
+      });
     }
-  }, [profile, authLoading, loadAccountData]);
+  };
 
-  // Load inicial
   useEffect(() => {
-    if (!accountId) {
-      setDataLoading(true);
-      return;
-    }
-    
-    (async () => {
-      try {
-        setDataLoading(true);
-        
-        // Get comprehensive stats with single query
-        const { data: stats, error } = await (supabase as any)
-          .rpc('get_dashboard_stats', { p_account_id: accountId });
+    // 🚀 primeira carga
+    fetchMetrics();
 
-        if (error) {
-          // Fallback to individual queries if RPC doesn't exist
-          const [totalContacts, totalLogs] = await Promise.all([
-            countTable(CONTACTS_TABLE, accountId),
-            countTable(LOGS_TABLE, accountId),
-          ]);
-          
-          // Get additional stats with raw SQL
-          const { data: rawStats, error: rawError } = await (supabase as any)
-            .from('contatos_geral')
-            .select(`
-              *,
-              (SELECT COUNT(*) FROM contatos_geral WHERE account_id = '${accountId}') as total_contacts,
-              (SELECT COUNT(*) FROM contatos_geral WHERE account_id = '${accountId}' AND created_at::date = CURRENT_DATE) as contacts_today,
-              (SELECT COUNT(*) FROM disparo_items WHERE account_id = '${accountId}' AND status = 'sent' AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)) as messages_month
-            `)
-            .eq('account_id', accountId)
-            .limit(1);
-          
-          if (!rawError && rawStats?.[0]) {
-            setContactsTotal(rawStats[0].total_contacts || 0);
-            setContactsToday(rawStats[0].contacts_today || 0);
-            setMessagesMonth(rawStats[0].messages_month || 0);
-          } else {
-            setContactsTotal(totalContacts);
-            setContactsToday(0);
-            setMessagesMonth(0);
-          }
-          setAttendedConversations(totalLogs);
-        } else if (stats?.[0]) {
-          setContactsTotal(stats[0].total_contacts || 0);
-          setContactsToday(stats[0].contacts_today || 0);
-          setMessagesMonth(stats[0].messages_month || 0);
-          setAttendedConversations(stats[0].total_logs || 0);
+    // 👀 realtime: contatos
+    const contactsChannel = supabase
+      .channel("contatos-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contatos_geral" },
+        () => {
+          fetchMetrics();
         }
-      } catch (err: any) {
-        console.error('Error loading dashboard data:', err);
-        toast.error(`Erro ao carregar: ${err?.message || "ver console"}`);
-      } finally {
-        setDataLoading(false);
-      }
-    })();
-  }, [accountId]);
-
-  // Realtime (sem F5)
-  useEffect(() => {
-    if (!accountId) return;
-    
-    const chContacts = supabase
-      .channel(`rt:${CONTACTS_TABLE}:${accountId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: CONTACTS_TABLE, filter: `account_id=eq.${accountId}` },
-        () => setContactsTotal((n) => n + 1)
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: CONTACTS_TABLE, filter: `account_id=eq.${accountId}` },
-        () => setContactsTotal((n) => Math.max(0, n - 1))
       )
       .subscribe();
 
-    const chLogs = supabase
-      .channel(`rt:${LOGS_TABLE}:${accountId}`)
+    // 👀 realtime: disparos
+    const disparosChannel = supabase
+      .channel("disparos-realtime")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: LOGS_TABLE, filter: `account_id=eq.${accountId}` },
-        () => setAttendedConversations((n) => n + 1)
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: LOGS_TABLE, filter: `account_id=eq.${accountId}` },
-        () => setAttendedConversations((n) => Math.max(0, n - 1))
+        { event: "*", schema: "public", table: "disparo_items" },
+        () => {
+          fetchMetrics();
+        }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(chContacts);
-      supabase.removeChannel(chLogs);
+      supabase.removeChannel(contactsChannel);
+      supabase.removeChannel(disparosChannel);
     };
-  }, [accountId]);
-
-  // Mostrar loading se ainda não tiver accountId ou se estiver carregando dados
-  if (!accountId || dataLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="text-center space-y-4">
-          <div className="animate-pulse">
-            <div className="w-12 h-12 bg-primary/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <div className="w-6 h-6 bg-primary/40 rounded-full animate-bounce"></div>
-            </div>
-            <p className="text-muted-foreground">
-              {!accountId ? 'Carregando informações da conta...' : 'Carregando dados do dashboard...'}
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 max-w-md mx-auto">
-            <div className="bg-card p-4 rounded-lg border animate-pulse">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-8 bg-gray-300 rounded"></div>
-            </div>
-            <div className="bg-card p-4 rounded-lg border animate-pulse">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-8 bg-gray-300 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, []);
 
   return (
-    <div className="p-6 space-y-6 animate-enter">
-      {/* Header */}
-      <header className="flex justify-between items-center mb-6">
-        <div>
-           <h1 className="text-3xl md:text-4xl font-bold mb-1 text-foreground dark:text-black leading-none">
-             <EditableField
-               value={title}
-               onSave={onSaveString(setTitle)}
-               className="inline-block"
-               showEditIcon
-             />
-           </h1>
-           <p className="text-muted-foreground text-sm md:text-lg">
-             <EditableField
-               value={description}
-               onSave={onSaveString(setDescription)}
-               className="inline-block"
-               showEditIcon
-             />
-           </p>
-        </div>
+    <div className="grid grid-cols-3 gap-4">
+      {/* 👥 Total Contacts */}
+      <Card>
+        <CardContent>
+          <h2 className="text-lg font-bold">👥 Total Contacts</h2>
+          <p className="text-2xl">{metrics.totalContacts}</p>
+        </CardContent>
+      </Card>
 
-        <div className="flex items-center space-x-4">
-          <button className="px-4 py-2 text-sm text-pink-600 font-medium bg-pink-100 rounded-lg hover:bg-pink-200 transition-colors">
-            <Calendar className="h-4 w-4 inline mr-2" />
-            <EditableField
-              value={currentMonth}
-              onSave={onSaveString(setCurrentMonth)}
-              className="inline-block"
-            />
-          </button>
-        </div>
-      </header>
+      {/* 🆕 Contacts Today */}
+      <Card>
+        <CardContent className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold">🆕 Contacts Today</h2>
+            <p className="text-2xl">{metrics.contactsToday}</p>
+          </div>
+          <ArrowUpRight className="text-green-500 w-6 h-6" />
+        </CardContent>
+      </Card>
 
-      {/* Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-bold">👥 Total Contacts</h2>
-            <p className="text-2xl">{nf.format(contactsTotal)}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <h2 className="text-lg font-bold">🆕 Contacts today</h2>
-              <p className="text-2xl">{nf.format(contactsToday)}</p>
-            </div>
-            <ArrowUpRight className="text-green-500 w-6 h-6" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-bold">✉️ Messages this month</h2>
-            <p className="text-2xl">{nf.format(messagesMonth)}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* ✉️ Messages This Month */}
+      <Card>
+        <CardContent>
+          <h2 className="text-lg font-bold">✉️ Messages This Month</h2>
+          <p className="text-2xl">{metrics.messagesMonth}</p>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default Dashboard;
+}
