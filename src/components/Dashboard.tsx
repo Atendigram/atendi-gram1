@@ -1,7 +1,8 @@
 // src/components/Dashboard.tsx
 import React, { useEffect, useState } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, ArrowUpRight } from "lucide-react";
 import { EditableField } from "./ui/editable-field";
+import { Card, CardContent } from "./ui/card";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,6 +43,8 @@ const Dashboard = () => {
   const [currentMonth, setCurrentMonth] = useState("Agosto 2023");
 
   const [contactsTotal, setContactsTotal] = useState<number>(0);
+  const [contactsToday, setContactsToday] = useState<number>(0);
+  const [messagesMonth, setMessagesMonth] = useState<number>(0);
   const [attendedConversations, setAttendedConversations] = useState<number>(0);
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -63,12 +66,46 @@ const Dashboard = () => {
     (async () => {
       try {
         setDataLoading(true);
-        const [totalContacts, totalLogs] = await Promise.all([
-          countTable(CONTACTS_TABLE, accountId),
-          countTable(LOGS_TABLE, accountId),
-        ]);
-        setContactsTotal(totalContacts);
-        setAttendedConversations(totalLogs);
+        
+        // Get comprehensive stats with single query
+        const { data: stats, error } = await (supabase as any)
+          .rpc('get_dashboard_stats', { p_account_id: accountId });
+
+        if (error) {
+          // Fallback to individual queries if RPC doesn't exist
+          const [totalContacts, totalLogs] = await Promise.all([
+            countTable(CONTACTS_TABLE, accountId),
+            countTable(LOGS_TABLE, accountId),
+          ]);
+          
+          // Get additional stats with raw SQL
+          const { data: rawStats, error: rawError } = await (supabase as any)
+            .from('contatos_geral')
+            .select(`
+              *,
+              (SELECT COUNT(*) FROM contatos_geral WHERE account_id = '${accountId}') as total_contacts,
+              (SELECT COUNT(*) FROM contatos_geral WHERE account_id = '${accountId}' AND created_at::date = CURRENT_DATE) as contacts_today,
+              (SELECT COUNT(*) FROM disparo_items WHERE account_id = '${accountId}' AND status = 'sent' AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)) as messages_month
+            `)
+            .eq('account_id', accountId)
+            .limit(1);
+          
+          if (!rawError && rawStats?.[0]) {
+            setContactsTotal(rawStats[0].total_contacts || 0);
+            setContactsToday(rawStats[0].contacts_today || 0);
+            setMessagesMonth(rawStats[0].messages_month || 0);
+          } else {
+            setContactsTotal(totalContacts);
+            setContactsToday(0);
+            setMessagesMonth(0);
+          }
+          setAttendedConversations(totalLogs);
+        } else if (stats?.[0]) {
+          setContactsTotal(stats[0].total_contacts || 0);
+          setContactsToday(stats[0].contacts_today || 0);
+          setMessagesMonth(stats[0].messages_month || 0);
+          setAttendedConversations(stats[0].total_logs || 0);
+        }
       } catch (err: any) {
         console.error('Error loading dashboard data:', err);
         toast.error(`Erro ao carregar: ${err?.message || "ver console"}`);
@@ -180,22 +217,30 @@ const Dashboard = () => {
       </header>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Total de Contatos */}
-        <div className="stat-card card-hover">
-          <p className="stat-label">Total de Contatos 👥</p>
-          <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">{nf.format(contactsTotal)}</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-bold">👥 Total Contacts</h2>
+            <p className="text-2xl">{nf.format(contactsTotal)}</p>
+          </CardContent>
+        </Card>
 
-        {/* Conversas Atendidas */}
-        <div className="stat-card card-hover">
-          <p className="stat-label">Conversas Atendidas 💬</p>
-          <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">{nf.format(attendedConversations)}</p>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="flex items-center justify-between p-6">
+            <div>
+              <h2 className="text-lg font-bold">🆕 Contacts today</h2>
+              <p className="text-2xl">{nf.format(contactsToday)}</p>
+            </div>
+            <ArrowUpRight className="text-green-500 w-6 h-6" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-bold">✉️ Messages this month</h2>
+            <p className="text-2xl">{nf.format(messagesMonth)}</p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
