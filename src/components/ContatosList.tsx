@@ -36,55 +36,77 @@ const ContatosList = () => {
   const [filteredCount, setFilteredCount] = useState(0);
   const [exporting, setExporting] = useState(false);
 
-  // 🔑 recarrega também quando rota muda
+  // 🔑 recarrega também quando rota muda ou accountId muda
   useEffect(() => {
     if (accountId) {
       loadContacts();
     }
   }, [currentPage, searchTerm, accountId, location.pathname]);
 
+  // 🔄 Também recarrega quando o componente é montado
+  useEffect(() => {
+    if (accountId) {
+      loadContacts();
+    }
+  }, []);
+
   const loadContacts = async () => {
     if (!accountId) {
+      console.log('No accountId available');
       setLoading(false);
       return;
     }
 
+    console.log('Loading contacts for account:', accountId);
     setLoading(true);
     try {
+      // Base query with account_id filter
       let query = scopedSelectWithColumns('contatos_geral', 'user_id, first_name, last_name, username, created_at', accountId);
 
-      if (searchTerm) {
-        const isNumeric = /^\d+$/.test(searchTerm);
+      // Apply search filters if search term exists
+      if (searchTerm.trim()) {
+        const isNumeric = /^\d+$/.test(searchTerm.trim());
         if (isNumeric) {
-          query = query.or(`user_id.eq.${searchTerm},first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+          // Search by user_id or text fields
+          query = query.or(`user_id.eq.${searchTerm.trim()},first_name.ilike.%${searchTerm.trim()}%,last_name.ilike.%${searchTerm.trim()}%,username.ilike.%${searchTerm.trim()}%`);
         } else {
-          query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+          // Search only text fields
+          query = query.or(`first_name.ilike.%${searchTerm.trim()}%,last_name.ilike.%${searchTerm.trim()}%,username.ilike.%${searchTerm.trim()}%`);
         }
       }
 
+      // Apply pagination
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
+      // Execute query with ordering and pagination
       const { data, error, count } = await query
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Query error:', error);
+        throw error;
+      }
 
+      console.log('Loaded contacts:', data?.length || 0, 'Total count:', count);
+      
       setContacts((data as Contact[]) || []);
       setFilteredCount(count || 0);
 
-      if (!searchTerm) {
+      // Get total count for the account (without search filter)
+      if (!searchTerm.trim()) {
         setTotalCount(count || 0);
-      } else if (currentPage === 1) {
+      } else {
+        // When searching, we need to get the total count separately
         const { count: total } = await scopedCount('contatos_geral', accountId);
         setTotalCount(total || 0);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading contacts:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar os contatos",
+        description: error.message || "Não foi possível carregar os contatos",
         variant: "destructive",
       });
     } finally {
@@ -113,30 +135,47 @@ const ContatosList = () => {
   const handleSearch = (value: string) => { setSearchTerm(value); setCurrentPage(1); };
 
   // botão manual 🔄
-  const handleRefresh = () => {
-    loadContacts();
-    toast({ title: "Atualizado", description: "Lista de contatos recarregada" });
+  const handleRefresh = async () => {
+    console.log('Manual refresh triggered');
+    await loadContacts();
+    toast({ 
+      title: "Atualizado", 
+      description: `Lista de contatos recarregada (${filteredCount} encontrados)` 
+    });
   };
 
   const handleExportCSV = async () => {
-    if (!accountId) return;
+    if (!accountId) {
+      toast({
+        title: "Erro",
+        description: "Account ID não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setExporting(true);
     try {
+      console.log('Exporting contacts for account:', accountId);
+      
+      // Use the same query logic as loadContacts for consistency
       let query = scopedSelectWithColumns('contatos_geral', 'user_id, first_name, last_name, username, created_at', accountId);
       
-      if (searchTerm) {
-        const isNumeric = /^\d+$/.test(searchTerm);
+      if (searchTerm.trim()) {
+        const isNumeric = /^\d+$/.test(searchTerm.trim());
         if (isNumeric) {
-          query = query.or(`user_id.eq.${searchTerm},first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+          query = query.or(`user_id.eq.${searchTerm.trim()},first_name.ilike.%${searchTerm.trim()}%,last_name.ilike.%${searchTerm.trim()}%,username.ilike.%${searchTerm.trim()}%`);
         } else {
-          query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`);
+          query = query.or(`first_name.ilike.%${searchTerm.trim()}%,last_name.ilike.%${searchTerm.trim()}%,username.ilike.%${searchTerm.trim()}%`);
         }
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Export query error:', error);
+        throw error;
+      }
 
       const exportData = (data as Contact[]).map(contact => ({
         'ID do Usuário': contact.user_id,
@@ -145,18 +184,18 @@ const ContatosList = () => {
         'Data de Criação': formatDate(contact.created_at)
       }));
 
-      const fileName = `contatos_${searchTerm ? 'filtrados_' : ''}${new Date().toISOString().split('T')[0]}`;
+      const fileName = `contatos_${searchTerm.trim() ? 'filtrados_' : ''}${new Date().toISOString().split('T')[0]}`;
       exportToCSV(exportData, fileName);
       
       toast({
         title: "Sucesso",
         description: `${exportData.length} contatos exportados para CSV`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error exporting contacts:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível exportar os contatos",
+        description: error.message || "Não foi possível exportar os contatos",
         variant: "destructive",
       });
     } finally {
