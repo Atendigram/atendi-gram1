@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { supabase, getAccountId } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Send, Search, Upload, ChevronLeft, ChevronRight, FileText, Mic, Image, RefreshCw, List, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { scopedSelectWithColumns, scopedInsert } from '@/lib/scoped-queries';
@@ -42,8 +42,7 @@ interface Campaign {
 const ITEMS_PER_PAGE = 25;
 
 const Disparo = () => {
-  const { profile } = useAuth();
-  const accountId = profile?.account_id;
+  const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<number>>(new Set());
@@ -51,6 +50,7 @@ const Disparo = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [accountId, setAccountId] = useState<string | null>(null);
   
   // Campaigns state
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -65,7 +65,41 @@ const Disparo = () => {
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Load contacts and campaigns
+  // 🔑 Resolve account_id from accounts table
+  const resolveAccountId = async () => {
+    if (!user?.id) {
+      console.log('No user available');
+      setAccountId(null);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error resolving account_id:', error);
+        setAccountId(null);
+        return;
+      }
+
+      console.log('Resolved account_id:', data.id);
+      setAccountId(data.id);
+    } catch (error) {
+      console.error('Error resolving account_id:', error);
+      setAccountId(null);
+    }
+  };
+
+  // 🔄 Resolve account_id when user changes
+  useEffect(() => {
+    resolveAccountId();
+  }, [user?.id]);
+
+  // Load contacts and campaigns when accountId is available
   useEffect(() => {
     if (accountId) {
       loadContacts();
@@ -252,9 +286,8 @@ const Disparo = () => {
 
     setSubmitting(true);
     try {
-      // Get account_id from session
-      const currentAccountId = await getAccountId();
-      if (!currentAccountId) {
+      // Validate accountId is available
+      if (!accountId) {
         throw new Error('Não foi possível obter o ID da conta');
       }
 
@@ -302,7 +335,7 @@ const Disparo = () => {
       const { data: campaign, error: campaignError } = await supabase
         .from('disparos')
         .insert({
-          account_id: currentAccountId,
+          account_id: accountId,
           name: `Disparo ${messageType} ${new Date().toLocaleDateString()}`,
           content: messageType === 'text' ? textMessage.trim() : null,
           text_message: messageType === 'text' ? textMessage.trim() : null,
@@ -340,7 +373,7 @@ const Disparo = () => {
           const scheduledAt = new Date(now.getTime() + (index * intervalSeconds * 1000));
           
           return {
-            account_id: currentAccountId,
+            account_id: accountId,
             campaign_id: campaign.id,
             user_id: contact.user_id.toString(),
             tg_id: contact.user_id.toString(),
