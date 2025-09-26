@@ -480,7 +480,7 @@ const Disparo = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {campaigns.map(campaign => <TableRow key={campaign.id}>
+                {campaigns.slice(0, 2).map(campaign => <TableRow key={campaign.id}>
                     <TableCell className="font-medium">
                       {campaign.name || 'Sem nome'}
                     </TableCell>
@@ -491,8 +491,16 @@ const Disparo = () => {
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(campaign.status)}</TableCell>
-                    <TableCell>{campaign.total_targets || 0}</TableCell>
-                    <TableCell>{campaign.sent_count || 0}</TableCell>
+                    <TableCell>
+                      <span className="font-medium text-blue-600">
+                        {campaign.total_targets || 0} contatos
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium text-green-600">
+                        {campaign.sent_count || 0} enviados
+                      </span>
+                    </TableCell>
                     <TableCell>
                       {new Date(campaign.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
