@@ -1,7 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, X, Pencil } from 'lucide-react';
-
 interface EditableFieldProps {
   value: string | number;
   onSave: (value: string | number) => void;
@@ -10,11 +8,13 @@ interface EditableFieldProps {
   inputClassName?: string;
   placeholder?: string;
   onClick?: (e: React.MouseEvent) => void;
-  options?: { value: string; label: string }[];
+  options?: {
+    value: string;
+    label: string;
+  }[];
   icon?: React.ReactNode;
   showEditIcon?: boolean;
 }
-
 export const EditableField = ({
   value,
   onSave,
@@ -30,7 +30,6 @@ export const EditableField = ({
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
-
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -41,22 +40,16 @@ export const EditableField = ({
   useEffect(() => {
     setInputValue(value);
   }, [value]);
-
   const handleSave = () => {
     // For number type, convert string to number
-    const processedValue = type === 'number' ? 
-      (inputValue === '' ? 0 : Number(inputValue)) : 
-      inputValue;
-    
+    const processedValue = type === 'number' ? inputValue === '' ? 0 : Number(inputValue) : inputValue;
     onSave(processedValue);
     setIsEditing(false);
   };
-
   const handleCancel = () => {
     setInputValue(value);
     setIsEditing(false);
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSave();
@@ -64,7 +57,6 @@ export const EditableField = ({
       handleCancel();
     }
   };
-
   const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
       onClick(e);
@@ -73,7 +65,6 @@ export const EditableField = ({
       setIsEditing(true);
     }
   };
-
   const formatValue = (val: string | number) => {
     if (type === 'date' && typeof val === 'string') {
       const date = new Date(val);
@@ -84,74 +75,24 @@ export const EditableField = ({
       const option = options.find(opt => opt.value === val);
       return option ? option.label : val;
     }
-    
     return val;
   };
-
   if (isEditing) {
-    return (
-      <div className={`flex items-center gap-1 ${className}`}>
-        {type === 'select' ? (
-          <select
-            ref={inputRef as React.RefObject<HTMLSelectElement>}
-            value={inputValue as string}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className={`px-2 py-1 border rounded-md focus:ring-1 focus:ring-primary focus:outline-none text-sm ${inputClassName}`}
-          >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
+    return <div className={`flex items-center gap-1 ${className}`}>
+        {type === 'select' ? <select ref={inputRef as React.RefObject<HTMLSelectElement>} value={inputValue as string} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} className={`px-2 py-1 border rounded-md focus:ring-1 focus:ring-primary focus:outline-none text-sm ${inputClassName}`}>
+            {options.map(option => <option key={option.value} value={option.value}>
                 {option.label}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            ref={inputRef as React.RefObject<HTMLInputElement>}
-            type={type}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className={`px-2 py-1 border rounded-md focus:ring-1 focus:ring-primary focus:outline-none text-sm ${inputClassName}`}
-            placeholder={placeholder}
-          />
-        )}
+              </option>)}
+          </select> : <input ref={inputRef as React.RefObject<HTMLInputElement>} type={type} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} className={`px-2 py-1 border rounded-md focus:ring-1 focus:ring-primary focus:outline-none text-sm ${inputClassName}`} placeholder={placeholder} />}
         <div className="flex items-center">
-          <button 
-            onClick={handleSave} 
-            className="p-1 text-agri-success hover:bg-agri-success/10 rounded-full"
-            aria-label="Enregistrer"
-          >
+          <button onClick={handleSave} className="p-1 text-agri-success hover:bg-agri-success/10 rounded-full" aria-label="Enregistrer">
             <Check className="h-4 w-4" />
           </button>
-          <button 
-            onClick={handleCancel} 
-            className="p-1 text-agri-danger hover:bg-agri-danger/10 rounded-full"
-            aria-label="Annuler"
-          >
+          <button onClick={handleCancel} className="p-1 text-agri-danger hover:bg-agri-danger/10 rounded-full" aria-label="Annuler">
             <X className="h-4 w-4" />
           </button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div 
-      className={`group cursor-pointer hover:bg-muted/30 px-2 py-1 rounded flex items-center justify-between ${className}`}
-      onClick={handleClick}
-    >
-      <div className="flex items-center gap-2">
-        {icon && <span className="text-muted-foreground">{icon}</span>}
-        <span className="text-base md:text-lg">
-          {value ? formatValue(value) : (
-            <span className="text-muted-foreground italic">{placeholder}</span>
-          )}
-        </span>
-      </div>
-      {showEditIcon && (
-        <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-      )}
-    </div>
-  );
+  return;
 };
