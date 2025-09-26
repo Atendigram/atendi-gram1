@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Search, ChevronLeft, ChevronRight, Users, Download, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,8 +24,7 @@ interface Contact {
 const ITEMS_PER_PAGE = 25;
 
 const ContatosList = () => {
-  const { profile } = useAuth();
-  const accountId = profile?.account_id;
+  const { user } = useAuth();
   const location = useLocation(); // 👈 pega rota atual
 
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -35,6 +34,41 @@ const ContatosList = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
   const [exporting, setExporting] = useState(false);
+  const [accountId, setAccountId] = useState<string | null>(null);
+
+  // 🔑 Resolve account_id from accounts table
+  const resolveAccountId = async () => {
+    if (!user?.id) {
+      console.log('No user available');
+      setAccountId(null);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error resolving account_id:', error);
+        setAccountId(null);
+        return;
+      }
+
+      console.log('Resolved account_id:', data.id);
+      setAccountId(data.id);
+    } catch (error) {
+      console.error('Error resolving account_id:', error);
+      setAccountId(null);
+    }
+  };
+
+  // 🔄 Resolve account_id when user changes
+  useEffect(() => {
+    resolveAccountId();
+  }, [user?.id]);
 
   // 🔑 recarrega também quando rota muda ou accountId muda
   useEffect(() => {
@@ -42,13 +76,6 @@ const ContatosList = () => {
       loadContacts();
     }
   }, [currentPage, searchTerm, accountId, location.pathname]);
-
-  // 🔄 Também recarrega quando o componente é montado
-  useEffect(() => {
-    if (accountId) {
-      loadContacts();
-    }
-  }, []);
 
   const loadContacts = async () => {
     if (!accountId) {
