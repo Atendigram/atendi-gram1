@@ -7,9 +7,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase, getAccountId } from '@/lib/supabase';
-import { Send, Search, Upload, ChevronLeft, ChevronRight, FileText, Mic, Image } from 'lucide-react';
+import { Send, Search, Upload, ChevronLeft, ChevronRight, FileText, Mic, Image, RefreshCw, List, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { scopedSelectWithColumns, scopedInsert } from '@/lib/scoped-queries';
 
@@ -21,6 +22,21 @@ interface Contact {
   chat_id?: number;
   created_at: string;
   name?: string; // Computed field from first_name + last_name
+}
+
+interface Campaign {
+  id: string;
+  name?: string;
+  content?: string;
+  text_message?: string;
+  audio_url?: string;
+  media_url?: string;
+  status: string;
+  interval_seconds: number;
+  total_targets?: number;
+  sent_count?: number;
+  queued_count?: number;
+  created_at: string;
 }
 
 const ITEMS_PER_PAGE = 25;
@@ -35,6 +51,10 @@ const Disparo = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Campaigns state
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
 
   // Form state
   const [messageType, setMessageType] = useState<'text' | 'audio' | 'photo'>('text');
@@ -45,10 +65,11 @@ const Disparo = () => {
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Load contacts
+  // Load contacts and campaigns
   useEffect(() => {
     if (accountId) {
       loadContacts();
+      loadCampaigns();
     }
   }, [accountId]);
 
@@ -97,6 +118,43 @@ const Disparo = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadCampaigns = async () => {
+    if (!accountId) {
+      setCampaignsLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await scopedSelectWithColumns(
+        'disparos', 
+        'id, name, content, text_message, audio_url, media_url, status, interval_seconds, total_targets, sent_count, queued_count, created_at', 
+        accountId
+      ).order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setCampaigns((data as Campaign[]) || []);
+    } catch (error) {
+      console.error('Error loading campaigns:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as campanhas",
+        variant: "destructive",
+      });
+    } finally {
+      setCampaignsLoading(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    loadContacts();
+    loadCampaigns();
+    toast({ 
+      title: "Atualizado", 
+      description: "Dados recarregados com sucesso" 
+    });
   };
 
   const handleAudioSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,6 +381,9 @@ const Disparo = () => {
       setMediaUrl(null);
       setIntervalSeconds(0);
       setSelectedContacts(new Set());
+      
+      // Reload campaigns to show the new one
+      loadCampaigns();
 
     } catch (error: any) {
       console.error('Error creating disparo:', error);
@@ -351,8 +412,91 @@ const Disparo = () => {
     return <div className="flex justify-center p-8">Carregando contatos...</div>;
   }
 
+  const getStatusBadge = (status: string) => {
+    const statusMap = {
+      scheduled: { label: 'Agendado', variant: 'secondary' as const },
+      running: { label: 'Executando', variant: 'default' as const },
+      completed: { label: 'Concluído', variant: 'default' as const },
+      failed: { label: 'Falhou', variant: 'destructive' as const },
+      paused: { label: 'Pausado', variant: 'outline' as const }
+    };
+    
+    const { label, variant } = statusMap[status as keyof typeof statusMap] || { label: status, variant: 'outline' as const };
+    return <Badge variant={variant}>{label}</Badge>;
+  };
+
   return (
     <div className="space-y-6">
+      {/* Header with refresh button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Disparos</h1>
+          <p className="text-muted-foreground">Gerencie seus disparos de mensagens</p>
+        </div>
+        <Button variant="outline" onClick={handleRefresh}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Atualizar
+        </Button>
+      </div>
+
+      {/* Campaigns List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <List className="h-5 w-5" />
+            Campanhas Recentes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {campaignsLoading ? (
+            <div className="flex justify-center p-8">
+              <div className="text-muted-foreground">Carregando campanhas...</div>
+            </div>
+          ) : campaigns.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhuma campanha encontrada. Crie sua primeira campanha abaixo!
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Contatos</TableHead>
+                  <TableHead>Enviados</TableHead>
+                  <TableHead>Criado em</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {campaigns.map((campaign) => (
+                  <TableRow key={campaign.id}>
+                    <TableCell className="font-medium">
+                      {campaign.name || 'Sem nome'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {campaign.audio_url ? <Mic className="h-4 w-4" /> : 
+                         campaign.media_url ? <Image className="h-4 w-4" /> : 
+                         <FileText className="h-4 w-4" />}
+                        {campaign.audio_url ? 'Áudio' : 
+                         campaign.media_url ? 'Imagem' : 'Texto'}
+                      </div>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(campaign.status)}</TableCell>
+                    <TableCell>{campaign.total_targets || 0}</TableCell>
+                    <TableCell>{campaign.sent_count || 0}</TableCell>
+                    <TableCell>
+                      {new Date(campaign.created_at).toLocaleDateString('pt-BR')}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
