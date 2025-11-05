@@ -50,38 +50,39 @@ const ConectarPerfilPage = () => {
     const checkExistingConnection = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user || !user.email) {
+        if (!user) {
           setInitialLoading(false);
           return;
         }
 
-        // Complex join query to check for account through sessions and profiles
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('telegram_sessions')
-          .select(`
-            id,
-            phone_number,
-            status,
-            accounts!telegram_sessions_owner_id_fkey (
-              id,
-              name,
-              profiles!profiles_account_id_fkey (
-                email
-              )
-            )
-          `)
-          .ilike('accounts.profiles.email', user.email)
-          .limit(1)
+        // Get user's profile to find their account_id
+        const profileQuery = await (supabase as any)
+          .from('profiles')
+          .select('account_id')
+          .eq('id', user.id)
           .maybeSingle();
 
-        if (sessionError) {
-          console.error('Error checking connection:', sessionError);
+        if (profileQuery.error || !profileQuery.data?.account_id) {
           setInitialLoading(false);
           return;
         }
 
-        // If session exists with matching email, redirect to dashboard
-        if (sessionData) {
+        // Check if there's a connected telegram session for this account
+        const sessionQuery = await (supabase as any)
+          .from('telegram_sessions')
+          .select('id, status')
+          .eq('owner_id', profileQuery.data.account_id)
+          .eq('status', 'connected')
+          .maybeSingle();
+
+        if (sessionQuery.error) {
+          console.error('Error checking telegram session:', sessionQuery.error);
+          setInitialLoading(false);
+          return;
+        }
+
+        // If connected session exists, redirect to dashboard
+        if (sessionQuery.data) {
           navigate('/dashboard', { replace: true });
           return;
         }
