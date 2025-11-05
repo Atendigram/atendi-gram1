@@ -57,36 +57,44 @@ const ConectarPerfilPage = () => {
           return;
         }
 
-        // Get user's profile to find their account_id
-        const profileQuery = await (supabase as any)
-          .from('profiles')
-          .select('account_id')
-          .eq('id', user.id)
+        // 1) Try to find the user's account by owner_id
+        const accRes = await (supabase as any)
+          .from('accounts')
+          .select('id')
+          .eq('owner_id', user.id)
           .limit(1);
+        const accountId: string | undefined = accRes?.data?.[0]?.id;
 
-        const profile = profileQuery.data?.[0];
-        if (!profile?.account_id) {
-          isMounted && setInitialLoading(false);
-          return;
+        // 2) Fallback: find account via profiles by email (handles manually created profiles)
+        let fallbackAccountId: string | undefined;
+        if (!accountId && user.email) {
+          const profRes = await (supabase as any)
+            .from('profiles')
+            .select('account_id')
+            .ilike('email', user.email)
+            .limit(1);
+          fallbackAccountId = profRes?.data?.[0]?.account_id;
         }
 
-        // Check if there's a connected telegram session for this account
-        const sessionQuery = await (supabase as any)
-          .from('telegram_sessions')
-          .select('id, status')
-          .eq('owner_id', profile.account_id)
-          .eq('status', 'connected')
-          .limit(1);
+        const ownerIdsToCheck = [accountId, fallbackAccountId, user.id].filter(Boolean);
 
-        // If connected session exists, redirect to dashboard
-        if (sessionQuery.data && sessionQuery.data.length > 0) {
-          navigate('/dashboard', { replace: true });
-          return;
+        if (ownerIdsToCheck.length > 0) {
+          const sessRes = await (supabase as any)
+            .from('telegram_sessions')
+            .select('id, status, owner_id')
+            .in('owner_id', ownerIdsToCheck)
+            .eq('status', 'connected')
+            .limit(1);
+
+          if (sessRes?.data && sessRes.data.length > 0) {
+            navigate('/dashboard', { replace: true });
+            return;
+          }
         }
 
         isMounted && setInitialLoading(false);
       } catch (error) {
-        console.error('Error checking account:', error);
+        console.error('Error checking account/session:', error);
         isMounted && setInitialLoading(false);
       }
     };
@@ -94,7 +102,7 @@ const ConectarPerfilPage = () => {
     // Run on mount
     checkExistingConnection();
 
-    // Re-run on auth changes (e.g., after login)
+    // Re-run on auth changes (e.g., after login/refresh)
     const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         checkExistingConnection();
