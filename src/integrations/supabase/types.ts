@@ -483,6 +483,42 @@ export type Database = {
         }
         Relationships: []
       }
+      produtos_modelos: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+          link: string | null
+          nome: string
+          preco: number
+          status: string | null
+          tipo: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          link?: string | null
+          nome: string
+          preco: number
+          status?: string | null
+          tipo: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          link?: string | null
+          nome?: string
+          preco?: number
+          status?: string | null
+          tipo?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_id: string
@@ -517,12 +553,13 @@ export type Database = {
       }
       telegram_sessions: {
         Row: {
-          account_id: string
           api_hash: string
           api_id: string
           created_at: string | null
           error: string | null
           id: string
+          owner_id: string
+          phone_code_hash: string | null
           phone_number: string
           session_string: string | null
           status: string | null
@@ -531,12 +568,13 @@ export type Database = {
           verification_code: string | null
         }
         Insert: {
-          account_id: string
           api_hash: string
           api_id: string
           created_at?: string | null
           error?: string | null
           id?: string
+          owner_id: string
+          phone_code_hash?: string | null
           phone_number: string
           session_string?: string | null
           status?: string | null
@@ -545,12 +583,13 @@ export type Database = {
           verification_code?: string | null
         }
         Update: {
-          account_id?: string
           api_hash?: string
           api_id?: string
           created_at?: string | null
           error?: string | null
           id?: string
+          owner_id?: string
+          phone_code_hash?: string | null
           phone_number?: string
           session_string?: string | null
           status?: string | null
@@ -560,13 +599,28 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "telegram_sessions_account_id_fkey"
-            columns: ["account_id"]
+            foreignKeyName: "telegram_sessions_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: []
       }
       welcome_flow_steps: {
         Row: {
@@ -672,6 +726,10 @@ export type Database = {
         Args: { _err?: string; _item_id: string; _ok: boolean }
         Returns: undefined
       }
+      check_account_membership: {
+        Args: { _account_id: string }
+        Returns: boolean
+      }
       claim_disparo_items: {
         Args: { p_campaign: string; p_limit?: number }
         Returns: {
@@ -683,10 +741,7 @@ export type Database = {
           tg_id: number
         }[]
       }
-      cleanup_failed_disparos: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_failed_disparos: { Args: never; Returns: undefined }
       create_campaign_and_enqueue: {
         Args: {
           p_content: string
@@ -700,7 +755,7 @@ export type Database = {
         }[]
       }
       dequeue_disparo_item: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           account_id: string
           campaign_id: string
@@ -710,14 +765,19 @@ export type Database = {
           tg_id: number
         }[]
       }
+      get_dashboard_metrics: {
+        Args: never
+        Returns: {
+          contacts_today: number
+          messages_month: number
+          total_contacts: number
+        }[]
+      }
       is_account_member_or_owner: {
         Args: { account_id: string }
         Returns: boolean
       }
-      is_member_of: {
-        Args: { account_id: string }
-        Returns: boolean
-      }
+      is_member_of: { Args: { account_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
