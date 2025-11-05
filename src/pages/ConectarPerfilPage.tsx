@@ -97,7 +97,7 @@ const ConectarPerfilPage = () => {
           }
 
           // Redirect to dashboard
-          navigate('/', { replace: true });
+          navigate('/dashboard', { replace: true });
           return;
         }
 
