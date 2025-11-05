@@ -45,7 +45,7 @@ const ConectarPerfilPage = () => {
 
   const [error, setError] = useState<string | null>(null);
 
-  // Check for existing connected Telegram session on page load
+  // Check for existing account and redirect to dashboard
   useEffect(() => {
     const checkExistingConnection = async () => {
       try {
@@ -62,54 +62,22 @@ const ConectarPerfilPage = () => {
           .eq('owner_id', user.id)
           .single();
 
-        if (accountError || !accountData?.id) {
-          setInitialLoading(false);
-          return;
-        }
-
-        // Check for connected telegram session  
-        const sessionResponse = await (supabase as any)
-          .from('telegram_sessions')
-          .select('id, status')
-          .eq('owner_id', accountData.id)
-          .eq('status', 'connected')
-          .limit(1);
-
-        const sessionData = sessionResponse.data?.[0];
-        const sessionError = sessionResponse.error;
-
-        if (sessionError) {
-          console.error('Error checking telegram sessions:', sessionError);
-          setInitialLoading(false);
-          return;
-        }
-
-        // If connected session found, preload data and redirect to dashboard
-        if (sessionData) {
-          // Preload contatos_geral and disparos data in parallel
-          try {
-            await Promise.all([
-              supabase.from('contatos_geral').select('*').eq('account_id', accountData.id),
-              supabase.from('disparos').select('*').eq('account_id', accountData.id)
-            ]);
-          } catch (preloadError) {
-            console.error('Error preloading data:', preloadError);
-          }
-
-          // Redirect to dashboard
+        // If account exists, redirect to dashboard
+        if (accountData?.id) {
           navigate('/dashboard', { replace: true });
           return;
         }
 
         setInitialLoading(false);
       } catch (error) {
-        console.error('Error checking existing connection:', error);
+        console.error('Error checking account:', error);
         setInitialLoading(false);
       }
     };
 
     checkExistingConnection();
   }, [navigate]);
+
 
   const handleFormChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
