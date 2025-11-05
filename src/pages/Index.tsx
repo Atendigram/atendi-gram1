@@ -26,10 +26,11 @@ const Index = () => {
         navigate('/conectar-perfil');
         return;
       }
-      if (!hasConfiguredWelcome) {
-        navigate('/boas-vindas');
-        return;
-      }
+      // Permite acessar o dashboard mesmo sem configurar boas-vindas
+      // if (!hasConfiguredWelcome) {
+      //   navigate('/boas-vindas');
+      //   return;
+      // }
     }
   }, [onboardingLoading, hasConnectedProfile, hasConfiguredWelcome, navigate]);
   const [activeTab, setActiveTab] = useState<string>('dashboard');

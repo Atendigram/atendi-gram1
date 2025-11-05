@@ -36,12 +36,11 @@ export const useOnboardingStatus = () => {
     try {
       setStatus(prev => ({ ...prev, loading: true }));
 
-      // Get user's account_id from profiles
       const { data: profile } = await supabase
         .from('profiles')
         .select('account_id')
         .eq('id', session!.user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile?.account_id) {
         setStatus({
@@ -63,17 +62,13 @@ export const useOnboardingStatus = () => {
 
       const hasConnectedProfile = !!telegramSession;
 
-      // Check if user has configured welcome flow with steps
       const { data: welcomeFlow } = await supabase
         .from('welcome_flows')
-        .select(`
-          id, 
-          enabled,
-          welcome_flow_steps!inner(id)
-        `)
+        .select('id, enabled, welcome_flow_steps(id)')
         .eq('account_id', profile.account_id)
         .eq('enabled', true)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       const hasConfiguredWelcome = !!(welcomeFlow && welcomeFlow.welcome_flow_steps.length > 0);
 
