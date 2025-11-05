@@ -50,20 +50,38 @@ const ConectarPerfilPage = () => {
     const checkExistingConnection = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        if (!user || !user.email) {
           setInitialLoading(false);
           return;
         }
 
-        // Get account id from accounts table
-        const { data: accountData, error: accountError } = await supabase
-          .from('accounts')
-          .select('id')
-          .eq('owner_id', user.id)
-          .single();
+        // Complex join query to check for account through sessions and profiles
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('telegram_sessions')
+          .select(`
+            id,
+            phone_number,
+            status,
+            accounts!telegram_sessions_owner_id_fkey (
+              id,
+              name,
+              profiles!profiles_account_id_fkey (
+                email
+              )
+            )
+          `)
+          .ilike('accounts.profiles.email', user.email)
+          .limit(1)
+          .maybeSingle();
 
-        // If account exists, redirect to dashboard
-        if (accountData?.id) {
+        if (sessionError) {
+          console.error('Error checking connection:', sessionError);
+          setInitialLoading(false);
+          return;
+        }
+
+        // If session exists with matching email, redirect to dashboard
+        if (sessionData) {
           navigate('/dashboard', { replace: true });
           return;
         }
