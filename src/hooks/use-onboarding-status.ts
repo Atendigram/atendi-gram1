@@ -36,13 +36,8 @@ export const useOnboardingStatus = () => {
     try {
       setStatus(prev => ({ ...prev, loading: true }));
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('account_id')
-        .eq('id', session!.user.id)
-        .maybeSingle();
-
-      if (!profile?.account_id) {
+      const userEmail = session!.user.email;
+      if (!userEmail) {
         setStatus({
           hasConnectedProfile: false,
           hasConfiguredWelcome: false,
@@ -52,15 +47,45 @@ export const useOnboardingStatus = () => {
         return;
       }
 
-      // Check if user has connected Telegram profile
-      const { data: telegramSession } = await (supabase as any)
+      // Use the exact query structure provided by user
+      const { data: telegramCheck } = await supabase
         .from('telegram_sessions')
-        .select('id, status')
-        .eq('owner_id', profile.account_id)
+        .select(`
+          id,
+          phone_number,
+          status,
+          accounts!inner(
+            id,
+            owner_id,
+            profiles!inner(
+              id,
+              email
+            )
+          )
+        `)
+        .eq('accounts.profiles.email', userEmail.toLowerCase())
         .eq('status', 'connected')
+        .limit(1)
         .maybeSingle();
 
-      const hasConnectedProfile = !!telegramSession;
+      const hasConnectedProfile = !!telegramCheck;
+
+      // Get account_id for welcome flow check
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('account_id')
+        .eq('id', session!.user.id)
+        .maybeSingle();
+
+      if (!profile?.account_id) {
+        setStatus({
+          hasConnectedProfile,
+          hasConfiguredWelcome: false,
+          isComplete: hasConnectedProfile,
+          loading: false,
+        });
+        return;
+      }
 
       const { data: welcomeFlow } = await supabase
         .from('welcome_flows')

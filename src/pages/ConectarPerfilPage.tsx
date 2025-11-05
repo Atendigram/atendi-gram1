@@ -52,34 +52,34 @@ const ConectarPerfilPage = () => {
     const checkExistingConnection = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user || !isMounted) {
+        if (!user?.email || !isMounted) {
           isMounted && setInitialLoading(false);
           return;
         }
 
-        // Get profile to find account_id
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('account_id')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!profile?.account_id) {
-          isMounted && setInitialLoading(false);
-          return;
-        }
-
-        // Check if there's already a connected telegram session
-        const { data: session } = await (supabase as any)
+        // Use the exact query structure provided by user
+        const { data: telegramCheck } = await supabase
           .from('telegram_sessions')
-          .select('id, status')
-          .eq('owner_id', profile.account_id)
+          .select(`
+            id,
+            phone_number,
+            status,
+            accounts!inner(
+              id,
+              owner_id,
+              profiles!inner(
+                id,
+                email
+              )
+            )
+          `)
+          .eq('accounts.profiles.email', user.email.toLowerCase())
           .eq('status', 'connected')
           .limit(1)
           .maybeSingle();
 
         // Only redirect if session is connected, otherwise allow user to stay
-        if (session) {
+        if (telegramCheck && isMounted) {
           navigate('/dashboard', { replace: true });
           return;
         }
