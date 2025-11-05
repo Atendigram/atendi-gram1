@@ -47,11 +47,13 @@ const ConectarPerfilPage = () => {
 
   // Check for existing account and redirect to dashboard
   useEffect(() => {
+    let isMounted = true;
+
     const checkExistingConnection = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setInitialLoading(false);
+        if (!user || !isMounted) {
+          isMounted && setInitialLoading(false);
           return;
         }
 
@@ -60,10 +62,11 @@ const ConectarPerfilPage = () => {
           .from('profiles')
           .select('account_id')
           .eq('id', user.id)
-          .maybeSingle();
+          .limit(1);
 
-        if (profileQuery.error || !profileQuery.data?.account_id) {
-          setInitialLoading(false);
+        const profile = profileQuery.data?.[0];
+        if (!profile?.account_id) {
+          isMounted && setInitialLoading(false);
           return;
         }
 
@@ -71,30 +74,37 @@ const ConectarPerfilPage = () => {
         const sessionQuery = await (supabase as any)
           .from('telegram_sessions')
           .select('id, status')
-          .eq('owner_id', profileQuery.data.account_id)
+          .eq('owner_id', profile.account_id)
           .eq('status', 'connected')
-          .maybeSingle();
-
-        if (sessionQuery.error) {
-          console.error('Error checking telegram session:', sessionQuery.error);
-          setInitialLoading(false);
-          return;
-        }
+          .limit(1);
 
         // If connected session exists, redirect to dashboard
-        if (sessionQuery.data) {
+        if (sessionQuery.data && sessionQuery.data.length > 0) {
           navigate('/dashboard', { replace: true });
           return;
         }
 
-        setInitialLoading(false);
+        isMounted && setInitialLoading(false);
       } catch (error) {
         console.error('Error checking account:', error);
-        setInitialLoading(false);
+        isMounted && setInitialLoading(false);
       }
     };
 
+    // Run on mount
     checkExistingConnection();
+
+    // Re-run on auth changes (e.g., after login)
+    const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        checkExistingConnection();
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription?.subscription?.unsubscribe?.();
+    };
   }, [navigate]);
 
 
