@@ -730,6 +730,18 @@ export type Database = {
         Args: { _account_id: string }
         Returns: boolean
       }
+      check_connected_by_email: {
+        Args: { email_arg: string }
+        Returns: {
+          account_id: string
+          account_name: string
+          phone_number: string
+          profile_email: string
+          profile_id: string
+          session_id: string
+          status: string
+        }[]
+      }
       claim_disparo_items: {
         Args: { p_campaign: string; p_limit?: number }
         Returns: {
