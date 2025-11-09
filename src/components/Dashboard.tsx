@@ -64,7 +64,7 @@ export default function Dashboard() {
       <Card>
         <CardContent className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold">🆕 Contatos hoje</h2>
+            <h2 className="text-lg font-bold">🆕 Novos Contatos</h2>
             <p className="text-2xl">{metrics.contactsToday}</p>
           </div>
           <ArrowUpRight className="text-green-500 w-6 h-6" />
