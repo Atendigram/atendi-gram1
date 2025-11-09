@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Send, Search, Upload, ChevronLeft, ChevronRight, FileText, Mic, Image, RefreshCw, List, Clock } from 'lucide-react';
+import { Send, Search, Upload, ChevronLeft, ChevronRight, FileText, Mic, Image, RefreshCw, List, Clock, Video } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { scopedSelectWithColumns, scopedInsert } from '@/lib/scoped-queries';
 interface Contact {
@@ -55,13 +55,15 @@ const Disparo = () => {
   const [campaignsLoading, setCampaignsLoading] = useState(true);
 
   // Form state
-  const [messageType, setMessageType] = useState<'text' | 'audio' | 'photo'>('text');
+  const [messageType, setMessageType] = useState<'text' | 'audio' | 'photo' | 'video'>('text');
   const [textMessage, setTextMessage] = useState('');
   const [intervalSeconds, setIntervalSeconds] = useState(0);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // 🔑 Resolve account_id from accounts table
   const resolveAccountId = async () => {
@@ -185,12 +187,41 @@ const Disparo = () => {
     setPhotoFile(file || null);
     setMediaUrl(null); // Reset previous uploads
   };
-  const handleMessageTypeChange = (type: 'text' | 'audio' | 'photo') => {
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (200MB max)
+      const maxSize = 200 * 1024 * 1024; // 200MB in bytes
+      if (file.size > maxSize) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "O vídeo não pode exceder 200MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      // Validate file type
+      const validTypes = ['video/mp4', 'video/quicktime', 'video/webm'];
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: "Por favor, selecione um arquivo .mp4, .mov ou .webm",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    setVideoFile(file || null);
+    setMediaUrl(null); // Reset previous uploads
+  };
+  const handleMessageTypeChange = (type: 'text' | 'audio' | 'photo' | 'video') => {
     setMessageType(type);
     // Reset files when changing type
     setAudioFile(null);
     setPhotoFile(null);
+    setVideoFile(null);
     setMediaUrl(null);
+    setUploadProgress(0);
   };
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -248,6 +279,14 @@ const Disparo = () => {
       });
       return;
     }
+    if (messageType === 'video' && !videoFile) {
+      toast({
+        title: "Erro de validação",
+        description: "Você deve selecionar um vídeo",
+        variant: "destructive"
+      });
+      return;
+    }
     if (selectedContacts.size === 0) {
       toast({
         title: "Erro de validação",
@@ -301,6 +340,43 @@ const Disparo = () => {
         setMediaUrl(data.publicUrl);
         setUploading(false);
       }
+      if (messageType === 'video' && videoFile) {
+        setUploading(true);
+        setUploadProgress(0);
+        const ext = videoFile.name.split(".").pop() || "mp4";
+        const path = `videos/${crypto.randomUUID()}.${ext}`;
+        
+        // Simulate progress for large files
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => Math.min(prev + 10, 90));
+        }, 500);
+
+        try {
+          const {
+            error: uploadError
+          } = await supabase.storage.from("videos").upload(path, videoFile, {
+            cacheControl: "3600",
+            upsert: false
+          });
+          
+          clearInterval(progressInterval);
+          setUploadProgress(100);
+          
+          if (uploadError) throw uploadError;
+          
+          const {
+            data
+          } = supabase.storage.from("videos").getPublicUrl(path);
+          finalMediaUrl = data.publicUrl;
+          setMediaUrl(data.publicUrl);
+        } catch (error) {
+          clearInterval(progressInterval);
+          throw error;
+        } finally {
+          setUploading(false);
+          setUploadProgress(0);
+        }
+      }
 
       // Step 1: Create disparo record
       const {
@@ -320,7 +396,7 @@ const Disparo = () => {
         content: messageType === 'text' ? textMessage.trim() : null,
         text_message: messageType === 'text' ? textMessage.trim() : null,
         audio_url: messageType === 'audio' ? finalMediaUrl : null,
-        media_url: finalMediaUrl,
+        media_url: finalMediaUrl || (messageType === 'video' ? finalMediaUrl : null),
         interval_seconds: intervalSeconds,
         status: 'scheduled',
         created_by: session.user.id
@@ -382,8 +458,10 @@ const Disparo = () => {
       setTextMessage('');
       setAudioFile(null);
       setPhotoFile(null);
+      setVideoFile(null);
       setMediaUrl(null);
       setIntervalSeconds(0);
+      setUploadProgress(0);
       setSelectedContacts(new Set());
 
       // Reload campaigns to show the new one
@@ -486,8 +564,14 @@ const Disparo = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        {campaign.audio_url ? <Mic className="h-4 w-4" /> : campaign.media_url ? <Image className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                        {campaign.audio_url ? 'Áudio' : campaign.media_url ? 'Imagem' : 'Texto'}
+                        {campaign.audio_url ? <Mic className="h-4 w-4" /> : 
+                         campaign.media_url && campaign.media_url.includes('/videos/') ? <Video className="h-4 w-4" /> :
+                         campaign.media_url ? <Image className="h-4 w-4" /> : 
+                         <FileText className="h-4 w-4" />}
+                        {campaign.audio_url ? 'Áudio' : 
+                         campaign.media_url && campaign.media_url.includes('/videos/') ? 'Vídeo' :
+                         campaign.media_url ? 'Imagem' : 
+                         'Texto'}
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(campaign.status)}</TableCell>
@@ -635,6 +719,13 @@ const Disparo = () => {
                   Foto
                 </Label>
               </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="video" id="video" />
+                <Label htmlFor="video" className="flex items-center gap-2 cursor-pointer">
+                  <Video className="h-4 w-4" />
+                  Vídeo
+                </Label>
+              </div>
             </RadioGroup>
           </div>
 
@@ -688,6 +779,69 @@ const Disparo = () => {
               </div>
             </div>}
 
+          {/* Video Upload */}
+          {messageType === 'video' && <div>
+              <Label className="text-sm font-medium">Arquivo de Vídeo</Label>
+              <div className="mt-1 space-y-2">
+                <Input 
+                  type="file" 
+                  accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm" 
+                  onChange={handleVideoSelect} 
+                  disabled={uploading} 
+                  className="max-w-sm" 
+                  required={messageType === 'video'} 
+                />
+                <p className="text-xs text-muted-foreground">
+                  Tipos aceitos: MP4, MOV, WEBM • Tamanho máximo: 200MB
+                </p>
+                {uploading && uploadProgress > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Enviando vídeo...</span>
+                      <span className="font-medium">{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-amber-600">⚠️ Não feche esta janela durante o upload</p>
+                  </div>
+                )}
+                {videoFile && !uploading && <div className="space-y-2">
+                    <p className="text-sm text-green-600">
+                      Vídeo selecionado: {videoFile.name} ({(videoFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </p>
+                    <video 
+                      src={URL.createObjectURL(videoFile)} 
+                      controls 
+                      className="w-full max-w-md rounded-lg border"
+                      style={{ maxHeight: '300px' }}
+                    />
+                  </div>}
+                {mediaUrl && messageType === 'video' && <div className="space-y-2">
+                    <p className="text-sm text-blue-600">✓ Vídeo enviado com sucesso</p>
+                    <video 
+                      src={mediaUrl} 
+                      controls 
+                      className="w-full max-w-md rounded-lg border"
+                      style={{ maxHeight: '300px' }}
+                    />
+                  </div>}
+                {/* Optional caption for video */}
+                <div>
+                  <Label className="text-sm font-medium">Legenda (Opcional)</Label>
+                  <Textarea 
+                    placeholder="Digite uma legenda para o vídeo..." 
+                    value={textMessage} 
+                    onChange={e => setTextMessage(e.target.value)} 
+                    className="mt-1" 
+                  />
+                </div>
+              </div>
+            </div>}
+
           {/* Interval Setting */}
           <div>
             <Label className="text-sm font-medium">Intervalo entre envios (segundos)</Label>
@@ -697,7 +851,10 @@ const Disparo = () => {
           <Button onClick={handleSubmit} disabled={submitting || uploading || selectedContacts.size === 0} className="w-full">
             {submitting || uploading ? uploading ? "Carregando arquivo..." : "Enviando..." : <>
                 <Send className="mr-2 h-4 w-4" />
-                Enviar {messageType === 'text' ? 'Texto' : messageType === 'audio' ? 'Áudio' : 'Foto'} ({selectedContacts.size} contatos)
+                Enviar {messageType === 'text' ? 'Texto' : 
+                        messageType === 'audio' ? 'Áudio' : 
+                        messageType === 'video' ? 'Vídeo' : 
+                        'Foto'} ({selectedContacts.size} contatos)
               </>}
           </Button>
         </CardContent>

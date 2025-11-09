@@ -141,6 +141,7 @@ export type Database = {
           language_code: string | null
           last_name: string | null
           mensagem: string | null
+          name: string | null
           source: string | null
           status: string
           tg_id: string | null
@@ -163,6 +164,7 @@ export type Database = {
           language_code?: string | null
           last_name?: string | null
           mensagem?: string | null
+          name?: string | null
           source?: string | null
           status?: string
           tg_id?: string | null
@@ -185,6 +187,7 @@ export type Database = {
           language_code?: string | null
           last_name?: string | null
           mensagem?: string | null
+          name?: string | null
           source?: string | null
           status?: string
           tg_id?: string | null
