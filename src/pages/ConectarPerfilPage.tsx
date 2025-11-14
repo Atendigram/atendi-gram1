@@ -52,29 +52,30 @@ const ConectarPerfilPage = () => {
     const checkExistingConnection = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.email || !isMounted) {
+        if (!user?.id || !isMounted) {
           isMounted && setInitialLoading(false);
           return;
         }
 
-        // Use the exact query structure provided by user
+        // Get user's profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, account_id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (!profile || !isMounted) {
+          isMounted && setInitialLoading(false);
+          return;
+        }
+
+        // Check if profile has connected Telegram using the new logic:
+        // status = 'connected' AND (owner_id = profile.id OR owner_id = profile.account_id)
         const { data: telegramCheck } = await supabase
           .from('telegram_sessions')
-          .select(`
-            id,
-            phone_number,
-            status,
-            accounts!inner(
-              id,
-              owner_id,
-              profiles!inner(
-                id,
-                email
-              )
-            )
-          `)
-          .eq('accounts.profiles.email', user.email.toLowerCase())
+          .select('id, phone_number, status')
           .eq('status', 'connected')
+          .or(`owner_id.eq.${profile.id},owner_id.eq.${profile.account_id}`)
           .limit(1)
           .maybeSingle();
 
