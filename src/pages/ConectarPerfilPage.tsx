@@ -69,17 +69,18 @@ const ConectarPerfilPage = () => {
           return;
         }
 
-        // Check connection using server-side helper by email (covers owner_id = account)
-        const userEmail = user.email?.toLowerCase() || null;
-        let telegramCheck: any = null;
-        if (userEmail) {
-          const { data: connectedByEmail, error: rpcError } = await (supabase as any)
-            .rpc('check_connected_by_email', { email_arg: userEmail });
-          if (rpcError) {
-            console.error('❌ ConectarPerfil - Error in check_connected_by_email:', rpcError);
-          }
-          telegramCheck = Array.isArray(connectedByEmail) && connectedByEmail.length > 0 ? connectedByEmail[0] : null;
+        // Checa diretamente em telegram_sessions se há sessão conectada do perfil ou da conta
+        const { data: connectedSessions, error: sessionsError } = await supabase
+          .from('telegram_sessions')
+          .select('id')
+          .eq('status', 'connected')
+          .in('owner_id', [profile.id, profile.account_id]);
+
+        if (sessionsError) {
+          console.error('❌ ConectarPerfil - Erro ao buscar telegram_sessions:', sessionsError);
         }
+
+        const telegramCheck = Array.isArray(connectedSessions) && connectedSessions.length > 0 ? connectedSessions[0] : null;
 
         // Only redirect if session is connected, otherwise allow user to stay
         if (telegramCheck && isMounted) {
