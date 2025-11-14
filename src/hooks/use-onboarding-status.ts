@@ -36,8 +36,14 @@ export const useOnboardingStatus = () => {
     try {
       setStatus(prev => ({ ...prev, loading: true }));
 
-      const userEmail = session!.user.email;
-      if (!userEmail) {
+      // Get user's profile first
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, account_id')
+        .eq('id', session!.user.id)
+        .maybeSingle();
+
+      if (!profile) {
         setStatus({
           hasConnectedProfile: false,
           hasConfiguredWelcome: false,
@@ -47,45 +53,20 @@ export const useOnboardingStatus = () => {
         return;
       }
 
-      // Use the exact query structure provided by user
+      // Check if profile has connected Telegram using the new logic
+      // A profile is connected if there's a telegram_session where:
+      // status = 'connected' AND (owner_id = profile.id OR owner_id = profile.account_id)
       const { data: telegramCheck } = await supabase
         .from('telegram_sessions')
-        .select(`
-          id,
-          phone_number,
-          status,
-          accounts!inner(
-            id,
-            owner_id,
-            profiles!inner(
-              id,
-              email
-            )
-          )
-        `)
-        .eq('accounts.profiles.email', userEmail.toLowerCase())
+        .select('id, phone_number, status')
         .eq('status', 'connected')
+        .or(`owner_id.eq.${profile.id},owner_id.eq.${profile.account_id}`)
         .limit(1)
         .maybeSingle();
 
       const hasConnectedProfile = !!telegramCheck;
 
-      // Get account_id for welcome flow check
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('account_id')
-        .eq('id', session!.user.id)
-        .maybeSingle();
-
-      if (!profile?.account_id) {
-        setStatus({
-          hasConnectedProfile,
-          hasConfiguredWelcome: false,
-          isComplete: hasConnectedProfile,
-          loading: false,
-        });
-        return;
-      }
+      // Check for welcome flow configuration
 
       const { data: welcomeFlow } = await supabase
         .from('welcome_flows')
