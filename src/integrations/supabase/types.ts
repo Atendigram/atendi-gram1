@@ -67,6 +67,141 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_accounts_owner_fix: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          name: string | null
+          owner_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          owner_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          owner_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_auth_users: {
+        Row: {
+          aud: string | null
+          banned_until: string | null
+          confirmation_sent_at: string | null
+          confirmation_token: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          deleted_at: string | null
+          email: string | null
+          email_change: string | null
+          email_change_confirm_status: number | null
+          email_change_sent_at: string | null
+          email_change_token_current: string | null
+          email_change_token_new: string | null
+          email_confirmed_at: string | null
+          encrypted_password: string | null
+          id: string | null
+          instance_id: string | null
+          invited_at: string | null
+          is_anonymous: boolean | null
+          is_sso_user: boolean | null
+          is_super_admin: boolean | null
+          last_sign_in_at: string | null
+          phone: string | null
+          phone_change: string | null
+          phone_change_sent_at: string | null
+          phone_change_token: string | null
+          phone_confirmed_at: string | null
+          raw_app_meta_data: Json | null
+          raw_user_meta_data: Json | null
+          reauthentication_sent_at: string | null
+          reauthentication_token: string | null
+          recovery_sent_at: string | null
+          recovery_token: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aud?: string | null
+          banned_until?: string | null
+          confirmation_sent_at?: string | null
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          email_change?: string | null
+          email_change_confirm_status?: number | null
+          email_change_sent_at?: string | null
+          email_change_token_current?: string | null
+          email_change_token_new?: string | null
+          email_confirmed_at?: string | null
+          encrypted_password?: string | null
+          id?: string | null
+          instance_id?: string | null
+          invited_at?: string | null
+          is_anonymous?: boolean | null
+          is_sso_user?: boolean | null
+          is_super_admin?: boolean | null
+          last_sign_in_at?: string | null
+          phone?: string | null
+          phone_change?: string | null
+          phone_change_sent_at?: string | null
+          phone_change_token?: string | null
+          phone_confirmed_at?: string | null
+          raw_app_meta_data?: Json | null
+          raw_user_meta_data?: Json | null
+          reauthentication_sent_at?: string | null
+          reauthentication_token?: string | null
+          recovery_sent_at?: string | null
+          recovery_token?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aud?: string | null
+          banned_until?: string | null
+          confirmation_sent_at?: string | null
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          email_change?: string | null
+          email_change_confirm_status?: number | null
+          email_change_sent_at?: string | null
+          email_change_token_current?: string | null
+          email_change_token_new?: string | null
+          email_confirmed_at?: string | null
+          encrypted_password?: string | null
+          id?: string | null
+          instance_id?: string | null
+          invited_at?: string | null
+          is_anonymous?: boolean | null
+          is_sso_user?: boolean | null
+          is_super_admin?: boolean | null
+          last_sign_in_at?: string | null
+          phone?: string | null
+          phone_change?: string | null
+          phone_change_sent_at?: string | null
+          phone_change_token?: string | null
+          phone_confirmed_at?: string | null
+          raw_app_meta_data?: Json | null
+          raw_user_meta_data?: Json | null
+          reauthentication_sent_at?: string | null
+          reauthentication_token?: string | null
+          recovery_sent_at?: string | null
+          recovery_token?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       boas_vindas_settings: {
         Row: {
           account_id: string
@@ -360,6 +495,38 @@ export type Database = {
           total_targets?: number | null
         }
         Relationships: []
+      }
+      failed_inserts: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          error: string | null
+          id: string
+          payload: Json
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          payload: Json
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "failed_inserts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       logsgeral: {
         Row: {
@@ -722,7 +889,134 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      contatos: {
+        Row: {
+          account_id: string | null
+          chat_id: number | null
+          created_at: string | null
+          date_first_seen: string | null
+          fail_count: number | null
+          first_name: string | null
+          invalid_at: string | null
+          invalid_reason: string | null
+          is_bot: string | null
+          is_premium: string | null
+          language_code: string | null
+          last_name: string | null
+          mensagem: string | null
+          name: string | null
+          source: string | null
+          status: string | null
+          tg_id: string | null
+          user_id: number | null
+          username: string | null
+          welcome_opt_out: boolean | null
+          welcomed_at: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contatos_luna_account_fk"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dashboard_mensagens_semana: {
+        Row: {
+          account_id: string | null
+          messages: number | null
+          ord: number | null
+          weekday: string | null
+        }
+        Relationships: []
+      }
+      dashboard_total_mensagens: {
+        Row: {
+          account_id: string | null
+          total_messages: number | null
+        }
+        Relationships: []
+      }
+      view_new_contacts_today: {
+        Row: {
+          day: string | null
+          new_contacts: number | null
+        }
+        Relationships: []
+      }
+      view_profiles_connection_status: {
+        Row: {
+          account_created_at: string | null
+          account_id: string | null
+          account_name: string | null
+          account_owner_id: string | null
+          connected_sessions: number | null
+          display_name: string | null
+          email: string | null
+          last_connected_at: string | null
+          profile_created_at: string | null
+          profile_id: string | null
+          session_owner_ids: string[] | null
+          session_statuses: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       ack_disparo_item: {
@@ -769,6 +1063,7 @@ export type Database = {
           enqueued: number
         }[]
       }
+      current_account_id: { Args: never; Returns: string }
       dequeue_disparo_item: {
         Args: never
         Returns: {
@@ -788,11 +1083,20 @@ export type Database = {
           total_contacts: number
         }[]
       }
+      get_or_create_profile: {
+        Args: { _display_name?: string; _email: string; _user_id: string }
+        Returns: string
+      }
       is_account_member_or_owner: {
         Args: { account_id: string }
         Returns: boolean
       }
       is_member_of: { Args: { account_id: string }; Returns: boolean }
+      profile_has_connected_telegram: {
+        Args: { _profile_id: string }
+        Returns: boolean
+      }
+      whoami: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never

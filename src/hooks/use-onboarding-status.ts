@@ -36,11 +36,11 @@ export const useOnboardingStatus = () => {
     try {
       setStatus(prev => ({ ...prev, loading: true }));
 
-      // Get user's profile first
+      // Get user's profile first using email (not session.user.id)
       const { data: profile } = await supabase
         .from('profiles')
         .select('id, account_id')
-        .eq('id', session!.user.id)
+        .eq('email', session!.user.email)
         .maybeSingle();
 
       if (!profile) {
