@@ -53,28 +53,14 @@ export const useOnboardingStatus = () => {
         return;
       }
 
-      // Check if profile has connected Telegram using the new logic
-      // A profile is connected if there's a telegram_session where:
-      // status = 'connected' AND (owner_id = profile.id OR owner_id = profile.account_id)
-      console.log('🔍 Checking telegram connection for profile:', profile.id, 'account:', profile.account_id);
-      
-      // Try two separate queries to avoid .or() issues
-      const { data: sessionsByProfile } = await supabase
+      // Check if profile has connected Telegram
+      // Query telegram_sessions where status='connected' - RLS handles owner_id filtering
+      const { data: telegramSessions } = await supabase
         .from('telegram_sessions')
         .select('id, phone_number, status, owner_id')
-        .eq('status', 'connected')
-        .eq('owner_id', profile.id);
+        .eq('status', 'connected');
 
-      const { data: sessionsByAccount } = await supabase
-        .from('telegram_sessions')
-        .select('id, phone_number, status, owner_id')
-        .eq('status', 'connected')
-        .eq('owner_id', profile.account_id);
-
-      const telegramSessions = [...(sessionsByProfile || []), ...(sessionsByAccount || [])];
-      console.log('📱 Telegram sessions found:', telegramSessions);
-
-      const hasConnectedProfile = telegramSessions.length > 0;
+      const hasConnectedProfile = !!(telegramSessions && telegramSessions.length > 0);
 
       // Check for welcome flow configuration
 
