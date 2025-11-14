@@ -53,22 +53,22 @@ export const useOnboardingStatus = () => {
         return;
       }
 
-      // Checa diretamente em telegram_sessions se há sessão conectada do perfil ou da conta
+      // Usa a view view_profiles_connection_status para verificar conexão
       console.log('🔍 Verificando conexão Telegram para profile:', profile.id, 'account:', profile.account_id);
       
-      const { data: connectedSessions, error: sessionsError } = await supabase
-        .from('telegram_sessions')
-        .select('id, owner_id, status')
-        .eq('status', 'connected')
-        .in('owner_id', [profile.id, profile.account_id]);
+      const { data: connectionStatus, error: sessionsError } = await supabase
+        .from('view_profiles_connection_status')
+        .select('profile_id, display_name, account_id, connected_sessions, last_connected_at, session_owner_ids')
+        .eq('profile_id', profile.id)
+        .maybeSingle();
 
-      console.log('📱 Sessões conectadas encontradas:', connectedSessions);
+      console.log('📱 Status de conexão encontrado:', connectionStatus);
       if (sessionsError) {
-        console.error('❌ Erro ao buscar telegram_sessions:', sessionsError);
+        console.error('❌ Erro ao buscar view_profiles_connection_status:', sessionsError);
       }
 
-      const hasConnectedProfile = Array.isArray(connectedSessions) && connectedSessions.length > 0;
-      console.log('✅ hasConnectedProfile:', hasConnectedProfile);
+      const hasConnectedProfile = !!(connectionStatus && connectionStatus.connected_sessions > 0);
+      console.log('✅ hasConnectedProfile:', hasConnectedProfile, '| connected_sessions:', connectionStatus?.connected_sessions);
 
       // Check for welcome flow configuration
 
