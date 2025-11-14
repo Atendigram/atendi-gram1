@@ -70,10 +70,17 @@ const ConectarPerfilPage = () => {
         }
 
         // Check if profile has connected Telegram - RLS handles owner_id filtering
-        const { data: telegramSessions } = await supabase
+        console.log('🔍 ConectarPerfil - Checking telegram connection for profile:', profile.id, 'account:', profile.account_id);
+        
+        const { data: telegramSessions, error: sessionError } = await supabase
           .from('telegram_sessions')
           .select('id, phone_number, status, owner_id')
           .eq('status', 'connected');
+        
+        if (sessionError) {
+          console.error('❌ ConectarPerfil - Error fetching telegram sessions:', sessionError);
+        }
+        console.log('📱 ConectarPerfil - Telegram sessions found:', telegramSessions);
         
         const telegramCheck = telegramSessions && telegramSessions.length > 0 ? telegramSessions[0] : null;
 

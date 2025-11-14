@@ -55,10 +55,17 @@ export const useOnboardingStatus = () => {
 
       // Check if profile has connected Telegram
       // Query telegram_sessions where status='connected' - RLS handles owner_id filtering
-      const { data: telegramSessions } = await supabase
+      console.log('🔍 Checking telegram connection for profile:', profile.id, 'account:', profile.account_id);
+      
+      const { data: telegramSessions, error: sessionError } = await supabase
         .from('telegram_sessions')
         .select('id, phone_number, status, owner_id')
         .eq('status', 'connected');
+
+      if (sessionError) {
+        console.error('❌ Error fetching telegram sessions:', sessionError);
+      }
+      console.log('📱 Telegram sessions found:', telegramSessions);
 
       const hasConnectedProfile = !!(telegramSessions && telegramSessions.length > 0);
 
