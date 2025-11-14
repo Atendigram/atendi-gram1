@@ -53,21 +53,18 @@ export const useOnboardingStatus = () => {
         return;
       }
 
-      // Check if profile has connected Telegram
-      // Query telegram_sessions where status='connected' - RLS handles owner_id filtering
-      console.log('🔍 Checking telegram connection for profile:', profile.id, 'account:', profile.account_id);
-      
-      const { data: telegramSessions, error: sessionError } = await supabase
-        .from('telegram_sessions')
-        .select('id, phone_number, status, owner_id')
-        .eq('status', 'connected');
-
-      if (sessionError) {
-        console.error('❌ Error fetching telegram sessions:', sessionError);
+      // Check if profile has connected Telegram using server-side helper
+      // Uses SECURITY DEFINER function to match by email and account ownership
+      const userEmail = session!.user.email?.toLowerCase() || null;
+      let hasConnectedProfile = false;
+      if (userEmail) {
+        const { data: connectedByEmail, error: rpcError } = await (supabase as any)
+          .rpc('check_connected_by_email', { email_arg: userEmail });
+        if (rpcError) {
+          console.error('❌ Error in check_connected_by_email:', rpcError);
+        }
+        hasConnectedProfile = Array.isArray(connectedByEmail) && connectedByEmail.length > 0;
       }
-      console.log('📱 Telegram sessions found:', telegramSessions);
-
-      const hasConnectedProfile = !!(telegramSessions && telegramSessions.length > 0);
 
       // Check for welcome flow configuration
 

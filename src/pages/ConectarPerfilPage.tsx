@@ -69,20 +69,17 @@ const ConectarPerfilPage = () => {
           return;
         }
 
-        // Check if profile has connected Telegram - RLS handles owner_id filtering
-        console.log('🔍 ConectarPerfil - Checking telegram connection for profile:', profile.id, 'account:', profile.account_id);
-        
-        const { data: telegramSessions, error: sessionError } = await supabase
-          .from('telegram_sessions')
-          .select('id, phone_number, status, owner_id')
-          .eq('status', 'connected');
-        
-        if (sessionError) {
-          console.error('❌ ConectarPerfil - Error fetching telegram sessions:', sessionError);
+        // Check connection using server-side helper by email (covers owner_id = account)
+        const userEmail = user.email?.toLowerCase() || null;
+        let telegramCheck: any = null;
+        if (userEmail) {
+          const { data: connectedByEmail, error: rpcError } = await (supabase as any)
+            .rpc('check_connected_by_email', { email_arg: userEmail });
+          if (rpcError) {
+            console.error('❌ ConectarPerfil - Error in check_connected_by_email:', rpcError);
+          }
+          telegramCheck = Array.isArray(connectedByEmail) && connectedByEmail.length > 0 ? connectedByEmail[0] : null;
         }
-        console.log('📱 ConectarPerfil - Telegram sessions found:', telegramSessions);
-        
-        const telegramCheck = telegramSessions && telegramSessions.length > 0 ? telegramSessions[0] : null;
 
         // Only redirect if session is connected, otherwise allow user to stay
         if (telegramCheck && isMounted) {
