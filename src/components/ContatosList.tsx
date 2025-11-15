@@ -35,6 +35,18 @@ const ContatosList = () => {
   const [filteredCount, setFilteredCount] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [contactsTable, setContactsTable] = useState<string>('contatos_geral');
+
+  // 🔑 Get contacts table name based on account_id
+  const getContactsTableName = (accountId: string): string => {
+    // Map specific accounts to their tables
+    const accountTableMap: Record<string, string> = {
+      '5777f0ad-719d-4d92-b23b-aefa9d7077ac': 'contatos_luna',
+      '0727f119-2e77-42f5-ab9c-7a5f3aacedc0': 'contatos_bella',
+    };
+    
+    return accountTableMap[accountId] || 'contatos_geral';
+  };
 
   // 🔑 Resolve account_id from accounts table
   const resolveAccountId = async () => {
@@ -59,6 +71,9 @@ const ContatosList = () => {
 
       console.log('Resolved account_id:', data.id);
       setAccountId(data.id);
+      const tableName = getContactsTableName(data.id);
+      setContactsTable(tableName);
+      console.log('Using contacts table:', tableName);
     } catch (error) {
       console.error('Error resolving account_id:', error);
       setAccountId(null);
@@ -87,8 +102,8 @@ const ContatosList = () => {
     console.log('Loading contacts for account:', accountId);
     setLoading(true);
     try {
-      // Base query with account_id filter
-      let query = scopedSelectWithColumns('contatos_geral', 'user_id, first_name, last_name, username, created_at', accountId);
+      // Base query with account_id filter - use dynamic table name
+      let query = scopedSelectWithColumns(contactsTable, 'user_id, first_name, last_name, username, created_at', accountId);
 
       // Apply search filters if search term exists
       if (searchTerm.trim()) {
@@ -125,8 +140,8 @@ const ContatosList = () => {
       if (!searchTerm.trim()) {
         setTotalCount(count || 0);
       } else {
-        // When searching, we need to get the total count separately
-        const { count: total } = await scopedCount('contatos_geral', accountId);
+        // When searching, we need to get the total count separately - use dynamic table name
+        const { count: total } = await scopedCount(contactsTable, accountId);
         setTotalCount(total || 0);
       }
     } catch (error: any) {
@@ -185,8 +200,8 @@ const ContatosList = () => {
     try {
       console.log('Exporting contacts for account:', accountId);
       
-      // Use the same query logic as loadContacts for consistency
-      let query = scopedSelectWithColumns('contatos_geral', 'user_id, first_name, last_name, username, created_at', accountId);
+      // Use the same query logic as loadContacts for consistency - use dynamic table name
+      let query = scopedSelectWithColumns(contactsTable, 'user_id, first_name, last_name, username, created_at', accountId);
       
       if (searchTerm.trim()) {
         const isNumeric = /^\d+$/.test(searchTerm.trim());
