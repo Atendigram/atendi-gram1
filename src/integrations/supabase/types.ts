@@ -261,7 +261,157 @@ export type Database = {
           },
         ]
       }
+      contatos_bella: {
+        Row: {
+          account_id: string | null
+          chat_id: number | null
+          created_at: string | null
+          date_first_seen: string | null
+          fail_count: number | null
+          first_name: string | null
+          id: string
+          invalid_at: string | null
+          invalid_reason: string | null
+          is_bot: string | null
+          is_premium: string | null
+          language_code: string | null
+          last_name: string | null
+          mensagem: string | null
+          name: string | null
+          owner_id: string | null
+          source: string | null
+          status: string | null
+          tg_id: string | null
+          user_id: number | null
+          username: string | null
+          welcome_opt_out: boolean | null
+          welcomed_at: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          id?: string
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          owner_id?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          id?: string
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          owner_id?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Relationships: []
+      }
       contatos_geral: {
+        Row: {
+          account_id: string | null
+          chat_id: number | null
+          created_at: string | null
+          date_first_seen: string | null
+          fail_count: number | null
+          first_name: string | null
+          invalid_at: string | null
+          invalid_reason: string | null
+          is_bot: string | null
+          is_premium: string | null
+          language_code: string | null
+          last_name: string | null
+          mensagem: string | null
+          name: string | null
+          source: string | null
+          status: string | null
+          tg_id: string | null
+          user_id: number | null
+          username: string | null
+          welcome_opt_out: boolean | null
+          welcomed_at: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Relationships: []
+      }
+      contatos_geral_old: {
         Row: {
           account_id: string
           chat_id: number | null
@@ -340,6 +490,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      contatos_luna: {
+        Row: {
+          account_id: string | null
+          chat_id: number | null
+          created_at: string | null
+          date_first_seen: string | null
+          fail_count: number | null
+          first_name: string | null
+          id: string
+          invalid_at: string | null
+          invalid_reason: string | null
+          is_bot: string | null
+          is_premium: string | null
+          language_code: string | null
+          last_name: string | null
+          mensagem: string | null
+          name: string | null
+          source: string | null
+          status: string | null
+          tg_id: string | null
+          user_id: number | null
+          username: string | null
+          welcome_opt_out: boolean | null
+          welcomed_at: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          id?: string
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          id?: string
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Relationships: []
       }
       conversations: {
         Row: {
@@ -723,6 +948,7 @@ export type Database = {
       }
       telegram_sessions: {
         Row: {
+          account_id: string | null
           api_hash: string
           api_id: string
           created_at: string | null
@@ -738,6 +964,7 @@ export type Database = {
           verification_code: string | null
         }
         Insert: {
+          account_id?: string | null
           api_hash: string
           api_id: string
           created_at?: string | null
@@ -753,6 +980,7 @@ export type Database = {
           verification_code?: string | null
         }
         Update: {
+          account_id?: string | null
           api_hash?: string
           api_id?: string
           created_at?: string | null
@@ -856,6 +1084,7 @@ export type Database = {
           id: string
           is_default: boolean
           name: string
+          owner_id: string | null
           updated_at: string | null
           workspace_id: string
         }
@@ -865,6 +1094,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           name?: string
+          owner_id?: string | null
           updated_at?: string | null
           workspace_id: string
         }
@@ -874,6 +1104,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           name?: string
+          owner_id?: string | null
           updated_at?: string | null
           workspace_id?: string
         }
