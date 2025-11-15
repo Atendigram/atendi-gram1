@@ -37,15 +37,19 @@ const ContatosList = () => {
   const [accountId, setAccountId] = useState<string | null>(null);
   const [contactsTable, setContactsTable] = useState<string>('contatos_geral');
 
-  // 🔑 Get contacts table name based on account_id
-  const getContactsTableName = (accountId: string): string => {
+  // 🔑 Get contacts table name based on account_id and name
+  const getContactsTableName = (accountId: string, accountName: string): string => {
     // Map specific accounts to their tables
-    const accountTableMap: Record<string, string> = {
-      '5777f0ad-719d-4d92-b23b-aefa9d7077ac': 'contatos_luna',
-      '0727f119-2e77-42f5-ab9c-7a5f3aacedc0': 'contatos_bella',
-    };
+    if (accountId === '5777f0ad-719d-4d92-b23b-aefa9d7077ac') {
+      return 'contatos_luna';
+    }
+    if (accountId === '0727f119-2e77-42f5-ab9c-7a5f3aacedc0') {
+      return 'contatos_bella';
+    }
     
-    return accountTableMap[accountId] || 'contatos_geral';
+    // For new accounts, use contatos_<slug>
+    const slug = accountName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    return `contatos_${slug}`;
   };
 
   // 🔑 Resolve account_id from accounts table
@@ -59,7 +63,7 @@ const ContatosList = () => {
     try {
       const { data, error } = await supabase
         .from('accounts')
-        .select('id')
+        .select('id, name')
         .eq('owner_id', user.id)
         .single();
 
@@ -71,7 +75,7 @@ const ContatosList = () => {
 
       console.log('Resolved account_id:', data.id);
       setAccountId(data.id);
-      const tableName = getContactsTableName(data.id);
+      const tableName = getContactsTableName(data.id, data.name || 'user');
       setContactsTable(tableName);
       console.log('Using contacts table:', tableName);
     } catch (error) {
