@@ -1306,6 +1306,10 @@ export type Database = {
           tg_id: number
         }[]
       }
+      get_contacts_table_name: {
+        Args: { p_account_id: string }
+        Returns: string
+      }
       get_dashboard_metrics: {
         Args: never
         Returns: {
