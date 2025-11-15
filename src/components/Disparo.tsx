@@ -49,6 +49,22 @@ const Disparo = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [contactsTable, setContactsTable] = useState<string>('contatos_geral');
+
+  // 🔑 Get contacts table name based on account_id and name
+  const getContactsTableName = (accountId: string, accountName: string): string => {
+    // Map specific accounts to their tables
+    if (accountId === '5777f0ad-719d-4d92-b23b-aefa9d7077ac') {
+      return 'contatos_luna';
+    }
+    if (accountId === '0727f119-2e77-42f5-ab9c-7a5f3aacedc0') {
+      return 'contatos_bella';
+    }
+    
+    // For new accounts, use contatos_<slug>
+    const slug = accountName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    return `contatos_${slug}`;
+  };
 
   // Campaigns state
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -65,7 +81,7 @@ const Disparo = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // 🔑 Resolve account_id from accounts table
+  // 🔑 Resolve account_id and table name from accounts table
   const resolveAccountId = async () => {
     if (!user?.id) {
       console.log('No user available');
@@ -76,7 +92,7 @@ const Disparo = () => {
       const {
         data,
         error
-      } = await supabase.from('accounts').select('id').eq('owner_id', user.id).single();
+      } = await supabase.from('accounts').select('id, name').eq('owner_id', user.id).single();
       if (error) {
         console.error('Error resolving account_id:', error);
         setAccountId(null);
@@ -84,6 +100,9 @@ const Disparo = () => {
       }
       console.log('Resolved account_id:', data.id);
       setAccountId(data.id);
+      const tableName = getContactsTableName(data.id, data.name || 'user');
+      setContactsTable(tableName);
+      console.log('Using contacts table:', tableName);
     } catch (error) {
       console.error('Error resolving account_id:', error);
       setAccountId(null);
@@ -122,7 +141,7 @@ const Disparo = () => {
       const {
         data,
         error
-      } = await scopedSelectWithColumns('contatos_geral', 'user_id, first_name, last_name, username, chat_id, created_at', accountId).order('created_at', {
+      } = await scopedSelectWithColumns(contactsTable, 'user_id, first_name, last_name, username, chat_id, created_at', accountId).order('created_at', {
         ascending: false
       });
       if (error) throw error;

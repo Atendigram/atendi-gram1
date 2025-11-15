@@ -29,16 +29,7 @@ export default function Dashboard() {
     // 🚀 primeira carga
     fetchMetrics();
 
-    // 👀 realtime: contatos
-    const contactsChannel = supabase.channel("contatos-realtime").on("postgres_changes", {
-      event: "*",
-      schema: "public",
-      table: "contatos_geral"
-    }, () => {
-      fetchMetrics();
-    }).subscribe();
-
-    // 👀 realtime: disparos
+    // 👀 realtime: disparos (metrics are updated via RPC, so only watch disparos)
     const disparosChannel = supabase.channel("disparos-realtime").on("postgres_changes", {
       event: "*",
       schema: "public",
@@ -46,8 +37,8 @@ export default function Dashboard() {
     }, () => {
       fetchMetrics();
     }).subscribe();
+    
     return () => {
-      supabase.removeChannel(contactsChannel);
       supabase.removeChannel(disparosChannel);
     };
   }, []);
