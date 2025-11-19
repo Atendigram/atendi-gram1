@@ -202,6 +202,42 @@ export type Database = {
         }
         Relationships: []
       }
+      bans: {
+        Row: {
+          chat_id: number | null
+          chat_title: string | null
+          first_name: string | null
+          id: string
+          message_text: string | null
+          reason: string | null
+          ts: string | null
+          user_id: number | null
+          username: string | null
+        }
+        Insert: {
+          chat_id?: number | null
+          chat_title?: string | null
+          first_name?: string | null
+          id?: string
+          message_text?: string | null
+          reason?: string | null
+          ts?: string | null
+          user_id?: number | null
+          username?: string | null
+        }
+        Update: {
+          chat_id?: number | null
+          chat_title?: string | null
+          first_name?: string | null
+          id?: string
+          message_text?: string | null
+          reason?: string | null
+          ts?: string | null
+          user_id?: number | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       boas_vindas_settings: {
         Row: {
           account_id: string
@@ -508,6 +544,7 @@ export type Database = {
           last_name: string | null
           mensagem: string | null
           name: string | null
+          owner_id: string | null
           source: string | null
           status: string | null
           tg_id: string | null
@@ -532,6 +569,7 @@ export type Database = {
           last_name?: string | null
           mensagem?: string | null
           name?: string | null
+          owner_id?: string | null
           source?: string | null
           status?: string | null
           tg_id?: string | null
@@ -556,6 +594,7 @@ export type Database = {
           last_name?: string | null
           mensagem?: string | null
           name?: string | null
+          owner_id?: string | null
           source?: string | null
           status?: string | null
           tg_id?: string | null
@@ -854,30 +893,6 @@ export type Database = {
           },
         ]
       }
-      messages_log: {
-        Row: {
-          id: string
-          kind: string
-          payload: Json | null
-          sent_at: string
-          tg_id: string
-        }
-        Insert: {
-          id?: string
-          kind: string
-          payload?: Json | null
-          sent_at?: string
-          tg_id: string
-        }
-        Update: {
-          id?: string
-          kind?: string
-          payload?: Json | null
-          sent_at?: string
-          tg_id?: string
-        }
-        Relationships: []
-      }
       produtos_modelos: {
         Row: {
           account_id: string
@@ -1031,6 +1046,7 @@ export type Database = {
           media_path: string | null
           media_url: string | null
           order_index: number
+          owner_id: string
           parse_mode: string | null
           text_content: string | null
         }
@@ -1044,6 +1060,7 @@ export type Database = {
           media_path?: string | null
           media_url?: string | null
           order_index: number
+          owner_id: string
           parse_mode?: string | null
           text_content?: string | null
         }
@@ -1057,6 +1074,7 @@ export type Database = {
           media_path?: string | null
           media_url?: string | null
           order_index?: number
+          owner_id?: string
           parse_mode?: string | null
           text_content?: string | null
         }
@@ -1076,6 +1094,366 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      welcome_flow_steps_backup_20251119: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          delay_after_sec: number | null
+          flow_id: string | null
+          id: string | null
+          kind: string | null
+          media_path: string | null
+          media_url: string | null
+          order_index: number | null
+          owner_id: string | null
+          parse_mode: string | null
+          text_content: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Relationships: []
+      }
+      welcome_flow_steps_backup_before_finalize: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          delay_after_sec: number | null
+          flow_id: string | null
+          id: string | null
+          kind: string | null
+          media_path: string | null
+          media_url: string | null
+          order_index: number | null
+          owner_id: string | null
+          parse_mode: string | null
+          text_content: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Relationships: []
+      }
+      welcome_flow_steps_backup_final: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          delay_after_sec: number | null
+          flow_id: string | null
+          id: string | null
+          kind: string | null
+          media_path: string | null
+          media_url: string | null
+          order_index: number | null
+          owner_id: string | null
+          parse_mode: string | null
+          text_content: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Relationships: []
+      }
+      welcome_flow_steps_backup_pre_fk_fix: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          delay_after_sec: number | null
+          flow_id: string | null
+          id: string | null
+          kind: string | null
+          media_path: string | null
+          media_url: string | null
+          order_index: number | null
+          owner_id: string | null
+          parse_mode: string | null
+          text_content: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Relationships: []
+      }
+      welcome_flow_steps_orphan_backup: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          delay_after_sec: number | null
+          flow_id: string | null
+          id: string | null
+          kind: string | null
+          media_path: string | null
+          media_url: string | null
+          order_index: number | null
+          owner_id: string | null
+          parse_mode: string | null
+          text_content: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Relationships: []
+      }
+      welcome_flow_steps_orphan_backup_after_try: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          delay_after_sec: number | null
+          flow_id: string | null
+          id: string | null
+          kind: string | null
+          media_path: string | null
+          media_url: string | null
+          order_index: number | null
+          owner_id: string | null
+          parse_mode: string | null
+          text_content: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Relationships: []
+      }
+      welcome_flow_steps_orphan_rows_backup_final: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          delay_after_sec: number | null
+          flow_id: string | null
+          id: string | null
+          kind: string | null
+          media_path: string | null
+          media_url: string | null
+          order_index: number | null
+          owner_id: string | null
+          parse_mode: string | null
+          text_content: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Relationships: []
+      }
+      welcome_flow_steps_selected_backup: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          delay_after_sec: number | null
+          flow_id: string | null
+          id: string | null
+          kind: string | null
+          media_path: string | null
+          media_url: string | null
+          order_index: number | null
+          owner_id: string | null
+          parse_mode: string | null
+          text_content: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Relationships: []
       }
       welcome_flows: {
         Row: {
@@ -1120,6 +1498,12 @@ export type Database = {
       }
     }
     Views: {
+      _backup_sync_wfs_owner_from_account: {
+        Row: {
+          dummy: number | null
+        }
+        Relationships: []
+      }
       contatos: {
         Row: {
           account_id: string | null
@@ -1215,6 +1599,66 @@ export type Database = {
           total_messages: number | null
         }
         Relationships: []
+      }
+      flow_steps: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          delay_after_sec: number | null
+          flow_id: string | null
+          id: string | null
+          kind: string | null
+          media_path: string | null
+          media_url: string | null
+          order_index: number | null
+          owner_id: string | null
+          parse_mode: string | null
+          text_content: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          delay_after_sec?: number | null
+          flow_id?: string | null
+          id?: string | null
+          kind?: string | null
+          media_path?: string | null
+          media_url?: string | null
+          order_index?: number | null
+          owner_id?: string | null
+          parse_mode?: string | null
+          text_content?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "welcome_flow_steps_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "welcome_flow_steps_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "welcome_flows"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       view_new_contacts_today: {
         Row: {
