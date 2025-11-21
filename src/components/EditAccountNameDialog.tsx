@@ -8,6 +8,8 @@ import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
+import { AvatarUpload } from './AvatarUpload';
+import { Separator } from '@/components/ui/separator';
 
 interface EditAccountNameDialogProps {
   open: boolean;
@@ -87,50 +89,78 @@ export const EditAccountNameDialog = ({ open, onOpenChange }: EditAccountNameDia
     }
   };
 
+  const getInitials = () => {
+    if (profile?.account_name) {
+      return profile.account_name.substring(0, 2).toUpperCase();
+    }
+    if (profile?.email) {
+      return profile.email.substring(0, 2).toUpperCase();
+    }
+    return 'AD';
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Editar nome da conta</DialogTitle>
+          <DialogTitle>Editar perfil da conta</DialogTitle>
           <DialogDescription>
-            Altere o nome que aparece na sua conta.
+            Personalize o nome e a foto da sua conta.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Nome da conta</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  setError(null);
-                }}
-                placeholder="Digite o nome da conta"
-                maxLength={100}
-                disabled={isSubmitting}
-              />
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
+        
+        <div className="py-4">
+          {profile?.account_id && (
+            <>
+              <div className="mb-6">
+                <AvatarUpload
+                  currentAvatarUrl={profile.avatar_url}
+                  accountId={profile.account_id}
+                  initials={getInitials()}
+                  onAvatarUpdate={() => {}}
+                />
+              </div>
+              
+              <Separator className="my-6" />
+            </>
+          )}
+          
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Nome da conta</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setError(null);
+                  }}
+                  placeholder="Digite o nome da conta"
+                  maxLength={100}
+                  disabled={isSubmitting}
+                />
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter className="mt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar
+              </Button>
+            </DialogFooter>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

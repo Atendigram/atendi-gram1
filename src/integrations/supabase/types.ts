@@ -48,18 +48,21 @@ export type Database = {
       }
       accounts: {
         Row: {
+          avatar_url: string | null
           created_at: string | null
           id: string
           name: string | null
           owner_id: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string | null
           id?: string
           name?: string | null
           owner_id: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string | null
           id?: string
           name?: string | null

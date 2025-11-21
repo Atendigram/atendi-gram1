@@ -22,6 +22,7 @@ import {
   Pencil,
 } from 'lucide-react';
 import { EditAccountNameDialog } from './EditAccountNameDialog';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -143,16 +144,17 @@ const Navbar = () => {
 
         <div className="p-4 border-t border-border">
           <div className="flex items-center space-x-3 px-3 py-2 mb-3 group">
-            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-medium">
+            <Avatar className="h-8 w-8 flex-shrink-0">
+              <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+              <AvatarFallback className="text-sm bg-gray-200 dark:bg-gray-700">
                 {profile?.account_name 
                   ? profile.account_name.substring(0, 2).toUpperCase()
                   : profile?.email 
                     ? profile.email.substring(0, 2).toUpperCase()
                     : 'AD'
                 }
-              </span>
-            </div>
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
                 {profile?.account_name || 'Usuário'}
@@ -164,7 +166,7 @@ const Navbar = () => {
             <button
               onClick={() => setIsEditDialogOpen(true)}
               className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors opacity-0 group-hover:opacity-100"
-              aria-label="Editar nome da conta"
+              aria-label="Editar perfil da conta"
             >
               <Pencil className="h-4 w-4 text-muted-foreground" />
             </button>
