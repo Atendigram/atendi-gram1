@@ -50,13 +50,19 @@ export const AvatarUpload = ({
     setIsUploading(true);
 
     try {
+      // Obter user_id para RLS policy
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       // Criar preview local
       const localPreview = URL.createObjectURL(file);
       setPreviewUrl(localPreview);
 
       // Upload para o Supabase Storage
       const fileExt = file.name.split('.').pop();
-      const fileName = `${accountId}/avatar.${fileExt}`;
+      const fileName = `${user.id}/avatar.${fileExt}`;
 
       // Deletar avatar antigo se existir
       if (currentAvatarUrl) {
