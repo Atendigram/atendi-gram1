@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowUpRight, Calendar } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MessagesByDay {
   day: string;
@@ -12,53 +13,26 @@ interface MessagesByDay {
 }
 
 export default function Dashboard() {
+  const { profile } = useAuth();
   const [month, setMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   });
-  const [accountId, setAccountId] = useState<string>("");
   const [totalContacts, setTotalContacts] = useState(0);
   const [newContacts, setNewContacts] = useState(0);
   const [messagesByDay, setMessagesByDay] = useState<MessagesByDay[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Buscar account_id do usuário logado
-  useEffect(() => {
-    const fetchAccountId = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user?.id) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('account_id')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profileData?.account_id) {
-            console.log('Account ID carregado:', profileData.account_id);
-            setAccountId(profileData.account_id);
-          } else {
-            console.error('Nenhum account_id encontrado no profile');
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao buscar account_id:', error);
-      }
-    };
-    
-    fetchAccountId();
-  }, []);
-
   const fetchDashboardData = async () => {
-    if (!accountId) {
-      console.log('Aguardando account_id...');
+    if (!profile?.account_id) {
+      setLoading(false);
       return;
     }
     
-    console.log('Buscando dados para account_id:', accountId);
     setLoading(true);
     try {
+      const accountId = profile.account_id;
+      
       // Query 1: Mensagens por dia do mês
       const monthDate = new Date(month);
       const startDate = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}-01`;
@@ -79,8 +53,6 @@ export default function Dashboard() {
         dayMap.set(dayStr, 0);
       }
 
-      console.log('Mensagens encontradas:', logsData?.length || 0);
-
       logsData?.forEach((log) => {
         const logDate = new Date(log.data_hora);
         const dayStr = `${logDate.getFullYear()}-${String(logDate.getMonth() + 1).padStart(2, '0')}-${String(logDate.getDate()).padStart(2, '0')}`;
@@ -94,26 +66,23 @@ export default function Dashboard() {
         }));
 
       setMessagesByDay(chartData);
-      console.log('Dados do gráfico:', chartData);
 
       // Query 2: Total de contatos
-      const { count, error: contactsError } = await supabase
+      const { count } = await supabase
         .from('contatos_geral_old')
         .select('user_id', { count: 'exact' })
         .eq('account_id', accountId);
       
-      console.log('Total de contatos:', count, 'Erro:', contactsError);
       setTotalContacts(count || 0);
 
       // Novos contatos hoje
       const today = new Date().toISOString().split('T')[0];
-      const { count: newCount, error: newContactsError } = await supabase
+      const { count: newCount } = await supabase
         .from('contatos_geral_old')
         .select('user_id', { count: 'exact' })
         .eq('account_id', accountId)
         .gte('created_at', today);
       
-      console.log('Novos contatos hoje:', newCount, 'Erro:', newContactsError);
       setNewContacts(newCount || 0);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -123,11 +92,10 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (accountId) {
-      console.log('useEffect disparado - chamando fetchDashboardData para mês:', month);
+    if (profile?.account_id) {
       fetchDashboardData();
     }
-  }, [month, accountId]);
+  }, [month, profile?.account_id]);
 
   const totalMessages = messagesByDay.reduce((sum, item) => sum + item.messages_received, 0);
 
