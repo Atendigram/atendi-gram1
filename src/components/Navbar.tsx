@@ -144,17 +144,15 @@ const Navbar = () => {
               <span className="text-sm font-medium">
                 {profile?.account_name 
                   ? profile.account_name.substring(0, 2).toUpperCase()
-                  : profile?.display_name 
-                    ? profile.display_name.substring(0, 2).toUpperCase()
-                    : profile?.email 
-                      ? profile.email.substring(0, 2).toUpperCase()
-                      : 'AD'
+                  : profile?.email 
+                    ? profile.email.substring(0, 2).toUpperCase()
+                    : 'AD'
                 }
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {profile?.account_name || profile?.display_name || 'Usuário'}
+                {profile?.account_name || 'Usuário'}
               </p>
               <p className="text-xs text-muted-foreground truncate">
                 {profile?.email || 'usuario@atendigram.com'}
