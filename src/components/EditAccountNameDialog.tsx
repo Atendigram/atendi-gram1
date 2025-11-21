@@ -66,21 +66,45 @@ export const EditAccountNameDialog = ({ open, onOpenChange }: EditAccountNameDia
         throw new Error('Conta não encontrada');
       }
 
+      // Verificar qual é o owner_id da conta atual
+      const { data: accountCheck } = await supabase
+        .from('accounts')
+        .select('id, owner_id, name')
+        .eq('id', profileData.account_id)
+        .single();
+
+      console.log('🔍 Account check:', accountCheck);
       console.log('🏢 Account ID:', profileData.account_id);
       console.log('📝 Novo nome:', validation.data.name);
 
-      // Atualizar o nome da conta usando owner_id (para RLS)
+      // Se o owner_id não corresponde ao user.id, precisamos atualizar o owner_id primeiro
+      if (accountCheck && accountCheck.owner_id !== user.id) {
+        console.warn('⚠️ Owner ID não corresponde ao user ID. Atualizando owner_id...');
+        const { error: ownerUpdateError } = await supabase
+          .from('accounts')
+          .update({ owner_id: user.id })
+          .eq('id', profileData.account_id);
+        
+        if (ownerUpdateError) {
+          console.error('❌ Erro ao atualizar owner_id:', ownerUpdateError);
+        }
+      }
+
+      // Atualizar o nome da conta (RLS policy verifica owner_id automaticamente)
       const { data: updateData, error: updateError } = await supabase
         .from('accounts')
         .update({ name: validation.data.name })
         .eq('id', profileData.account_id)
-        .eq('owner_id', user.id)
         .select();
 
       console.log('✅ Update data:', updateData);
       console.log('❌ Update error:', updateError);
 
       if (updateError) throw updateError;
+      
+      if (!updateData || updateData.length === 0) {
+        throw new Error('Nenhuma linha foi atualizada. Verifique as permissões.');
+      }
 
       // Recarregar os dados do perfil
       await loadAccountData();
