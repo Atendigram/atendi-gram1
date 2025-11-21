@@ -25,13 +25,25 @@ export default function Dashboard() {
   // Buscar account_id do usuário logado
   useEffect(() => {
     const fetchAccountId = async () => {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('account_id')
-        .single();
-      
-      if (profileData?.account_id) {
-        setAccountId(profileData.account_id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user?.id) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('account_id')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileData?.account_id) {
+            console.log('Account ID carregado:', profileData.account_id);
+            setAccountId(profileData.account_id);
+          } else {
+            console.error('Nenhum account_id encontrado no profile');
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar account_id:', error);
       }
     };
     
@@ -39,8 +51,12 @@ export default function Dashboard() {
   }, []);
 
   const fetchDashboardData = async () => {
-    if (!accountId) return;
+    if (!accountId) {
+      console.log('Aguardando account_id...');
+      return;
+    }
     
+    console.log('Buscando dados para account_id:', accountId);
     setLoading(true);
     try {
       // Query 1: Mensagens por dia do mês
@@ -63,6 +79,8 @@ export default function Dashboard() {
         dayMap.set(dayStr, 0);
       }
 
+      console.log('Mensagens encontradas:', logsData?.length || 0);
+
       logsData?.forEach((log) => {
         const logDate = new Date(log.data_hora);
         const dayStr = `${logDate.getFullYear()}-${String(logDate.getMonth() + 1).padStart(2, '0')}-${String(logDate.getDate()).padStart(2, '0')}`;
@@ -76,23 +94,26 @@ export default function Dashboard() {
         }));
 
       setMessagesByDay(chartData);
+      console.log('Dados do gráfico:', chartData);
 
       // Query 2: Total de contatos
-      const { count } = await supabase
+      const { count, error: contactsError } = await supabase
         .from('contatos_geral_old')
         .select('user_id', { count: 'exact' })
         .eq('account_id', accountId);
       
+      console.log('Total de contatos:', count, 'Erro:', contactsError);
       setTotalContacts(count || 0);
 
       // Novos contatos hoje
       const today = new Date().toISOString().split('T')[0];
-      const { count: newCount } = await supabase
+      const { count: newCount, error: newContactsError } = await supabase
         .from('contatos_geral_old')
         .select('user_id', { count: 'exact' })
         .eq('account_id', accountId)
         .gte('created_at', today);
       
+      console.log('Novos contatos hoje:', newCount, 'Erro:', newContactsError);
       setNewContacts(newCount || 0);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -103,6 +124,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (accountId) {
+      console.log('useEffect disparado - chamando fetchDashboardData para mês:', month);
       fetchDashboardData();
     }
   }, [month, accountId]);
