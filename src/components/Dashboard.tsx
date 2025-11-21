@@ -25,11 +25,13 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     if (!profile?.account_id) {
+      console.log('Dashboard: Sem account_id no profile');
       setLoading(false);
       return;
     }
     
     setLoading(true);
+    console.log('Dashboard: Iniciando fetch com account_id:', profile.account_id);
     try {
       const accountId = profile.account_id;
       
@@ -68,20 +70,32 @@ export default function Dashboard() {
       setMessagesByDay(chartData);
 
       // Query 2: Total de contatos (contatos_luna)
-      const { count } = await supabase
+      const { count, error: contactsError } = await supabase
         .from('contatos_luna')
         .select('user_id', { count: 'exact' })
         .eq('account_id', accountId);
       
+      if (contactsError) {
+        console.error('Dashboard: Erro ao buscar contatos:', contactsError);
+      } else {
+        console.log('Dashboard: Total de contatos:', count);
+      }
+      
       setTotalContacts(count || 0);
 
       // Query 3: Novos contatos no mês (contatos_luna)
-      const { count: newCount } = await supabase
+      const { count: newCount, error: newContactsError } = await supabase
         .from('contatos_luna')
         .select('user_id', { count: 'exact' })
         .eq('account_id', accountId)
         .gte('created_at', startDate)
         .lte('created_at', endDateStr);
+      
+      if (newContactsError) {
+        console.error('Dashboard: Erro ao buscar novos contatos:', newContactsError);
+      } else {
+        console.log('Dashboard: Novos contatos no mês:', newCount);
+      }
       
       setNewContacts(newCount || 0);
     } catch (error) {
@@ -109,13 +123,19 @@ export default function Dashboard() {
       const endDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
       const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
       
-      const { count } = await supabase
+      const { count, error: sentError } = await supabase
         .from('disparo_items')
         .select('id', { count: 'exact' })
         .eq('account_id', profile.account_id)
         .eq('status', 'sent')
         .gte('sent_at', startDate)
         .lte('sent_at', endDateStr);
+      
+      if (sentError) {
+        console.error('Dashboard: Erro ao buscar mensagens disparadas:', sentError);
+      } else {
+        console.log('Dashboard: Mensagens disparadas:', count);
+      }
       
       setSentMessages(count || 0);
     };
