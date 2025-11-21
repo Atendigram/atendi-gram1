@@ -42,17 +42,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string, currentUser: any): Promise<Profile | null> => {
-    // Simplificação para evitar loops - não busca do banco por enquanto
-    console.log('🔍 Creating profile from user data:', userId);
-    
-    return {
-      id: userId,
-      email: currentUser?.email || null,
-      display_name: currentUser?.user_metadata?.display_name || 
-                   currentUser?.email?.split('@')[0] || 
-                   'Usuário',
-      account_id: undefined, // Será buscado depois se necessário
-    };
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select(`
+          id, 
+          account_id, 
+          email, 
+          display_name,
+          accounts:account_id (
+            name,
+            avatar_url
+          )
+        `)
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) {
+        // Fallback: criar perfil básico
+        return {
+          id: userId,
+          email: currentUser?.email || null,
+          display_name: currentUser?.user_metadata?.display_name || 
+                       currentUser?.email?.split('@')[0] || 
+                       'Usuário',
+          account_id: undefined,
+        };
+      }
+
+      if (profileData) {
+        return {
+          id: profileData.id,
+          email: profileData.email || currentUser?.email || null,
+          display_name: profileData.display_name || currentUser?.email?.split('@')[0] || 'Usuário',
+          account_id: profileData.account_id,
+          account_name: profileData.accounts?.name || null,
+          avatar_url: profileData.accounts?.avatar_url || null,
+        };
+      }
+
+      // Nenhum perfil encontrado - criar básico
+      return {
+        id: userId,
+        email: currentUser?.email || null,
+        display_name: currentUser?.user_metadata?.display_name || 
+                     currentUser?.email?.split('@')[0] || 
+                     'Usuário',
+        account_id: undefined,
+      };
+    } catch (error) {
+      return {
+        id: userId,
+        email: currentUser?.email || null,
+        display_name: currentUser?.email?.split('@')[0] || 'Usuário',
+        account_id: undefined,
+      };
+    }
   };
 
   const signOut = async () => {
@@ -84,7 +129,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!session?.user?.id || !profile) return;
     
     try {
-      console.log('🔄 Loading account data for user:', session.user.id);
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select(`
@@ -101,7 +145,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .maybeSingle();
 
       if (!error && profileData) {
-        console.log('✅ Account data loaded:', profileData);
         const accountName = profileData.accounts?.name || null;
         const avatarUrl = profileData.accounts?.avatar_url || null;
         
@@ -109,14 +152,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setProfile({
           id: profileData.id,
           email: profileData.email || profile.email,
-          display_name: profileData.display_name, // Sem fallback - usa sempre o valor do banco
+          display_name: profileData.display_name,
           account_id: profileData.account_id,
           account_name: accountName,
           avatar_url: avatarUrl,
         });
       }
     } catch (error) {
-      console.log('❌ Error loading account data:', error);
+      console.error('Error loading account data:', error);
     }
   };
 
@@ -126,8 +169,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔄 Auth event:', event);
-        
         if (!mounted) return;
         
         setSession(session);
