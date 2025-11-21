@@ -142,17 +142,19 @@ const Navbar = () => {
           <div className="flex items-center space-x-3 px-3 py-2 mb-3">
             <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
               <span className="text-sm font-medium">
-                {profile?.display_name 
-                  ? profile.display_name.substring(0, 2).toUpperCase()
-                  : profile?.email 
-                    ? profile.email.substring(0, 2).toUpperCase()
-                    : 'AD'
+                {profile?.account_name 
+                  ? profile.account_name.substring(0, 2).toUpperCase()
+                  : profile?.display_name 
+                    ? profile.display_name.substring(0, 2).toUpperCase()
+                    : profile?.email 
+                      ? profile.email.substring(0, 2).toUpperCase()
+                      : 'AD'
                 }
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {profile?.display_name || 'Usuário'}
+                {profile?.account_name || profile?.display_name || 'Usuário'}
               </p>
               <p className="text-xs text-muted-foreground truncate">
                 {profile?.email || 'usuario@atendigram.com'}
