@@ -9,6 +9,7 @@ interface Profile {
   email: string | null;
   display_name: string | null;
   account_name?: string | null;
+  avatar_url?: string | null;
 }
 
 interface AuthContextType {
@@ -92,7 +93,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email, 
           display_name,
           accounts:account_id (
-            name
+            name,
+            avatar_url
           )
         `)
         .eq('id', session.user.id)
@@ -101,11 +103,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!error && profileData) {
         console.log('✅ Account data loaded:', profileData);
         const accountName = profileData.accounts?.name || null;
+        const avatarUrl = profileData.accounts?.avatar_url || null;
         setProfile({
           ...profile,
           account_id: profileData.account_id,
           display_name: profileData.display_name || profile.display_name,
           account_name: accountName,
+          avatar_url: avatarUrl,
         });
       }
     } catch (error) {
