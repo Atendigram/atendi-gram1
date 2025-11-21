@@ -200,6 +200,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (error) {
           console.error('Error getting session:', error);
+          // Limpar sessão inválida
+          setSession(null);
+          setUser(null);
+          setProfile(null);
           setLoading(false);
           return;
         }
@@ -212,6 +216,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (mounted) {
             setProfile(profileData);
           }
+        } else {
+          setProfile(null);
         }
         
         if (mounted) {
@@ -219,7 +225,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
+        // Limpar tudo em caso de erro
         if (mounted) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
           setLoading(false);
         }
       }
