@@ -110,7 +110,7 @@ const LoginPage = () => {
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
-            username: signUpUsername,
+            name: signUpUsername,
           },
         },
       });

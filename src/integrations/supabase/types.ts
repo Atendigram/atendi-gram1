@@ -1046,7 +1046,7 @@ export type Database = {
           media_path: string | null
           media_url: string | null
           order_index: number
-          owner_id: string
+          owner_id: string | null
           parse_mode: string | null
           text_content: string | null
         }
@@ -1060,7 +1060,7 @@ export type Database = {
           media_path?: string | null
           media_url?: string | null
           order_index: number
-          owner_id: string
+          owner_id?: string | null
           parse_mode?: string | null
           text_content?: string | null
         }
@@ -1074,7 +1074,7 @@ export type Database = {
           media_path?: string | null
           media_url?: string | null
           order_index?: number
-          owner_id?: string
+          owner_id?: string | null
           parse_mode?: string | null
           text_content?: string | null
         }
