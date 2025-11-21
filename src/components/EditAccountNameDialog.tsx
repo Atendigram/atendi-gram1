@@ -60,13 +60,21 @@ export const EditAccountNameDialog = ({ open, onOpenChange }: EditAccountNameDia
         throw new Error('Conta não encontrada');
       }
 
-      // Atualizar o nome da conta (RLS policy verifica acesso automaticamente)
-      const { error: updateError } = await supabase
+      // Atualizar o nome da conta e o display_name do perfil
+      const { error: accountUpdateError } = await supabase
         .from('accounts')
         .update({ name: validation.data.name })
         .eq('id', profileData.account_id);
 
-      if (updateError) throw updateError;
+      if (accountUpdateError) throw accountUpdateError;
+
+      // Atualizar o display_name no perfil
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({ display_name: validation.data.name })
+        .eq('id', user.id);
+
+      if (profileUpdateError) throw profileUpdateError;
 
       // Recarregar os dados do perfil
       await loadAccountData();
