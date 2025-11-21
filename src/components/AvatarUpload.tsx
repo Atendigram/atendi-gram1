@@ -53,38 +53,54 @@ export const AvatarUpload = ({
       // Criar preview local
       const localPreview = URL.createObjectURL(file);
       setPreviewUrl(localPreview);
+      console.log('📤 Iniciando upload do avatar. Account ID:', accountId);
 
       // Upload para o Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${accountId}/avatar.${fileExt}`;
+      console.log('📁 Nome do arquivo:', fileName);
 
       // Deletar avatar antigo se existir
       if (currentAvatarUrl) {
+        console.log('🗑️ Deletando avatar antigo:', currentAvatarUrl);
         const oldPath = currentAvatarUrl.split('/').slice(-2).join('/');
-        await supabase.storage.from('avatars').remove([oldPath]);
+        const { error: deleteError } = await supabase.storage.from('avatars').remove([oldPath]);
+        if (deleteError) console.warn('⚠️ Erro ao deletar avatar antigo:', deleteError);
       }
 
-      const { error: uploadError } = await supabase.storage
+      // Upload do arquivo
+      console.log('⬆️ Fazendo upload para bucket avatars...');
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: true
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Erro no upload:', uploadError);
+        throw uploadError;
+      }
+      console.log('✅ Upload concluído:', uploadData);
 
       // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
+      console.log('🔗 URL pública gerada:', publicUrl);
 
       // Atualizar tabela accounts
+      console.log('💾 Atualizando tabela accounts...');
       const { error: updateError } = await supabase
         .from('accounts')
         .update({ avatar_url: publicUrl })
         .eq('id', accountId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('❌ Erro ao atualizar tabela accounts:', updateError);
+        throw updateError;
+      }
+      console.log('✅ Tabela accounts atualizada com sucesso');
 
       // Recarregar dados do perfil
       await loadAccountData();
@@ -95,12 +111,19 @@ export const AvatarUpload = ({
       });
 
       onAvatarUpdate?.();
-    } catch (error) {
-      console.error('Erro ao fazer upload do avatar:', error);
+    } catch (error: any) {
+      console.error('❌ ERRO COMPLETO no upload do avatar:', error);
+      console.error('❌ Tipo do erro:', error?.name);
+      console.error('❌ Mensagem:', error?.message);
+      console.error('❌ Status:', error?.status);
+      console.error('❌ Details:', error?.details);
+      
       setPreviewUrl(currentAvatarUrl || null);
+      
+      const errorMessage = error?.message || 'Erro desconhecido';
       toast({
         title: 'Erro no upload',
-        description: 'Não foi possível atualizar o avatar. Tente novamente.',
+        description: `${errorMessage}. Verifique o console para mais detalhes.`,
         variant: 'destructive',
       });
     } finally {
