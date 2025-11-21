@@ -33,7 +33,7 @@ export default function Dashboard() {
     try {
       const accountId = profile.account_id;
       
-      // Query 1: Mensagens por dia do mês
+      // Query 1: Mensagens recebidas por dia do mês (logsgeral)
       const monthDate = new Date(month);
       const startDate = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}-01`;
       const endDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
@@ -67,21 +67,21 @@ export default function Dashboard() {
 
       setMessagesByDay(chartData);
 
-      // Query 2: Total de contatos
+      // Query 2: Total de contatos (contatos_luna)
       const { count } = await supabase
-        .from('contatos_geral_old')
+        .from('contatos_luna')
         .select('user_id', { count: 'exact' })
         .eq('account_id', accountId);
       
       setTotalContacts(count || 0);
 
-      // Novos contatos hoje
-      const today = new Date().toISOString().split('T')[0];
+      // Query 3: Novos contatos no mês (contatos_luna)
       const { count: newCount } = await supabase
-        .from('contatos_geral_old')
+        .from('contatos_luna')
         .select('user_id', { count: 'exact' })
         .eq('account_id', accountId)
-        .gte('created_at', today);
+        .gte('created_at', startDate)
+        .lte('created_at', endDateStr);
       
       setNewContacts(newCount || 0);
     } catch (error) {
@@ -97,7 +97,31 @@ export default function Dashboard() {
     }
   }, [month, profile?.account_id]);
 
-  const totalMessages = messagesByDay.reduce((sum, item) => sum + item.messages_received, 0);
+  // Query para mensagens disparadas no período (disparo_items)
+  const [sentMessages, setSentMessages] = useState(0);
+  
+  useEffect(() => {
+    const fetchSentMessages = async () => {
+      if (!profile?.account_id) return;
+      
+      const monthDate = new Date(month);
+      const startDate = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}-01`;
+      const endDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+      const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+      
+      const { count } = await supabase
+        .from('disparo_items')
+        .select('id', { count: 'exact' })
+        .eq('account_id', profile.account_id)
+        .eq('status', 'sent')
+        .gte('sent_at', startDate)
+        .lte('sent_at', endDateStr);
+      
+      setSentMessages(count || 0);
+    };
+    
+    fetchSentMessages();
+  }, [month, profile?.account_id]);
 
   return (
     <div className="space-y-6">
@@ -148,8 +172,8 @@ export default function Dashboard() {
         <Card>
           <CardContent className="pt-6">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">✉️ Mensagens no Período</p>
-              <p className="text-2xl font-bold">{loading ? "..." : totalMessages}</p>
+              <p className="text-sm font-medium text-muted-foreground">📤 Mensagens Disparadas</p>
+              <p className="text-2xl font-bold">{loading ? "..." : sentMessages}</p>
             </div>
           </CardContent>
         </Card>
