@@ -19,11 +19,14 @@ import {
   Wand2,
   LogOut,
   HelpCircle,
+  Pencil,
 } from 'lucide-react';
+import { EditAccountNameDialog } from './EditAccountNameDialog';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
@@ -139,8 +142,8 @@ const Navbar = () => {
         </nav>
 
         <div className="p-4 border-t border-border">
-          <div className="flex items-center space-x-3 px-3 py-2 mb-3">
-            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+          <div className="flex items-center space-x-3 px-3 py-2 mb-3 group">
+            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-sm font-medium">
                 {profile?.account_name 
                   ? profile.account_name.substring(0, 2).toUpperCase()
@@ -158,6 +161,13 @@ const Navbar = () => {
                 {profile?.email || 'usuario@atendigram.com'}
               </p>
             </div>
+            <button
+              onClick={() => setIsEditDialogOpen(true)}
+              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors opacity-0 group-hover:opacity-100"
+              aria-label="Editar nome da conta"
+            >
+              <Pencil className="h-4 w-4 text-muted-foreground" />
+            </button>
           </div>
           
           <button
@@ -176,6 +186,11 @@ const Navbar = () => {
           onClick={() => setIsOpen(false)}
         ></div>
       )}
+
+      <EditAccountNameDialog 
+        open={isEditDialogOpen} 
+        onOpenChange={setIsEditDialogOpen} 
+      />
     </>
   );
 };
