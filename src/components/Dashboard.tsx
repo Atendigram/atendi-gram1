@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowUpRight, Calendar, Users } from "lucide-react";
+import { ArrowUpRight, Calendar } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface MessagesByDay {
@@ -16,13 +16,31 @@ export default function Dashboard() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   });
-  const [accountId, setAccountId] = useState("");
+  const [accountId, setAccountId] = useState<string>("");
   const [totalContacts, setTotalContacts] = useState(0);
   const [newContacts, setNewContacts] = useState(0);
   const [messagesByDay, setMessagesByDay] = useState<MessagesByDay[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Buscar account_id do usuário logado
+  useEffect(() => {
+    const fetchAccountId = async () => {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('account_id')
+        .single();
+      
+      if (profileData?.account_id) {
+        setAccountId(profileData.account_id);
+      }
+    };
+    
+    fetchAccountId();
+  }, []);
+
   const fetchDashboardData = async () => {
+    if (!accountId) return;
+    
     setLoading(true);
     try {
       // Query 1: Mensagens por dia do mês
@@ -31,15 +49,10 @@ export default function Dashboard() {
       const endDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
       const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
 
-      let messagesQuery = supabase
+      const { data: logsData } = await supabase
         .from('logsgeral')
-        .select('data_hora');
-
-      if (accountId) {
-        messagesQuery = messagesQuery.eq('account_id', accountId);
-      }
-
-      const { data: logsData } = await messagesQuery
+        .select('data_hora')
+        .eq('account_id', accountId)
         .gte('data_hora', startDate)
         .lte('data_hora', endDateStr);
 
@@ -65,41 +78,22 @@ export default function Dashboard() {
       setMessagesByDay(chartData);
 
       // Query 2: Total de contatos
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('account_id')
-        .single();
+      const { count } = await supabase
+        .from('contatos_geral_old')
+        .select('user_id', { count: 'exact' })
+        .eq('account_id', accountId);
+      
+      setTotalContacts(count || 0);
 
-      if (profileData?.account_id) {
-        let contactsQuery = supabase
-          .from('contatos_geral_old')
-          .select('user_id', { count: 'exact' });
-
-        if (accountId) {
-          contactsQuery = contactsQuery.eq('account_id', accountId);
-        } else {
-          contactsQuery = contactsQuery.eq('account_id', profileData.account_id);
-        }
-
-        const { count } = await contactsQuery;
-        setTotalContacts(count || 0);
-
-        // Novos contatos hoje
-        const today = new Date().toISOString().split('T')[0];
-        let newContactsQuery = supabase
-          .from('contatos_geral_old')
-          .select('user_id', { count: 'exact' })
-          .gte('created_at', today);
-
-        if (accountId) {
-          newContactsQuery = newContactsQuery.eq('account_id', accountId);
-        } else {
-          newContactsQuery = newContactsQuery.eq('account_id', profileData.account_id);
-        }
-
-        const { count: newCount } = await newContactsQuery;
-        setNewContacts(newCount || 0);
-      }
+      // Novos contatos hoje
+      const today = new Date().toISOString().split('T')[0];
+      const { count: newCount } = await supabase
+        .from('contatos_geral_old')
+        .select('user_id', { count: 'exact' })
+        .eq('account_id', accountId)
+        .gte('created_at', today);
+      
+      setNewContacts(newCount || 0);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -108,7 +102,9 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    if (accountId) {
+      fetchDashboardData();
+    }
   }, [month, accountId]);
 
   const totalMessages = messagesByDay.reduce((sum, item) => sum + item.messages_received, 0);
@@ -118,34 +114,18 @@ export default function Dashboard() {
       {/* Filtros */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="month" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Mês
-              </Label>
-              <Input
-                id="month"
-                type="month"
-                value={month.substring(0, 7)}
-                onChange={(e) => setMonth(`${e.target.value}-01`)}
-                className="w-full"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="accountId" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Account ID (opcional)
-              </Label>
-              <Input
-                id="accountId"
-                type="text"
-                placeholder="Deixe vazio para todos"
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                className="w-full"
-              />
-            </div>
+          <div className="max-w-xs">
+            <Label htmlFor="month" className="flex items-center gap-2 mb-2">
+              <Calendar className="h-4 w-4" />
+              Mês
+            </Label>
+            <Input
+              id="month"
+              type="month"
+              value={month.substring(0, 7)}
+              onChange={(e) => setMonth(`${e.target.value}-01`)}
+              className="w-full"
+            />
           </div>
         </CardContent>
       </Card>
@@ -159,7 +139,6 @@ export default function Dashboard() {
                 <p className="text-sm font-medium text-muted-foreground">👥 Contatos</p>
                 <p className="text-2xl font-bold">{loading ? "..." : totalContacts}</p>
               </div>
-              <Users className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
