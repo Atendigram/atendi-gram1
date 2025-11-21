@@ -8,6 +8,7 @@ interface Profile {
   account_id?: string;
   email: string | null;
   display_name: string | null;
+  account_name?: string | null;
 }
 
 interface AuthContextType {
@@ -85,16 +86,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🔄 Loading account data for user:', session.user.id);
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('id, account_id, email, display_name')
+        .select(`
+          id, 
+          account_id, 
+          email, 
+          display_name,
+          accounts:account_id (
+            name
+          )
+        `)
         .eq('id', session.user.id)
         .maybeSingle();
 
       if (!error && profileData) {
         console.log('✅ Account data loaded:', profileData);
+        const accountName = profileData.accounts?.name || null;
         setProfile({
           ...profile,
           account_id: profileData.account_id,
           display_name: profileData.display_name || profile.display_name,
+          account_name: accountName,
         });
       }
     } catch (error) {
