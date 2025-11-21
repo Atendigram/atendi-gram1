@@ -60,19 +60,32 @@ export const EditAccountNameDialog = ({ open, onOpenChange }: EditAccountNameDia
         throw new Error('Conta não encontrada');
       }
 
+      console.log('🔄 Iniciando atualização...');
+      console.log('📝 Novo nome:', validation.data.name);
+      console.log('🏢 Account ID:', profileData.account_id);
+      console.log('👤 User ID:', user.id);
+
       // Atualizar o nome da conta e o display_name do perfil
-      const { error: accountUpdateError } = await supabase
+      const { data: accountData, error: accountUpdateError } = await supabase
         .from('accounts')
         .update({ name: validation.data.name })
-        .eq('id', profileData.account_id);
+        .eq('id', profileData.account_id)
+        .select();
+
+      console.log('✅ Account update result:', accountData);
+      console.log('❌ Account update error:', accountUpdateError);
 
       if (accountUpdateError) throw accountUpdateError;
 
       // Atualizar o display_name no perfil
-      const { error: profileUpdateError } = await supabase
+      const { data: profileUpdateData, error: profileUpdateError } = await supabase
         .from('profiles')
         .update({ display_name: validation.data.name })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
+
+      console.log('✅ Profile update result:', profileUpdateData);
+      console.log('❌ Profile update error:', profileUpdateError);
 
       if (profileUpdateError) throw profileUpdateError;
 
