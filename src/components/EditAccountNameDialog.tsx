@@ -43,27 +43,42 @@ export const EditAccountNameDialog = ({ open, onOpenChange }: EditAccountNameDia
     setIsSubmitting(true);
 
     try {
+      console.log('🔄 Iniciando atualização do nome da conta...');
+      
       // Buscar account_id do perfil
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('👤 User ID:', user?.id);
+      
       if (!user) {
         throw new Error('Usuário não autenticado');
       }
 
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('account_id')
         .eq('id', user.id)
         .single();
 
+      console.log('📋 Profile data:', profileData);
+      console.log('📋 Profile error:', profileError);
+
       if (!profileData?.account_id) {
         throw new Error('Conta não encontrada');
       }
 
-      // Atualizar o nome da conta
-      const { error: updateError } = await supabase
+      console.log('🏢 Account ID:', profileData.account_id);
+      console.log('📝 Novo nome:', validation.data.name);
+
+      // Atualizar o nome da conta usando owner_id (para RLS)
+      const { data: updateData, error: updateError } = await supabase
         .from('accounts')
         .update({ name: validation.data.name })
-        .eq('id', profileData.account_id);
+        .eq('id', profileData.account_id)
+        .eq('owner_id', user.id)
+        .select();
+
+      console.log('✅ Update data:', updateData);
+      console.log('❌ Update error:', updateError);
 
       if (updateError) throw updateError;
 
