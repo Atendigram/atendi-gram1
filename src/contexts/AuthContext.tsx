@@ -104,10 +104,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('✅ Account data loaded:', profileData);
         const accountName = profileData.accounts?.name || null;
         const avatarUrl = profileData.accounts?.avatar_url || null;
+        
+        // Atualizar profile com dados frescos do banco (sem fallbacks)
         setProfile({
-          ...profile,
+          id: profileData.id,
+          email: profileData.email || profile.email,
+          display_name: profileData.display_name, // Sem fallback - usa sempre o valor do banco
           account_id: profileData.account_id,
-          display_name: profileData.display_name || profile.display_name,
           account_name: accountName,
           avatar_url: avatarUrl,
         });
