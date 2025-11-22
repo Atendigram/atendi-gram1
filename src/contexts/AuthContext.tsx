@@ -165,14 +165,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
+    let refreshTimer: NodeJS.Timeout | null = null;
+    
+    // Função para agendar refresh do token
+    const scheduleTokenRefresh = (session: Session | null) => {
+      // Limpar timer anterior
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
+      }
+      
+      if (!session?.expires_at) return;
+      
+      // Calcular tempo até a expiração (em milissegundos)
+      const expiresAt = session.expires_at * 1000; // converter para ms
+      const now = Date.now();
+      const timeUntilExpiry = expiresAt - now;
+      
+      // Renovar 5 minutos (300000 ms) antes de expirar
+      const refreshBuffer = 5 * 60 * 1000;
+      const timeUntilRefresh = timeUntilExpiry - refreshBuffer;
+      
+      // Se já passou do tempo de refresh, renovar imediatamente
+      if (timeUntilRefresh <= 0) {
+        console.log('🔄 Token próximo de expirar, renovando imediatamente');
+        supabase.auth.refreshSession();
+        return;
+      }
+      
+      console.log(`⏰ Token será renovado em ${Math.round(timeUntilRefresh / 1000 / 60)} minutos`);
+      
+      // Agendar refresh automático
+      refreshTimer = setTimeout(async () => {
+        if (!mounted) return;
+        console.log('🔄 Renovando token automaticamente');
+        const { data, error } = await supabase.auth.refreshSession();
+        if (error) {
+          console.error('❌ Erro ao renovar token:', error);
+        } else {
+          console.log('✅ Token renovado com sucesso');
+        }
+      }, timeUntilRefresh);
+    };
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
         
+        console.log('🔐 Auth event:', event);
+        
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Agendar renovação automática do token
+        if (session) {
+          scheduleTokenRefresh(session);
+        }
         
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id, session.user);
@@ -251,6 +300,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => {
       mounted = false;
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
       subscription.unsubscribe();
     };
   }, []);
