@@ -147,10 +147,10 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Filtros */}
-      <Card>
+      <Card className="w-fit">
         <CardContent className="pt-6">
-          <div className="max-w-xs">
-            <Label htmlFor="month" className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-3">
+            <Label htmlFor="month" className="flex items-center gap-2 text-sm whitespace-nowrap">
               <Calendar className="h-4 w-4" />
               Mês
             </Label>
@@ -159,7 +159,7 @@ export default function Dashboard() {
               type="month"
               value={month.substring(0, 7)}
               onChange={(e) => setMonth(`${e.target.value}-01`)}
-              className="w-full"
+              className="w-[180px]"
             />
           </div>
         </CardContent>
