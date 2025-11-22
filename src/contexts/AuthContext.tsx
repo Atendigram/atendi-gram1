@@ -210,32 +210,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
         
         console.log('🔐 Auth event:', event);
         
+        // CRITICAL: Only synchronous state updates here
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false);
         
-        // Agendar renovação automática do token
+        // Defer async operations with setTimeout
         if (session) {
+          // Agendar renovação automática do token
           scheduleTokenRefresh(session);
-        }
-        
-        if (session?.user) {
-          const profileData = await fetchProfile(session.user.id, session.user);
-          if (mounted) {
-            setProfile(profileData);
-          }
+          
+          // Fetch profile in next tick to avoid deadlock
+          setTimeout(() => {
+            if (!mounted) return;
+            fetchProfile(session.user.id, session.user).then(profileData => {
+              if (mounted) {
+                setProfile(profileData);
+              }
+            });
+          }, 0);
         } else {
-          if (mounted) {
-            setProfile(null);
-          }
-        }
-        
-        if (mounted) {
-          setLoading(false);
+          setProfile(null);
         }
       }
     );
@@ -249,12 +249,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (error) {
           console.error('Error getting session:', error);
-          // Limpar sessão inválida e localStorage
+          // Limpar sessão inválida do localStorage
           try {
-            await supabase.auth.signOut();
             localStorage.removeItem('sb-sjafivptbizdrzkozonv-auth-token');
           } catch (e) {
-            console.error('Error clearing session:', e);
+            console.error('Error clearing localStorage:', e);
           }
           setSession(null);
           setUser(null);
@@ -280,12 +279,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
-        // Limpar tudo em caso de erro, incluindo localStorage
+        // Limpar localStorage em caso de erro
         try {
-          await supabase.auth.signOut();
           localStorage.removeItem('sb-sjafivptbizdrzkozonv-auth-token');
         } catch (e) {
-          console.error('Error clearing session:', e);
+          console.error('Error clearing localStorage:', e);
         }
         if (mounted) {
           setSession(null);
