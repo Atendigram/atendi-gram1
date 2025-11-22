@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getAccountId } from '@/lib/supabase';
+import { getAccountId } from '@/lib/account-utils';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
 import PageLayout from '@/components/layout/PageLayout';

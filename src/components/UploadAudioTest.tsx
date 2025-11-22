@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "@/lib/supabase"; // use the same path we use elsewhere
+import { supabase } from "@/integrations/supabase/client";
 
 export default function UploadAudioTest() {
   const [url, setUrl] = useState<string | null>(null);
