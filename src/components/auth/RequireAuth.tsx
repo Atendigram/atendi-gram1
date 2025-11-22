@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
-import { Loader2 } from 'lucide-react';
+import { DashboardSkeleton } from '@/components/ui/skeleton-card';
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -36,10 +36,9 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Verificando autenticação...</p>
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <DashboardSkeleton />
         </div>
       </div>
     );
