@@ -149,19 +149,13 @@ export default function Dashboard() {
       {/* Filtros */}
       <Card className="w-fit">
         <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
-            <Label htmlFor="month" className="flex items-center gap-2 text-sm whitespace-nowrap">
-              <Calendar className="h-4 w-4" />
-              Mês
-            </Label>
-            <Input
-              id="month"
-              type="month"
-              value={month.substring(0, 7)}
-              onChange={(e) => setMonth(`${e.target.value}-01`)}
-              className="w-[180px]"
-            />
-          </div>
+          <Input
+            id="month"
+            type="month"
+            value={month.substring(0, 7)}
+            onChange={(e) => setMonth(`${e.target.value}-01`)}
+            className="w-[180px]"
+          />
         </CardContent>
       </Card>
 
