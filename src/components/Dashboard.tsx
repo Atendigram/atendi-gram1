@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowUpRight, Calendar } from "lucide-react";
+import { ArrowUpRight, Calendar, Users, UserPlus, Send } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from "@/contexts/AuthContext";
+import { SkeletonCard, SkeletonChart } from "@/components/ui/skeleton-card";
 
 interface MessagesByDay {
   day: string;
@@ -166,50 +167,68 @@ export default function Dashboard() {
 
       {/* Cards de métricas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">👥 Contatos</p>
-                <p className="text-2xl font-bold">{loading ? "..." : totalContacts}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {loading ? (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : (
+          <>
+            <Card className="animate-fade-in">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <p className="text-sm font-medium text-muted-foreground">Total de Contatos</p>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalContacts.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Todos os contatos cadastrados
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">🆕 Novos Contatos</p>
-                <p className="text-2xl font-bold">{loading ? "..." : newContacts}</p>
-              </div>
-              <ArrowUpRight className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <p className="text-sm font-medium text-muted-foreground">Novos Contatos</p>
+                <UserPlus className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{newContacts.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Contatos adicionados este mês
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">📤 Mensagens Disparadas</p>
-              <p className="text-2xl font-bold">{loading ? "..." : sentMessages}</p>
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <p className="text-sm font-medium text-muted-foreground">Mensagens Disparadas</p>
+                <Send className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{sentMessages.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Mensagens enviadas este mês
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Gráfico de mensagens por dia */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Mensagens Recebidas - Últimos 30 Dias</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              Carregando...
-            </div>
-          ) : (
+      {loading ? (
+        <SkeletonChart />
+      ) : (
+        <Card className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+          <CardHeader>
+            <CardTitle>Mensagens Recebidas</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Volume de mensagens recebidas por dia do mês
+            </p>
+          </CardHeader>
+          <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={messagesByDay}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -217,10 +236,12 @@ export default function Dashboard() {
                   dataKey="day" 
                   className="text-xs"
                   tick={{ fill: 'hsl(var(--foreground))' }}
+                  label={{ value: 'Dia do Mês', position: 'insideBottom', offset: -5 }}
                 />
                 <YAxis 
                   className="text-xs"
                   tick={{ fill: 'hsl(var(--foreground))' }}
+                  label={{ value: 'Mensagens', angle: -90, position: 'insideLeft' }}
                 />
                 <Tooltip 
                   contentStyle={{ 
@@ -229,6 +250,7 @@ export default function Dashboard() {
                     borderRadius: '8px'
                   }}
                   labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  formatter={(value: number) => [`${value} mensagens`, 'Recebidas']}
                 />
                 <Bar 
                   dataKey="messages_received" 
@@ -237,9 +259,9 @@ export default function Dashboard() {
                 />
               </BarChart>
             </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
