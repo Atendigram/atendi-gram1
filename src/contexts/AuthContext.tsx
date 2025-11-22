@@ -200,7 +200,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (error) {
           console.error('Error getting session:', error);
-          // Limpar sessão inválida
+          // Limpar sessão inválida e localStorage
+          try {
+            await supabase.auth.signOut();
+            localStorage.removeItem('sb-sjafivptbizdrzkozonv-auth-token');
+          } catch (e) {
+            console.error('Error clearing session:', e);
+          }
           setSession(null);
           setUser(null);
           setProfile(null);
@@ -225,7 +231,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
-        // Limpar tudo em caso de erro
+        // Limpar tudo em caso de erro, incluindo localStorage
+        try {
+          await supabase.auth.signOut();
+          localStorage.removeItem('sb-sjafivptbizdrzkozonv-auth-token');
+        } catch (e) {
+          console.error('Error clearing session:', e);
+        }
         if (mounted) {
           setSession(null);
           setUser(null);
