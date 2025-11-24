@@ -13,12 +13,12 @@ interface MessagesByDay {
   messages_received: number;
 }
 
-export default function Dashboard() {
+interface DashboardProps {
+  month: string;
+}
+
+export default function Dashboard({ month }: DashboardProps) {
   const { profile } = useAuth();
-  const [month, setMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  });
   const [totalContacts, setTotalContacts] = useState(0);
   const [newContacts, setNewContacts] = useState(0);
   const [messagesByDay, setMessagesByDay] = useState<MessagesByDay[]>([]);
@@ -146,19 +146,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Filtros */}
-      <Card className="w-fit">
-        <CardContent className="pt-6">
-          <Input
-            id="month"
-            type="month"
-            value={month.substring(0, 7)}
-            onChange={(e) => setMonth(`${e.target.value}-01`)}
-            className="w-[180px]"
-          />
-        </CardContent>
-      </Card>
-
       {/* Cards de métricas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {loading ? (

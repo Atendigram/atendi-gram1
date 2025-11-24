@@ -13,6 +13,7 @@ import { StatisticsProvider } from '../contexts/StatisticsContext';
 import { useCRM } from '../contexts/CRMContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { useOnboardingStatus } from '@/hooks/use-onboarding-status';
 const Index = () => {
@@ -24,6 +25,10 @@ const Index = () => {
   const [userName, setUserName] = useState('Atendente');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  });
 
   // Contexto CRM
   const {
@@ -155,7 +160,7 @@ const Index = () => {
   const tabs: TabItem[] = [{
     value: 'dashboard',
     label: 'Dashboard',
-    content: <Dashboard />
+    content: <Dashboard month={month} />
   }, {
     value: 'harvest',
     label: 'Disparos',
@@ -194,9 +199,14 @@ const Index = () => {
           )}
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <div>
+            <div className="flex items-center gap-4">
               <h1 className="text-2xl font-bold text-gray-800">📊Painel AtendiGram</h1>
-              
+              <Input
+                type="month"
+                value={month.substring(0, 7)}
+                onChange={(e) => setMonth(`${e.target.value}-01`)}
+                className="w-[180px]"
+              />
             </div>
             {getTabActions()}
           </div>
