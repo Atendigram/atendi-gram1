@@ -59,8 +59,12 @@ export default function Dashboard({ month }: DashboardProps) {
         console.error('Dashboard: Erro ao buscar logs:', logsError);
         setMessagesByDay([]);
       } else {
+        console.log('Dashboard: Registros de logs recebidos:', logsData?.length || 0);
+        
         // Processar dados por dia - criar todos os dias do mês
         const daysInMonth = new Date(year, monthNum, 0).getDate();
+        console.log('Dashboard: Dias no mês:', daysInMonth);
+        
         const dayMap = new Map<number, number>();
         
         // Inicializar todos os dias com 0
@@ -84,6 +88,8 @@ export default function Dashboard({ month }: DashboardProps) {
           }));
 
         console.log('Dashboard: Gráfico de mensagens processado:', chartData.length, 'dias');
+        console.log('Dashboard: Primeiros 5 dias do gráfico:', chartData.slice(0, 5));
+        console.log('Dashboard: Últimos 5 dias do gráfico:', chartData.slice(-5));
         setMessagesByDay(chartData);
       }
 
