@@ -1765,6 +1765,13 @@ export type Database = {
           total_contacts: number
         }[]
       }
+      get_messages_by_day: {
+        Args: { p_account_id: string; p_month: number; p_year: number }
+        Returns: {
+          dia: string
+          mensagens_recebidas: number
+        }[]
+      }
       get_or_create_profile: {
         Args: { _display_name?: string; _email: string; _user_id: string }
         Returns: string
