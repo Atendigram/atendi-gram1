@@ -35,19 +35,21 @@ export default function Dashboard({ month }: DashboardProps) {
     console.log('Dashboard: Iniciando fetch com account_id:', profile.account_id);
     try {
       const accountId = profile.account_id;
-      
-      // Query 1: Mensagens recebidas por dia do mês (logsgeral)
       const monthDate = new Date(month);
-      const startDate = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}-01`;
-      const endDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
-      const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+      const year = monthDate.getFullYear();
+      const monthNum = monthDate.getMonth() + 1;
+      
+      // Query 1: Mensagens recebidas por dia do mês usando generate_series
+      const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+      const endDate = new Date(year, monthNum, 0);
+      const endDateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
 
       const { data: logsData } = await supabase
         .from('logsgeral')
         .select('data_hora')
         .eq('account_id', accountId)
         .gte('data_hora', startDate)
-        .lte('data_hora', endDateStr);
+        .lte('data_hora', `${endDateStr} 23:59:59`);
 
       // Processar dados por dia
       const dayMap = new Map<string, number>();
@@ -64,7 +66,7 @@ export default function Dashboard({ month }: DashboardProps) {
 
       const chartData = Array.from(dayMap.entries())
         .map(([day, messages_received]) => ({ 
-          day: day.split('-')[2], // Apenas o dia
+          day: day.split('-')[2],
           messages_received 
         }));
 
@@ -78,24 +80,20 @@ export default function Dashboard({ month }: DashboardProps) {
       
       if (contactsError) {
         console.error('Dashboard: Erro ao buscar contatos:', contactsError);
-      } else {
-        console.log('Dashboard: Total de contatos:', count);
       }
       
       setTotalContacts(count || 0);
 
-      // Query 3: Novos contatos no mês (contatos_luna)
+      // Query 3: Novos contatos no mês usando created_at
       const { count: newCount, error: newContactsError } = await supabase
         .from('contatos_luna')
         .select('user_id', { count: 'exact' })
         .eq('account_id', accountId)
         .gte('created_at', startDate)
-        .lte('created_at', endDateStr);
+        .lte('created_at', `${endDateStr} 23:59:59`);
       
       if (newContactsError) {
         console.error('Dashboard: Erro ao buscar novos contatos:', newContactsError);
-      } else {
-        console.log('Dashboard: Novos contatos no mês:', newCount);
       }
       
       setNewContacts(newCount || 0);
@@ -120,22 +118,21 @@ export default function Dashboard({ month }: DashboardProps) {
       if (!profile?.account_id) return;
       
       const monthDate = new Date(month);
-      const startDate = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}-01`;
-      const endDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
-      const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+      const year = monthDate.getFullYear();
+      const monthNum = monthDate.getMonth() + 1;
+      const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+      const endDate = new Date(year, monthNum, 0);
+      const endDateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
       
       const { count, error: sentError } = await supabase
         .from('disparo_items')
         .select('id', { count: 'exact' })
         .eq('account_id', profile.account_id)
-        .eq('status', 'sent')
-        .gte('sent_at', startDate)
-        .lte('sent_at', endDateStr);
+        .gte('created_at', startDate)
+        .lte('created_at', `${endDateStr} 23:59:59`);
       
       if (sentError) {
         console.error('Dashboard: Erro ao buscar mensagens disparadas:', sentError);
-      } else {
-        console.log('Dashboard: Mensagens disparadas:', count);
       }
       
       setSentMessages(count || 0);
