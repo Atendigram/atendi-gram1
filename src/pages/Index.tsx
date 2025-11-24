@@ -25,10 +25,7 @@ const Index = () => {
   const [userName, setUserName] = useState('Atendente');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [month, setMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  });
+  const [month, setMonth] = useState('2025-11-01');
 
   // Contexto CRM
   const {
