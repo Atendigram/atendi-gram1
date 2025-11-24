@@ -84,19 +84,26 @@ export default function Dashboard({ month }: DashboardProps) {
       
       setTotalContacts(count || 0);
 
-      // Query 3: Novos contatos no mês usando created_at
-      const { count: newCount, error: newContactsError } = await supabase
+      // Query 3: Novos contatos no mês - buscar e filtrar por YEAR/MONTH
+      const { data: allNewContacts, error: newContactsError } = await supabase
         .from('contatos_luna')
-        .select('user_id', { count: 'exact' })
+        .select('created_at')
         .eq('account_id', accountId)
-        .gte('created_at', startDate)
-        .lte('created_at', `${endDateStr} 23:59:59`);
+        .not('created_at', 'is', null);
       
       if (newContactsError) {
         console.error('Dashboard: Erro ao buscar novos contatos:', newContactsError);
+        setNewContacts(0);
+      } else {
+        // Filtrar por ano e mês no cliente
+        const newContactsFiltered = allNewContacts?.filter(contact => {
+          const contactDate = new Date(contact.created_at);
+          return contactDate.getFullYear() === year && 
+                 (contactDate.getMonth() + 1) === monthNum;
+        }) || [];
+        
+        setNewContacts(newContactsFiltered.length);
       }
-      
-      setNewContacts(newCount || 0);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -124,18 +131,26 @@ export default function Dashboard({ month }: DashboardProps) {
       const endDate = new Date(year, monthNum, 0);
       const endDateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
       
-      const { count, error: sentError } = await supabase
+      // Buscar mensagens disparadas e filtrar por ano/mês no cliente
+      const { data: allSentMessages, error: sentError } = await supabase
         .from('disparo_items')
-        .select('id', { count: 'exact' })
+        .select('created_at')
         .eq('account_id', profile.account_id)
-        .gte('created_at', startDate)
-        .lte('created_at', `${endDateStr} 23:59:59`);
+        .not('created_at', 'is', null);
       
       if (sentError) {
         console.error('Dashboard: Erro ao buscar mensagens disparadas:', sentError);
+        setSentMessages(0);
+      } else {
+        // Filtrar por ano e mês no cliente
+        const sentMessagesFiltered = allSentMessages?.filter(item => {
+          const itemDate = new Date(item.created_at);
+          return itemDate.getFullYear() === year && 
+                 (itemDate.getMonth() + 1) === monthNum;
+        }) || [];
+        
+        setSentMessages(sentMessagesFiltered.length);
       }
-      
-      setSentMessages(count || 0);
     };
     
     fetchSentMessages();
