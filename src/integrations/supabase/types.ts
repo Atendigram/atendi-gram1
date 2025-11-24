@@ -1772,10 +1772,15 @@ export type Database = {
           mensagens_recebidas: number
         }[]
       }
+      get_new_contacts: {
+        Args: { p_account_id: string; p_month: number; p_year: number }
+        Returns: number
+      }
       get_or_create_profile: {
         Args: { _display_name?: string; _email: string; _user_id: string }
         Returns: string
       }
+      get_total_contacts: { Args: { p_account_id: string }; Returns: number }
       is_account_member_or_owner: {
         Args: { account_id: string }
         Returns: boolean
