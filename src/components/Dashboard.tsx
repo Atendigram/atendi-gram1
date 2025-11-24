@@ -79,13 +79,13 @@ export default function Dashboard({ month }: DashboardProps) {
           dayMap.set(d, 0);
         }
 
-        // Contar mensagens por dia - usar data local
+        // Contar mensagens por dia - usar UTC para evitar problemas de timezone
         let matchCount = 0;
         logsData?.forEach((log, index) => {
           const logDate = new Date(log.data_hora);
-          const day = logDate.getDate();
-          const logMonth = logDate.getMonth() + 1;
-          const logYear = logDate.getFullYear();
+          const day = logDate.getUTCDate();
+          const logMonth = logDate.getUTCMonth() + 1;
+          const logYear = logDate.getUTCFullYear();
           
           // Log primeiros 3 registros para debug
           if (index < 3) {
