@@ -43,21 +43,24 @@ export default function Dashboard({ month }: DashboardProps) {
       console.log('Dashboard: Buscando dados para ano:', year, 'mês:', monthNum);
       
       // Query 1: Mensagens recebidas por dia do mês usando SQL
-      const { data: chartData, error: logsError } = await supabase.rpc('get_messages_by_day', {
-        p_account_id: accountId,
-        p_year: year,
-        p_month: monthNum
-      });
+      const { data: chartData, error: logsError } = await supabase.rpc(
+        'get_messages_by_day' as any,
+        {
+          p_account_id: accountId,
+          p_year: year,
+          p_month: monthNum
+        }
+      );
 
       if (logsError) {
         console.error('Dashboard: Erro ao buscar mensagens por dia:', logsError);
         setMessagesByDay([]);
       } else {
-        console.log('Dashboard: Dados do gráfico recebidos:', chartData?.length || 0);
+        console.log('Dashboard: Dados do gráfico recebidos:', (chartData as any[])?.length || 0);
         
         // Formatar para o gráfico
-        const formattedData = (chartData || []).map((row: any) => ({
-          day: new Date(row.dia).getDate().toString().padStart(2, '0'),
+        const formattedData = ((chartData as any[]) || []).map((row: any) => ({
+          day: new Date(row.dia).getUTCDate().toString().padStart(2, '0'),
           messages_received: row.mensagens_recebidas
         }));
         
