@@ -72,11 +72,18 @@ export default function Dashboard({ month }: DashboardProps) {
           dayMap.set(d, 0);
         }
 
-        // Contar mensagens por dia usando UTC
+        // Contar mensagens por dia - usar data local
         logsData?.forEach((log) => {
           const logDate = new Date(log.data_hora);
-          const day = logDate.getUTCDate();
-          dayMap.set(day, (dayMap.get(day) || 0) + 1);
+          // Pegar o dia do mês em timezone local
+          const day = logDate.getDate();
+          const logMonth = logDate.getMonth() + 1; // getMonth() retorna 0-11
+          const logYear = logDate.getFullYear();
+          
+          // Só contar se for do mês/ano correto
+          if (logYear === year && logMonth === monthNum) {
+            dayMap.set(day, (dayMap.get(day) || 0) + 1);
+          }
         });
 
         // Converter para array ordenado
