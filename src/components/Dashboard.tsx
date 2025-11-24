@@ -69,33 +69,36 @@ export default function Dashboard({ month }: DashboardProps) {
         setMessagesByDay(formattedData);
       }
 
-      // Query 2: Total de contatos (contatos_luna)
-      const { count, error: contactsError } = await supabase
-        .from('contatos_luna')
-        .select('user_id', { count: 'exact' })
-        .eq('account_id', accountId);
+      // Query 2: Total de contatos usando função dinâmica
+      const { data: totalData, error: contactsError } = await supabase.rpc(
+        'get_total_contacts' as any,
+        { p_account_id: accountId }
+      );
       
       if (contactsError) {
         console.error('Dashboard: Erro ao buscar contatos:', contactsError);
+        setTotalContacts(0);
+      } else {
+        console.log('Dashboard: Total de contatos encontrados:', totalData);
+        setTotalContacts(Number(totalData) || 0);
       }
-      
-      setTotalContacts(count || 0);
 
-      // Query 3: Novos contatos no mês usando SQL EXTRACT
-      const { count: newContactsCount, error: newContactsError } = await supabase
-        .from('contatos_luna')
-        .select('*', { count: 'exact', head: true })
-        .eq('account_id', accountId)
-        .filter('created_at', 'not.is', null)
-        .gte('created_at', `${year}-${String(monthNum).padStart(2, '0')}-01`)
-        .lt('created_at', `${year}-${String(monthNum + 1).padStart(2, '0')}-01`);
+      // Query 3: Novos contatos no mês usando função dinâmica
+      const { data: newData, error: newContactsError } = await supabase.rpc(
+        'get_new_contacts' as any,
+        {
+          p_account_id: accountId,
+          p_year: year,
+          p_month: monthNum
+        }
+      );
       
       if (newContactsError) {
         console.error('Dashboard: Erro ao buscar novos contatos:', newContactsError);
         setNewContacts(0);
       } else {
-        console.log('Dashboard: Novos contatos encontrados:', newContactsCount);
-        setNewContacts(newContactsCount || 0);
+        console.log('Dashboard: Novos contatos encontrados:', newData);
+        setNewContacts(Number(newData) || 0);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
