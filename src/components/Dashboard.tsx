@@ -61,9 +61,16 @@ export default function Dashboard({ month }: DashboardProps) {
       } else {
         console.log('Dashboard: Registros de logs recebidos:', logsData?.length || 0);
         
+        // Log algumas datas de exemplo
+        if (logsData && logsData.length > 0) {
+          console.log('Dashboard: Exemplo de data:', logsData[0].data_hora);
+          console.log('Dashboard: Exemplo parseado:', new Date(logsData[0].data_hora));
+        }
+        
         // Processar dados por dia - criar todos os dias do mês
         const daysInMonth = new Date(year, monthNum, 0).getDate();
         console.log('Dashboard: Dias no mês:', daysInMonth);
+        console.log('Dashboard: Filtrando para ano:', year, 'mês:', monthNum);
         
         const dayMap = new Map<number, number>();
         
@@ -73,18 +80,33 @@ export default function Dashboard({ month }: DashboardProps) {
         }
 
         // Contar mensagens por dia - usar data local
-        logsData?.forEach((log) => {
+        let matchCount = 0;
+        logsData?.forEach((log, index) => {
           const logDate = new Date(log.data_hora);
-          // Pegar o dia do mês em timezone local
           const day = logDate.getDate();
-          const logMonth = logDate.getMonth() + 1; // getMonth() retorna 0-11
+          const logMonth = logDate.getMonth() + 1;
           const logYear = logDate.getFullYear();
+          
+          // Log primeiros 3 registros para debug
+          if (index < 3) {
+            console.log(`Dashboard: Log ${index}:`, {
+              data_hora: log.data_hora,
+              parsed: logDate.toISOString(),
+              day,
+              month: logMonth,
+              year: logYear,
+              match: logYear === year && logMonth === monthNum
+            });
+          }
           
           // Só contar se for do mês/ano correto
           if (logYear === year && logMonth === monthNum) {
+            matchCount++;
             dayMap.set(day, (dayMap.get(day) || 0) + 1);
           }
         });
+        
+        console.log('Dashboard: Total de logs que matched:', matchCount);
 
         // Converter para array ordenado
         const chartData = Array.from(dayMap.entries())
