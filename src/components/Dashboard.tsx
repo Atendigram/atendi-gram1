@@ -44,32 +44,38 @@ export default function Dashboard({ month }: DashboardProps) {
       
       // Query 1: Mensagens recebidas por dia do mês usando generate_series
       const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
-      const endDate = new Date(year, monthNum, 0);
-      const endDateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+      const nextMonth = monthNum === 12 ? 1 : monthNum + 1;
+      const nextYear = monthNum === 12 ? year + 1 : year;
+      const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
 
-      const { data: logsData } = await supabase
+      const { data: logsData, error: logsError } = await supabase
         .from('logsgeral')
         .select('data_hora')
         .eq('account_id', accountId)
         .gte('data_hora', startDate)
-        .lte('data_hora', `${endDateStr} 23:59:59`);
+        .lt('data_hora', endDate);
 
-      // Processar dados por dia
+      if (logsError) {
+        console.error('Dashboard: Erro ao buscar logs:', logsError);
+      }
+
+      // Processar dados por dia - criar todos os dias do mês
+      const daysInMonth = new Date(year, monthNum, 0).getDate();
       const dayMap = new Map<string, number>();
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        dayMap.set(dayStr, 0);
+      
+      for (let d = 1; d <= daysInMonth; d++) {
+        dayMap.set(String(d).padStart(2, '0'), 0);
       }
 
       logsData?.forEach((log) => {
         const logDate = new Date(log.data_hora);
-        const dayStr = `${logDate.getFullYear()}-${String(logDate.getMonth() + 1).padStart(2, '0')}-${String(logDate.getDate()).padStart(2, '0')}`;
-        dayMap.set(dayStr, (dayMap.get(dayStr) || 0) + 1);
+        const day = String(logDate.getDate()).padStart(2, '0');
+        dayMap.set(day, (dayMap.get(day) || 0) + 1);
       });
 
       const chartData = Array.from(dayMap.entries())
         .map(([day, messages_received]) => ({ 
-          day: day.split('-')[2],
+          day,
           messages_received 
         }));
 
@@ -87,27 +93,21 @@ export default function Dashboard({ month }: DashboardProps) {
       
       setTotalContacts(count || 0);
 
-      // Query 3: Novos contatos no mês - filtrar usando UTC
-      const { data: allNewContacts, error: newContactsError } = await supabase
+      // Query 3: Novos contatos no mês usando SQL EXTRACT
+      const { count: newContactsCount, error: newContactsError } = await supabase
         .from('contatos_luna')
-        .select('created_at')
+        .select('*', { count: 'exact', head: true })
         .eq('account_id', accountId)
-        .not('created_at', 'is', null);
+        .filter('created_at', 'not.is', null)
+        .gte('created_at', `${year}-${String(monthNum).padStart(2, '0')}-01`)
+        .lt('created_at', `${year}-${String(monthNum + 1).padStart(2, '0')}-01`);
       
       if (newContactsError) {
         console.error('Dashboard: Erro ao buscar novos contatos:', newContactsError);
         setNewContacts(0);
       } else {
-        // Filtrar por ano e mês usando UTC
-        const newContactsFiltered = allNewContacts?.filter(contact => {
-          if (!contact.created_at) return false;
-          const contactDate = new Date(contact.created_at);
-          return contactDate.getUTCFullYear() === year && 
-                 (contactDate.getUTCMonth() + 1) === monthNum;
-        }) || [];
-        
-        console.log('Dashboard: Novos contatos encontrados:', newContactsFiltered.length);
-        setNewContacts(newContactsFiltered.length);
+        console.log('Dashboard: Novos contatos encontrados:', newContactsCount);
+        setNewContacts(newContactsCount || 0);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -133,27 +133,21 @@ export default function Dashboard({ month }: DashboardProps) {
       const year = parseInt(yearStr);
       const monthNum = parseInt(monthStr);
       
-      // Buscar mensagens disparadas usando filtragem UTC
-      const { data: allSentMessages, error: sentError } = await supabase
+      // Buscar mensagens disparadas usando range de datas
+      const { count: sentCount, error: sentError } = await supabase
         .from('disparo_items')
-        .select('created_at')
+        .select('*', { count: 'exact', head: true })
         .eq('account_id', profile.account_id)
-        .not('created_at', 'is', null);
+        .filter('created_at', 'not.is', null)
+        .gte('created_at', `${year}-${String(monthNum).padStart(2, '0')}-01`)
+        .lt('created_at', `${year}-${String(monthNum + 1).padStart(2, '0')}-01`);
       
       if (sentError) {
         console.error('Dashboard: Erro ao buscar mensagens disparadas:', sentError);
         setSentMessages(0);
       } else {
-        // Filtrar por ano e mês no cliente usando UTC
-        const sentMessagesFiltered = allSentMessages?.filter(item => {
-          if (!item.created_at) return false;
-          const itemDate = new Date(item.created_at);
-          return itemDate.getUTCFullYear() === year && 
-                 (itemDate.getUTCMonth() + 1) === monthNum;
-        }) || [];
-        
-        console.log('Dashboard: Mensagens disparadas encontradas:', sentMessagesFiltered.length);
-        setSentMessages(sentMessagesFiltered.length);
+        console.log('Dashboard: Mensagens disparadas encontradas:', sentCount);
+        setSentMessages(sentCount || 0);
       }
     };
     
