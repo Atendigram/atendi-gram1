@@ -35,9 +35,12 @@ export default function Dashboard({ month }: DashboardProps) {
     console.log('Dashboard: Iniciando fetch com account_id:', profile.account_id);
     try {
       const accountId = profile.account_id;
-      const monthDate = new Date(month);
-      const year = monthDate.getFullYear();
-      const monthNum = monthDate.getMonth() + 1;
+      // Parse month properly - month format is 'YYYY-MM-DD'
+      const [yearStr, monthStr] = month.split('-');
+      const year = parseInt(yearStr);
+      const monthNum = parseInt(monthStr);
+      
+      console.log('Dashboard: Buscando dados para ano:', year, 'mês:', monthNum);
       
       // Query 1: Mensagens recebidas por dia do mês usando generate_series
       const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
@@ -84,7 +87,7 @@ export default function Dashboard({ month }: DashboardProps) {
       
       setTotalContacts(count || 0);
 
-      // Query 3: Novos contatos no mês - buscar e filtrar por YEAR/MONTH
+      // Query 3: Novos contatos no mês - filtrar usando UTC
       const { data: allNewContacts, error: newContactsError } = await supabase
         .from('contatos_luna')
         .select('created_at')
@@ -95,13 +98,12 @@ export default function Dashboard({ month }: DashboardProps) {
         console.error('Dashboard: Erro ao buscar novos contatos:', newContactsError);
         setNewContacts(0);
       } else {
-        // Filtrar por ano e mês no cliente
-        console.log('Dashboard: Filtrando contatos para ano:', year, 'mês:', monthNum);
+        // Filtrar por ano e mês usando UTC
         const newContactsFiltered = allNewContacts?.filter(contact => {
+          if (!contact.created_at) return false;
           const contactDate = new Date(contact.created_at);
-          const contactYear = contactDate.getFullYear();
-          const contactMonth = contactDate.getMonth() + 1;
-          return contactYear === year && contactMonth === monthNum;
+          return contactDate.getUTCFullYear() === year && 
+                 (contactDate.getUTCMonth() + 1) === monthNum;
         }) || [];
         
         console.log('Dashboard: Novos contatos encontrados:', newContactsFiltered.length);
@@ -127,14 +129,11 @@ export default function Dashboard({ month }: DashboardProps) {
     const fetchSentMessages = async () => {
       if (!profile?.account_id) return;
       
-      const monthDate = new Date(month);
-      const year = monthDate.getFullYear();
-      const monthNum = monthDate.getMonth() + 1;
-      const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
-      const endDate = new Date(year, monthNum, 0);
-      const endDateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+      const [yearStr, monthStr] = month.split('-');
+      const year = parseInt(yearStr);
+      const monthNum = parseInt(monthStr);
       
-      // Buscar mensagens disparadas e filtrar por ano/mês no cliente
+      // Buscar mensagens disparadas usando filtragem UTC
       const { data: allSentMessages, error: sentError } = await supabase
         .from('disparo_items')
         .select('created_at')
@@ -145,13 +144,12 @@ export default function Dashboard({ month }: DashboardProps) {
         console.error('Dashboard: Erro ao buscar mensagens disparadas:', sentError);
         setSentMessages(0);
       } else {
-        // Filtrar por ano e mês no cliente
-        console.log('Dashboard: Filtrando disparos para ano:', year, 'mês:', monthNum);
+        // Filtrar por ano e mês no cliente usando UTC
         const sentMessagesFiltered = allSentMessages?.filter(item => {
+          if (!item.created_at) return false;
           const itemDate = new Date(item.created_at);
-          const itemYear = itemDate.getFullYear();
-          const itemMonth = itemDate.getMonth() + 1;
-          return itemYear === year && itemMonth === monthNum;
+          return itemDate.getUTCFullYear() === year && 
+                 (itemDate.getUTCMonth() + 1) === monthNum;
         }) || [];
         
         console.log('Dashboard: Mensagens disparadas encontradas:', sentMessagesFiltered.length);
