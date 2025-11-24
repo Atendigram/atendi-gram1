@@ -42,84 +42,28 @@ export default function Dashboard({ month }: DashboardProps) {
       
       console.log('Dashboard: Buscando dados para ano:', year, 'mês:', monthNum);
       
-      // Query 1: Mensagens recebidas por dia do mês
-      const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
-      const nextMonth = monthNum === 12 ? 1 : monthNum + 1;
-      const nextYear = monthNum === 12 ? year + 1 : year;
-      const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
-
-      const { data: logsData, error: logsError } = await supabase
-        .from('logsgeral')
-        .select('data_hora')
-        .eq('account_id', accountId)
-        .gte('data_hora', startDate)
-        .lt('data_hora', endDate);
+      // Query 1: Mensagens recebidas por dia do mês usando SQL
+      const { data: chartData, error: logsError } = await supabase.rpc('get_messages_by_day', {
+        p_account_id: accountId,
+        p_year: year,
+        p_month: monthNum
+      });
 
       if (logsError) {
-        console.error('Dashboard: Erro ao buscar logs:', logsError);
+        console.error('Dashboard: Erro ao buscar mensagens por dia:', logsError);
         setMessagesByDay([]);
       } else {
-        console.log('Dashboard: Registros de logs recebidos:', logsData?.length || 0);
+        console.log('Dashboard: Dados do gráfico recebidos:', chartData?.length || 0);
         
-        // Log algumas datas de exemplo
-        if (logsData && logsData.length > 0) {
-          console.log('Dashboard: Exemplo de data:', logsData[0].data_hora);
-          console.log('Dashboard: Exemplo parseado:', new Date(logsData[0].data_hora));
-        }
+        // Formatar para o gráfico
+        const formattedData = (chartData || []).map((row: any) => ({
+          day: new Date(row.dia).getDate().toString().padStart(2, '0'),
+          messages_received: row.mensagens_recebidas
+        }));
         
-        // Processar dados por dia - criar todos os dias do mês
-        const daysInMonth = new Date(year, monthNum, 0).getDate();
-        console.log('Dashboard: Dias no mês:', daysInMonth);
-        console.log('Dashboard: Filtrando para ano:', year, 'mês:', monthNum);
-        
-        const dayMap = new Map<number, number>();
-        
-        // Inicializar todos os dias com 0
-        for (let d = 1; d <= daysInMonth; d++) {
-          dayMap.set(d, 0);
-        }
-
-        // Contar mensagens por dia - usar UTC para evitar problemas de timezone
-        let matchCount = 0;
-        logsData?.forEach((log, index) => {
-          const logDate = new Date(log.data_hora);
-          const day = logDate.getUTCDate();
-          const logMonth = logDate.getUTCMonth() + 1;
-          const logYear = logDate.getUTCFullYear();
-          
-          // Log primeiros 3 registros para debug
-          if (index < 3) {
-            console.log(`Dashboard: Log ${index}:`, {
-              data_hora: log.data_hora,
-              parsed: logDate.toISOString(),
-              day,
-              month: logMonth,
-              year: logYear,
-              match: logYear === year && logMonth === monthNum
-            });
-          }
-          
-          // Só contar se for do mês/ano correto
-          if (logYear === year && logMonth === monthNum) {
-            matchCount++;
-            dayMap.set(day, (dayMap.get(day) || 0) + 1);
-          }
-        });
-        
-        console.log('Dashboard: Total de logs que matched:', matchCount);
-
-        // Converter para array ordenado
-        const chartData = Array.from(dayMap.entries())
-          .sort((a, b) => a[0] - b[0])
-          .map(([day, messages_received]) => ({ 
-            day: String(day).padStart(2, '0'),
-            messages_received 
-          }));
-
-        console.log('Dashboard: Gráfico de mensagens processado:', chartData.length, 'dias');
-        console.log('Dashboard: Primeiros 5 dias do gráfico:', chartData.slice(0, 5));
-        console.log('Dashboard: Últimos 5 dias do gráfico:', chartData.slice(-5));
-        setMessagesByDay(chartData);
+        console.log('Dashboard: Primeiros 5 dias:', formattedData.slice(0, 5));
+        console.log('Dashboard: Últimos 5 dias:', formattedData.slice(-5));
+        setMessagesByDay(formattedData);
       }
 
       // Query 2: Total de contatos (contatos_luna)
