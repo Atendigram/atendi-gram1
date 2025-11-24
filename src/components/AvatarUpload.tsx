@@ -27,6 +27,9 @@ export const AvatarUpload = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Limpar o input para permitir selecionar o mesmo arquivo novamente
+    e.target.value = '';
+
     // Validação do arquivo
     const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
@@ -62,7 +65,8 @@ export const AvatarUpload = ({
 
       // Upload para o Supabase Storage
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
+      const timestamp = Date.now();
+      const fileName = `${user.id}/avatar-${timestamp}.${fileExt}`;
 
       // Deletar avatar antigo se existir
       if (currentAvatarUrl) {
@@ -73,8 +77,8 @@ export const AvatarUpload = ({
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
+          cacheControl: 'no-cache',
+          upsert: false
         });
 
       if (uploadError) throw uploadError;
