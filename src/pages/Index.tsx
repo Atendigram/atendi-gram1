@@ -14,6 +14,7 @@ import { useCRM } from '../contexts/CRMContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { useOnboardingStatus } from '@/hooks/use-onboarding-status';
 const Index = () => {
@@ -201,12 +202,27 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl font-bold text-gray-800">📊Painel AtendiGram</h1>
-              <Input
-                type="month"
-                value={month.substring(0, 7)}
-                onChange={(e) => setMonth(`${e.target.value}-01`)}
-                className="w-[180px]"
-              />
+              <Select value={month.substring(0, 7)} onValueChange={(value) => setMonth(`${value}-01`)}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2025-11">novembro de 2025</SelectItem>
+                  <SelectItem value="2025-10">outubro de 2025</SelectItem>
+                  <SelectItem value="2025-09">setembro de 2025</SelectItem>
+                  <SelectItem value="2025-08">agosto de 2025</SelectItem>
+                  <SelectItem value="2025-07">julho de 2025</SelectItem>
+                  <SelectItem value="2025-06">junho de 2025</SelectItem>
+                  <SelectItem value="2025-05">maio de 2025</SelectItem>
+                  <SelectItem value="2025-04">abril de 2025</SelectItem>
+                  <SelectItem value="2025-03">março de 2025</SelectItem>
+                  <SelectItem value="2025-02">fevereiro de 2025</SelectItem>
+                  <SelectItem value="2025-01">janeiro de 2025</SelectItem>
+                  <SelectItem value="2024-12">dezembro de 2024</SelectItem>
+                  <SelectItem value="2024-11">novembro de 2024</SelectItem>
+                  <SelectItem value="2024-10">outubro de 2024</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {getTabActions()}
           </div>
