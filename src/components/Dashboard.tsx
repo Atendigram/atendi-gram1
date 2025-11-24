@@ -96,12 +96,15 @@ export default function Dashboard({ month }: DashboardProps) {
         setNewContacts(0);
       } else {
         // Filtrar por ano e mês no cliente
+        console.log('Dashboard: Filtrando contatos para ano:', year, 'mês:', monthNum);
         const newContactsFiltered = allNewContacts?.filter(contact => {
           const contactDate = new Date(contact.created_at);
-          return contactDate.getFullYear() === year && 
-                 (contactDate.getMonth() + 1) === monthNum;
+          const contactYear = contactDate.getFullYear();
+          const contactMonth = contactDate.getMonth() + 1;
+          return contactYear === year && contactMonth === monthNum;
         }) || [];
         
+        console.log('Dashboard: Novos contatos encontrados:', newContactsFiltered.length);
         setNewContacts(newContactsFiltered.length);
       }
     } catch (error) {
@@ -143,12 +146,15 @@ export default function Dashboard({ month }: DashboardProps) {
         setSentMessages(0);
       } else {
         // Filtrar por ano e mês no cliente
+        console.log('Dashboard: Filtrando disparos para ano:', year, 'mês:', monthNum);
         const sentMessagesFiltered = allSentMessages?.filter(item => {
           const itemDate = new Date(item.created_at);
-          return itemDate.getFullYear() === year && 
-                 (itemDate.getMonth() + 1) === monthNum;
+          const itemYear = itemDate.getFullYear();
+          const itemMonth = itemDate.getMonth() + 1;
+          return itemYear === year && itemMonth === monthNum;
         }) || [];
         
+        console.log('Dashboard: Mensagens disparadas encontradas:', sentMessagesFiltered.length);
         setSentMessages(sentMessagesFiltered.length);
       }
     };

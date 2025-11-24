@@ -25,7 +25,10 @@ const Index = () => {
   const [userName, setUserName] = useState('Atendente');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [month, setMonth] = useState('2025-11-01');
+  const [month, setMonth] = useState(() => {
+    // Forçar novembro de 2025 como padrão (onde há dados)
+    return '2025-11-01';
+  });
 
   // Contexto CRM
   const {
