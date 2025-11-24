@@ -42,7 +42,7 @@ export default function Dashboard({ month }: DashboardProps) {
       
       console.log('Dashboard: Buscando dados para ano:', year, 'mês:', monthNum);
       
-      // Query 1: Mensagens recebidas por dia do mês usando generate_series
+      // Query 1: Mensagens recebidas por dia do mês
       const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
       const nextMonth = monthNum === 12 ? 1 : monthNum + 1;
       const nextYear = monthNum === 12 ? year + 1 : year;
@@ -57,29 +57,35 @@ export default function Dashboard({ month }: DashboardProps) {
 
       if (logsError) {
         console.error('Dashboard: Erro ao buscar logs:', logsError);
+        setMessagesByDay([]);
+      } else {
+        // Processar dados por dia - criar todos os dias do mês
+        const daysInMonth = new Date(year, monthNum, 0).getDate();
+        const dayMap = new Map<number, number>();
+        
+        // Inicializar todos os dias com 0
+        for (let d = 1; d <= daysInMonth; d++) {
+          dayMap.set(d, 0);
+        }
+
+        // Contar mensagens por dia usando UTC
+        logsData?.forEach((log) => {
+          const logDate = new Date(log.data_hora);
+          const day = logDate.getUTCDate();
+          dayMap.set(day, (dayMap.get(day) || 0) + 1);
+        });
+
+        // Converter para array ordenado
+        const chartData = Array.from(dayMap.entries())
+          .sort((a, b) => a[0] - b[0])
+          .map(([day, messages_received]) => ({ 
+            day: String(day).padStart(2, '0'),
+            messages_received 
+          }));
+
+        console.log('Dashboard: Gráfico de mensagens processado:', chartData.length, 'dias');
+        setMessagesByDay(chartData);
       }
-
-      // Processar dados por dia - criar todos os dias do mês
-      const daysInMonth = new Date(year, monthNum, 0).getDate();
-      const dayMap = new Map<string, number>();
-      
-      for (let d = 1; d <= daysInMonth; d++) {
-        dayMap.set(String(d).padStart(2, '0'), 0);
-      }
-
-      logsData?.forEach((log) => {
-        const logDate = new Date(log.data_hora);
-        const day = String(logDate.getDate()).padStart(2, '0');
-        dayMap.set(day, (dayMap.get(day) || 0) + 1);
-      });
-
-      const chartData = Array.from(dayMap.entries())
-        .map(([day, messages_received]) => ({ 
-          day,
-          messages_received 
-        }));
-
-      setMessagesByDay(chartData);
 
       // Query 2: Total de contatos (contatos_luna)
       const { count, error: contactsError } = await supabase
