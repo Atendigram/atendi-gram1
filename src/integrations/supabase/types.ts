@@ -475,6 +475,7 @@ export type Database = {
           last_name: string | null
           mensagem: string | null
           name: string | null
+          owner_id: string | null
           source: string | null
           status: string | null
           tg_id: string | null
@@ -498,6 +499,7 @@ export type Database = {
           last_name?: string | null
           mensagem?: string | null
           name?: string | null
+          owner_id?: string | null
           source?: string | null
           status?: string | null
           tg_id?: string | null
@@ -521,6 +523,7 @@ export type Database = {
           last_name?: string | null
           mensagem?: string | null
           name?: string | null
+          owner_id?: string | null
           source?: string | null
           status?: string | null
           tg_id?: string | null
