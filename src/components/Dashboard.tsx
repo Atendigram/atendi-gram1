@@ -124,14 +124,17 @@ export default function Dashboard({ month }: DashboardProps) {
       const year = parseInt(yearStr);
       const monthNum = parseInt(monthStr);
       
+      // Calcular próximo mês corretamente (dezembro -> janeiro do próximo ano)
+      const nextMonth = monthNum === 12 ? 1 : monthNum + 1;
+      const nextYear = monthNum === 12 ? year + 1 : year;
+      
       // Buscar mensagens disparadas usando range de datas
       const { count: sentCount, error: sentError } = await supabase
         .from('disparo_items')
         .select('*', { count: 'exact', head: true })
         .eq('account_id', profile.account_id)
-        .filter('created_at', 'not.is', null)
         .gte('created_at', `${year}-${String(monthNum).padStart(2, '0')}-01`)
-        .lt('created_at', `${year}-${String(monthNum + 1).padStart(2, '0')}-01`);
+        .lt('created_at', `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`);
       
       if (sentError) {
         console.error('Dashboard: Erro ao buscar mensagens disparadas:', sentError);
