@@ -27,8 +27,11 @@ const Index = () => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [month, setMonth] = useState(() => {
-    // Forçar novembro de 2025 como padrão (onde há dados)
-    return '2025-11-01';
+    // Usar o mês atual como padrão
+    const now = new Date();
+    const year = now.getFullYear();
+    const monthNum = String(now.getMonth() + 1).padStart(2, '0');
+    return `${year}-${monthNum}-01`;
   });
 
   // Contexto CRM
@@ -207,6 +210,7 @@ const Index = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="2025-12">dezembro de 2025</SelectItem>
                   <SelectItem value="2025-11">novembro de 2025</SelectItem>
                   <SelectItem value="2025-10">outubro de 2025</SelectItem>
                   <SelectItem value="2025-09">setembro de 2025</SelectItem>
