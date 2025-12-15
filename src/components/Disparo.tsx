@@ -138,21 +138,42 @@ const Disparo = () => {
       return;
     }
     try {
-      // Fetch all contacts without Supabase's default 1000 limit using range
-      const {
-        data,
-        error
-      } = await scopedSelectWithColumns(contactsTable, 'user_id, first_name, last_name, username, chat_id, created_at', accountId)
-        .order('created_at', { ascending: false })
-        .range(0, 9999); // Override default 1000 limit - fetch up to 10000 rows
-      if (error) throw error;
+      // Fetch all contacts using pagination to bypass Supabase's 1000 row limit
+      const allContacts: Contact[] = [];
+      const pageSize = 1000;
+      let page = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+        
+        const { data, error } = await scopedSelectWithColumns(
+          contactsTable, 
+          'user_id, first_name, last_name, username, chat_id, created_at', 
+          accountId
+        )
+          .order('created_at', { ascending: false })
+          .range(from, to);
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allContacts.push(...(data as Contact[]));
+          hasMore = data.length === pageSize; // Continue if we got a full page
+          page++;
+        } else {
+          hasMore = false;
+        }
+      }
 
       // Add computed name field
-      const contactsWithName = (data as Contact[] || []).map(contact => ({
+      const contactsWithName = allContacts.map(contact => ({
         ...contact,
         name: [contact.first_name, contact.last_name].filter(Boolean).join(' ') || ''
       }));
       setContacts(contactsWithName);
+      console.log(`Loaded ${contactsWithName.length} contacts total`);
     } catch (error) {
       console.error('Error loading contacts:', error);
       toast({
