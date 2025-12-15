@@ -138,13 +138,13 @@ const Disparo = () => {
       return;
     }
     try {
-      // Fetch all contacts without Supabase's default 1000 limit
+      // Fetch all contacts without Supabase's default 1000 limit using range
       const {
         data,
         error
       } = await scopedSelectWithColumns(contactsTable, 'user_id, first_name, last_name, username, chat_id, created_at', accountId)
         .order('created_at', { ascending: false })
-        .limit(10000); // Override default 1000 limit
+        .range(0, 9999); // Override default 1000 limit - fetch up to 10000 rows
       if (error) throw error;
 
       // Add computed name field
