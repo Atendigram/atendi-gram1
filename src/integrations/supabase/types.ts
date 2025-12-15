@@ -378,87 +378,6 @@ export type Database = {
         }
         Relationships: []
       }
-      contatos_biatrovao: {
-        Row: {
-          account_id: string | null
-          chat_id: number | null
-          created_at: string | null
-          date_first_seen: string | null
-          fail_count: number | null
-          first_name: string | null
-          id: string
-          invalid_at: string | null
-          invalid_reason: string | null
-          is_bot: string | null
-          is_premium: string | null
-          language_code: string | null
-          last_name: string | null
-          mensagem: string | null
-          name: string | null
-          owner_id: string | null
-          phone: string | null
-          source: string | null
-          status: string | null
-          tg_id: string | null
-          user_id: number | null
-          username: string | null
-          welcome_opt_out: boolean | null
-          welcomed_at: string | null
-        }
-        Insert: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Update: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Relationships: []
-      }
       contatos_biatrovaoo: {
         Row: {
           account_id: string | null
@@ -776,6 +695,87 @@ export type Database = {
           },
         ]
       }
+      contatos_giribeiro: {
+        Row: {
+          account_id: string | null
+          chat_id: number | null
+          created_at: string | null
+          date_first_seen: string | null
+          fail_count: number | null
+          first_name: string | null
+          id: string
+          invalid_at: string | null
+          invalid_reason: string | null
+          is_bot: string | null
+          is_premium: string | null
+          language_code: string | null
+          last_name: string | null
+          mensagem: string | null
+          name: string | null
+          owner_id: string | null
+          phone: string | null
+          source: string | null
+          status: string | null
+          tg_id: string | null
+          user_id: number | null
+          username: string | null
+          welcome_opt_out: boolean | null
+          welcomed_at: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          id?: string
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          id?: string
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Relationships: []
+      }
       contatos_luna: {
         Row: {
           account_id: string | null
@@ -844,6 +844,87 @@ export type Database = {
           mensagem?: string | null
           name?: string | null
           owner_id?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Relationships: []
+      }
+      contatos_profalexia: {
+        Row: {
+          account_id: string | null
+          chat_id: number | null
+          created_at: string | null
+          date_first_seen: string | null
+          fail_count: number | null
+          first_name: string | null
+          id: string
+          invalid_at: string | null
+          invalid_reason: string | null
+          is_bot: string | null
+          is_premium: string | null
+          language_code: string | null
+          last_name: string | null
+          mensagem: string | null
+          name: string | null
+          owner_id: string | null
+          phone: string | null
+          source: string | null
+          status: string | null
+          tg_id: string | null
+          user_id: number | null
+          username: string | null
+          welcome_opt_out: boolean | null
+          welcomed_at: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          id?: string
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string | null
+          tg_id?: string | null
+          user_id?: number | null
+          username?: string | null
+          welcome_opt_out?: boolean | null
+          welcomed_at?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          date_first_seen?: string | null
+          fail_count?: number | null
+          first_name?: string | null
+          id?: string
+          invalid_at?: string | null
+          invalid_reason?: string | null
+          is_bot?: string | null
+          is_premium?: string | null
+          language_code?: string | null
+          last_name?: string | null
+          mensagem?: string | null
+          name?: string | null
+          owner_id?: string | null
+          phone?: string | null
           source?: string | null
           status?: string | null
           tg_id?: string | null
@@ -2056,6 +2137,7 @@ export type Database = {
         }[]
       }
       cleanup_failed_disparos: { Args: never; Returns: undefined }
+      cleanup_inactive_contacts: { Args: never; Returns: undefined }
       create_campaign_and_enqueue: {
         Args: {
           p_content: string
