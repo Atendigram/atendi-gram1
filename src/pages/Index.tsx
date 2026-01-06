@@ -210,6 +210,7 @@ const Index = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="2026-01">janeiro de 2026</SelectItem>
                   <SelectItem value="2025-12">dezembro de 2025</SelectItem>
                   <SelectItem value="2025-11">novembro de 2025</SelectItem>
                   <SelectItem value="2025-10">outubro de 2025</SelectItem>
