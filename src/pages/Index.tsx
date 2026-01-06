@@ -209,23 +209,21 @@ const Index = () => {
                 <SelectTrigger className="w-[200px]">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2026-01">janeiro de 2026</SelectItem>
-                  <SelectItem value="2025-12">dezembro de 2025</SelectItem>
-                  <SelectItem value="2025-11">novembro de 2025</SelectItem>
-                  <SelectItem value="2025-10">outubro de 2025</SelectItem>
-                  <SelectItem value="2025-09">setembro de 2025</SelectItem>
-                  <SelectItem value="2025-08">agosto de 2025</SelectItem>
-                  <SelectItem value="2025-07">julho de 2025</SelectItem>
-                  <SelectItem value="2025-06">junho de 2025</SelectItem>
-                  <SelectItem value="2025-05">maio de 2025</SelectItem>
-                  <SelectItem value="2025-04">abril de 2025</SelectItem>
-                  <SelectItem value="2025-03">março de 2025</SelectItem>
-                  <SelectItem value="2025-02">fevereiro de 2025</SelectItem>
-                  <SelectItem value="2025-01">janeiro de 2025</SelectItem>
-                  <SelectItem value="2024-12">dezembro de 2024</SelectItem>
-                  <SelectItem value="2024-11">novembro de 2024</SelectItem>
-                  <SelectItem value="2024-10">outubro de 2024</SelectItem>
+              <SelectContent>
+                  {(() => {
+                    const months = [];
+                    const now = new Date();
+                    const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                    for (let i = 0; i < 24; i++) {
+                      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                      const year = date.getFullYear();
+                      const monthNum = String(date.getMonth() + 1).padStart(2, '0');
+                      const value = `${year}-${monthNum}`;
+                      const label = `${monthNames[date.getMonth()]} de ${year}`;
+                      months.push(<SelectItem key={value} value={value}>{label}</SelectItem>);
+                    }
+                    return months;
+                  })()}
                 </SelectContent>
               </Select>
             </div>
