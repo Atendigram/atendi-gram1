@@ -300,87 +300,6 @@ export type Database = {
           },
         ]
       }
-      contatos__sarluny_69: {
-        Row: {
-          account_id: string | null
-          chat_id: number | null
-          created_at: string | null
-          date_first_seen: string | null
-          fail_count: number | null
-          first_name: string | null
-          id: string
-          invalid_at: string | null
-          invalid_reason: string | null
-          is_bot: string | null
-          is_premium: string | null
-          language_code: string | null
-          last_name: string | null
-          mensagem: string | null
-          name: string | null
-          owner_id: string | null
-          phone: string | null
-          source: string | null
-          status: string | null
-          tg_id: string | null
-          user_id: number | null
-          username: string | null
-          welcome_opt_out: boolean | null
-          welcomed_at: string | null
-        }
-        Insert: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Update: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Relationships: []
-      }
       contatos_bella: {
         Row: {
           account_id: string | null
@@ -621,87 +540,6 @@ export type Database = {
         }
         Relationships: []
       }
-      contatos_gbarcellos: {
-        Row: {
-          account_id: string | null
-          chat_id: number | null
-          created_at: string | null
-          date_first_seen: string | null
-          fail_count: number | null
-          first_name: string | null
-          id: string
-          invalid_at: string | null
-          invalid_reason: string | null
-          is_bot: string | null
-          is_premium: string | null
-          language_code: string | null
-          last_name: string | null
-          mensagem: string | null
-          name: string | null
-          owner_id: string | null
-          phone: string | null
-          source: string | null
-          status: string | null
-          tg_id: string | null
-          user_id: number | null
-          username: string | null
-          welcome_opt_out: boolean | null
-          welcomed_at: string | null
-        }
-        Insert: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Update: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Relationships: []
-      }
       contatos_geral: {
         Row: {
           account_id: string | null
@@ -776,86 +614,6 @@ export type Database = {
           welcomed_at?: string | null
         }
         Relationships: []
-      }
-      contatos_geral_old: {
-        Row: {
-          account_id: string
-          chat_id: number | null
-          created_at: string | null
-          date_first_seen: string | null
-          fail_count: number
-          first_name: string | null
-          invalid_at: string | null
-          invalid_reason: string | null
-          is_bot: string | null
-          is_premium: string | null
-          language_code: string | null
-          last_name: string | null
-          mensagem: string | null
-          name: string | null
-          source: string | null
-          status: string
-          tg_id: string | null
-          user_id: number
-          username: string | null
-          welcome_opt_out: boolean
-          welcomed_at: string | null
-        }
-        Insert: {
-          account_id: string
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number
-          first_name?: string | null
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          source?: string | null
-          status?: string
-          tg_id?: string | null
-          user_id: number
-          username?: string | null
-          welcome_opt_out?: boolean
-          welcomed_at?: string | null
-        }
-        Update: {
-          account_id?: string
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number
-          first_name?: string | null
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          source?: string | null
-          status?: string
-          tg_id?: string | null
-          user_id?: number
-          username?: string | null
-          welcome_opt_out?: boolean
-          welcomed_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "contatos_luna_account_fk"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       contatos_giribeiro: {
         Row: {
@@ -1097,88 +855,7 @@ export type Database = {
         }
         Relationships: []
       }
-      contatos_pah_suelen: {
-        Row: {
-          account_id: string | null
-          chat_id: number | null
-          created_at: string | null
-          date_first_seen: string | null
-          fail_count: number | null
-          first_name: string | null
-          id: string
-          invalid_at: string | null
-          invalid_reason: string | null
-          is_bot: string | null
-          is_premium: string | null
-          language_code: string | null
-          last_name: string | null
-          mensagem: string | null
-          name: string | null
-          owner_id: string | null
-          phone: string | null
-          source: string | null
-          status: string | null
-          tg_id: string | null
-          user_id: number | null
-          username: string | null
-          welcome_opt_out: boolean | null
-          welcomed_at: string | null
-        }
-        Insert: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Update: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Relationships: []
-      }
-      contatos_peach: {
+      contatos_nexustech: {
         Row: {
           account_id: string | null
           chat_id: number | null
@@ -1260,87 +937,6 @@ export type Database = {
         Relationships: []
       }
       contatos_profalexia: {
-        Row: {
-          account_id: string | null
-          chat_id: number | null
-          created_at: string | null
-          date_first_seen: string | null
-          fail_count: number | null
-          first_name: string | null
-          id: string
-          invalid_at: string | null
-          invalid_reason: string | null
-          is_bot: string | null
-          is_premium: string | null
-          language_code: string | null
-          last_name: string | null
-          mensagem: string | null
-          name: string | null
-          owner_id: string | null
-          phone: string | null
-          source: string | null
-          status: string | null
-          tg_id: string | null
-          user_id: number | null
-          username: string | null
-          welcome_opt_out: boolean | null
-          welcomed_at: string | null
-        }
-        Insert: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Update: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          id?: string
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Relationships: []
-      }
-      contatos_yourqueenmel: {
         Row: {
           account_id: string | null
           chat_id: number | null
@@ -1794,6 +1390,7 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          role: string | null
         }
         Insert: {
           account_id: string
@@ -1801,6 +1398,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id: string
+          role?: string | null
         }
         Update: {
           account_id?: string
@@ -1808,6 +1406,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          role?: string | null
         }
         Relationships: [
           {
@@ -2362,86 +1961,6 @@ export type Database = {
         }
         Relationships: []
       }
-      contatos: {
-        Row: {
-          account_id: string | null
-          chat_id: number | null
-          created_at: string | null
-          date_first_seen: string | null
-          fail_count: number | null
-          first_name: string | null
-          invalid_at: string | null
-          invalid_reason: string | null
-          is_bot: string | null
-          is_premium: string | null
-          language_code: string | null
-          last_name: string | null
-          mensagem: string | null
-          name: string | null
-          source: string | null
-          status: string | null
-          tg_id: string | null
-          user_id: number | null
-          username: string | null
-          welcome_opt_out: boolean | null
-          welcomed_at: string | null
-        }
-        Insert: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Update: {
-          account_id?: string | null
-          chat_id?: number | null
-          created_at?: string | null
-          date_first_seen?: string | null
-          fail_count?: number | null
-          first_name?: string | null
-          invalid_at?: string | null
-          invalid_reason?: string | null
-          is_bot?: string | null
-          is_premium?: string | null
-          language_code?: string | null
-          last_name?: string | null
-          mensagem?: string | null
-          name?: string | null
-          source?: string | null
-          status?: string | null
-          tg_id?: string | null
-          user_id?: number | null
-          username?: string | null
-          welcome_opt_out?: boolean | null
-          welcomed_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "contatos_luna_account_fk"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       dashboard_mensagens_semana: {
         Row: {
           account_id: string | null
@@ -2517,13 +2036,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      view_new_contacts_today: {
-        Row: {
-          day: string | null
-          new_contacts: number | null
-        }
-        Relationships: []
       }
       view_profiles_connection_status: {
         Row: {

@@ -8,6 +8,7 @@ interface Profile {
   account_id?: string;
   email: string | null;
   display_name: string | null;
+  role: string | null;
   account_name?: string | null;
   avatar_url?: string | null;
 }
@@ -50,6 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           account_id, 
           email, 
           display_name,
+          role,
           accounts:account_id (
             name,
             avatar_url
@@ -66,6 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           display_name: currentUser?.user_metadata?.display_name || 
                        currentUser?.email?.split('@')[0] || 
                        'Usuário',
+          role: null,
           account_id: undefined,
         };
       }
@@ -75,6 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: profileData.id,
           email: profileData.email || currentUser?.email || null,
           display_name: profileData.display_name || currentUser?.email?.split('@')[0] || 'Usuário',
+          role: profileData.role || null,
           account_id: profileData.account_id,
           account_name: profileData.accounts?.name || null,
           avatar_url: profileData.accounts?.avatar_url || null,
@@ -88,6 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         display_name: currentUser?.user_metadata?.display_name || 
                      currentUser?.email?.split('@')[0] || 
                      'Usuário',
+        role: null,
         account_id: undefined,
       };
     } catch (error) {
@@ -95,6 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         id: userId,
         email: currentUser?.email || null,
         display_name: currentUser?.email?.split('@')[0] || 'Usuário',
+        role: null,
         account_id: undefined,
       };
     }
@@ -136,6 +142,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           account_id, 
           email, 
           display_name,
+          role,
           accounts:account_id (
             name,
             avatar_url
@@ -153,6 +160,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: profileData.id,
           email: profileData.email || profile.email,
           display_name: profileData.display_name,
+          role: profileData.role || null,
           account_id: profileData.account_id,
           account_name: accountName,
           avatar_url: avatarUrl,
