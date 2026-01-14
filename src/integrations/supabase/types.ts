@@ -2153,6 +2153,7 @@ export type Database = {
         Args: { account_id: string }
         Returns: boolean
       }
+      is_admin_user: { Args: never; Returns: boolean }
       is_member_of: { Args: { account_id: string }; Returns: boolean }
       profile_has_connected_telegram: {
         Args: { _profile_id: string }
