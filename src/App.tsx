@@ -15,6 +15,7 @@ import Contatos from "./pages/Contatos";
 import SuportePage from "./pages/SuportePage";
 import ConectarPerfilPage from "./pages/ConectarPerfilPage";
 import WelcomePage from "./pages/WelcomePage";
+import ListaModelosPage from "./pages/ListaModelosPage";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -41,6 +42,7 @@ const routes = [
   { path: "/boas-vindas", element: <ProtectedRoute><WelcomePage /></ProtectedRoute> },
   { path: "/suporte", element: <ProtectedRoute><SuportePage /></ProtectedRoute> },
   { path: "/conectar-perfil", element: <ProtectedRoute><ConectarPerfilPage /></ProtectedRoute> },
+  { path: "/lista-modelos", element: <ProtectedRoute><ListaModelosPage /></ProtectedRoute> },
   
   
   

@@ -64,16 +64,15 @@ const Navbar = () => {
     navigate('/login', { replace: true });
   };
 
+  const isAdmin = profile?.role === 'admin';
+
   const navItems = [
     { title: 'Dashboard', path: '/', icon: Home },
     { title: 'Contatos', path: '/contatos', icon: Users },
     { title: 'Disparos', path: '/disparos', icon: Send },
     { title: 'Boas-Vindas', path: '/boas-vindas', icon: Wand2 },
     { title: 'Suporte', path: '/suporte', icon: HelpCircle },
-    
-    
-    
-    
+    ...(isAdmin ? [{ title: 'Lista de Modelos', path: '/lista-modelos', icon: Users }] : []),
     { title: 'Conectar Perfil', path: '/conectar-perfil', icon: Settings },
   ];
 
