@@ -5,14 +5,17 @@ import Disparo from '@/components/Disparo';
 import { useOnboardingStatus } from '@/hooks/use-onboarding-status';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DisparoPage = () => {
   const { hasConnectedProfile, loading } = useOnboardingStatus();
   const navigate = useNavigate();
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
 
   return (
     <PageLayout>
-      {!loading && !hasConnectedProfile && (
+      {!loading && !hasConnectedProfile && !isAdmin && (
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0">

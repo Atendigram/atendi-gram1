@@ -17,9 +17,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { useOnboardingStatus } from '@/hooks/use-onboarding-status';
+import { useAuth } from '@/contexts/AuthContext';
+
 const Index = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { hasConnectedProfile, hasConfiguredWelcome, loading: onboardingLoading } = useOnboardingStatus();
+  const isAdmin = profile?.role === 'admin';
   
   // No forced redirects - users can navigate freely
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -177,7 +181,7 @@ const Index = () => {
   return <StatisticsProvider>
       <PageLayout>
         <div className="p-6 animate-enter">
-          {!onboardingLoading && !hasConnectedProfile && (
+          {!onboardingLoading && !hasConnectedProfile && !isAdmin && (
             <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
