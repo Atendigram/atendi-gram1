@@ -114,40 +114,42 @@ const ListaModelosPage = () => {
             Nenhum modelo encontrado
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {modelos.map((modelo) => (
-              <Card key={modelo.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-14 w-14 flex-shrink-0">
-                      <AvatarImage src={modelo.avatar_url || undefined} alt={modelo.display_name || 'Modelo'} />
-                      <AvatarFallback className="text-lg bg-primary/10 text-primary font-medium">
-                        {modelo.display_name
-                          ? modelo.display_name.substring(0, 2).toUpperCase()
-                          : modelo.email
-                            ? modelo.email.substring(0, 2).toUpperCase()
-                            : '??'
-                        }
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate">
-                        {modelo.display_name || 'Sem nome'}
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {modelo.email || 'Sem email'}
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-2 text-sm">
-                        <Users className="h-4 w-4 text-primary" />
-                        <span className="font-medium text-primary">
-                          {modelo.total_contatos.toLocaleString('pt-BR')}
-                        </span>
-                        <span className="text-muted-foreground">contatos</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="space-y-2">
+            {modelos.map((modelo, index) => (
+              <div 
+                key={modelo.id} 
+                className="flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow"
+              >
+                <span className="text-sm font-medium text-muted-foreground w-6">
+                  {index + 1}.
+                </span>
+                <Avatar className="h-12 w-12 flex-shrink-0">
+                  <AvatarImage src={modelo.avatar_url || undefined} alt={modelo.display_name || 'Modelo'} />
+                  <AvatarFallback className="text-base bg-primary/10 text-primary font-medium">
+                    {modelo.display_name
+                      ? modelo.display_name.substring(0, 2).toUpperCase()
+                      : modelo.email
+                        ? modelo.email.substring(0, 2).toUpperCase()
+                        : '??'
+                    }
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground truncate">
+                    {modelo.display_name || 'Sem nome'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {modelo.email || 'Sem email'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm flex-shrink-0">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span className="font-semibold text-primary">
+                    {modelo.total_contatos.toLocaleString('pt-BR')}
+                  </span>
+                  <span className="text-muted-foreground hidden sm:inline">contatos</span>
+                </div>
+              </div>
             ))}
           </div>
         )}
