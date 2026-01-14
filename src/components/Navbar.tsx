@@ -102,19 +102,26 @@ const Navbar = () => {
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } md:relative md:translate-x-0 flex flex-col h-full overflow-y-auto`}
       >
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            {/* Logo aviãozinho */}
-            <Send className="h-6 w-6 text-primary" />
-            <span className="text-lg font-bold text-foreground">AtendiGram</span>
-          </Link>
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Toggle theme"
-          >
-            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center space-x-2">
+              {/* Logo aviãozinho */}
+              <Send className="h-6 w-6 text-primary" />
+              <span className="text-lg font-bold text-foreground">AtendiGram</span>
+            </Link>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          </div>
+          {profile?.role === 'admin' && (
+            <div className="mt-2 px-2 py-1 bg-primary/10 rounded text-xs font-medium text-primary text-center">
+              Modo administrador ativo
+            </div>
+          )}
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
