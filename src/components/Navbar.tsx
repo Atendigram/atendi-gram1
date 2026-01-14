@@ -66,15 +66,22 @@ const Navbar = () => {
 
   const isAdmin = profile?.role === 'admin';
 
-  const navItems = [
+  // Sidebar exclusivo para admin: apenas Lista de Modelos
+  const adminNavItems = [
+    { title: 'Lista de Modelos', path: '/lista-modelos', icon: Users },
+  ];
+
+  // Sidebar normal para usuários não-admin
+  const userNavItems = [
     { title: 'Dashboard', path: '/', icon: Home },
     { title: 'Contatos', path: '/contatos', icon: Users },
     { title: 'Disparos', path: '/disparos', icon: Send },
     { title: 'Boas-Vindas', path: '/boas-vindas', icon: Wand2 },
     { title: 'Suporte', path: '/suporte', icon: HelpCircle },
-    ...(isAdmin ? [{ title: 'Lista de Modelos', path: '/lista-modelos', icon: Users }] : []),
     { title: 'Conectar Perfil', path: '/conectar-perfil', icon: Settings },
   ];
+
+  const navItems = isAdmin ? adminNavItems : userNavItems;
 
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
