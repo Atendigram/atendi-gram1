@@ -35,12 +35,27 @@ const LoginPage = () => {
   // Active tab state
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
 
-  // Se já estiver logado, manda pro dashboard (simplificado para evitar loops)
+  // Se já estiver logado, verifica role e redireciona
   useEffect(() => {
-    if (session) {
-      console.log('🔀 User is logged in, redirecting to dashboard');
-      navigate('/dashboard', { replace: true });
-    }
+    const checkRoleAndRedirect = async () => {
+      if (session) {
+        console.log('🔀 User is logged in, checking role...');
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profile?.role === 'admin') {
+          console.log('👑 Admin detected, redirecting to lista-modelos');
+          navigate('/lista-modelos', { replace: true });
+        } else {
+          console.log('👤 Regular user, redirecting to dashboard');
+          navigate('/dashboard', { replace: true });
+        }
+      }
+    };
+    checkRoleAndRedirect();
   }, [session]);  // Removido authLoading e navigate das dependências
 
   // ========= SIGN IN =========
@@ -75,7 +90,19 @@ const LoginPage = () => {
         try { localStorage.setItem('last_login_email', signInEmail); } catch {}
       }
       toast({ title: 'Sucesso!', description: 'Login realizado com sucesso.' });
-      navigate('/dashboard', { replace: true });
+      
+      // Verificar role para redirecionar corretamente
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+      
+      if (profile?.role === 'admin') {
+        navigate('/lista-modelos', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err: any) {
       toast({ title: 'Erro inesperado', description: err?.message ?? 'Falha desconhecida', variant: 'destructive' });
     } finally {
@@ -141,7 +168,19 @@ const LoginPage = () => {
       if (data.session) {
         console.log('✅ Account created with immediate session');
         toast({ title: 'Conta criada!', description: 'Login automático realizado.' });
-        navigate('/dashboard', { replace: true });
+        
+        // Verificar role para redirecionar corretamente (novos usuários normalmente não são admin)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profile?.role === 'admin') {
+          navigate('/lista-modelos', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       } else if (data.user && !data.session) {
         console.log('📧 Account created, email confirmation required');
         toast({ title: 'Verifique seu email', description: 'Enviamos um link de confirmação.' });
