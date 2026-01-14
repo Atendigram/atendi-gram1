@@ -114,18 +114,22 @@ const ListaModelosPage = () => {
             Nenhum modelo encontrado
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {modelos.map((modelo, index) => (
               <div 
                 key={modelo.id} 
-                className="flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow"
+                className="flex items-center gap-3 px-3 py-2.5 bg-card border border-border rounded-lg hover:shadow-sm transition-shadow"
               >
-                <span className="text-sm font-medium text-muted-foreground w-6">
+                <span className="text-sm font-medium text-muted-foreground w-5">
                   {index + 1}.
                 </span>
-                <Avatar className="h-12 w-12 flex-shrink-0">
-                  <AvatarImage src={modelo.avatar_url || undefined} alt={modelo.display_name || 'Modelo'} />
-                  <AvatarFallback className="text-base bg-primary/10 text-primary font-medium">
+                <Avatar className="h-10 w-10 flex-shrink-0">
+                  <AvatarImage 
+                    src={modelo.avatar_url || undefined} 
+                    alt={modelo.display_name || 'Modelo'}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="text-sm bg-primary/10 text-primary font-medium">
                     {modelo.display_name
                       ? modelo.display_name.substring(0, 2).toUpperCase()
                       : modelo.email
@@ -135,10 +139,10 @@ const ListaModelosPage = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground truncate">
+                  <h3 className="font-medium text-foreground truncate text-sm">
                     {modelo.display_name || 'Sem nome'}
                   </h3>
-                  <p className="text-sm text-muted-foreground truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {modelo.email || 'Sem email'}
                   </p>
                 </div>
@@ -147,7 +151,7 @@ const ListaModelosPage = () => {
                   <span className="font-semibold text-primary">
                     {modelo.total_contatos.toLocaleString('pt-BR')}
                   </span>
-                  <span className="text-muted-foreground hidden sm:inline">contatos</span>
+                  <span className="text-muted-foreground hidden sm:inline text-xs">contatos</span>
                 </div>
               </div>
             ))}
