@@ -1,4 +1,3 @@
-
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -19,6 +18,7 @@ import ListaModelosPage from "./pages/ListaModelosPage";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import AutoReplyPage from "@/pages/AutoReplyPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { useEffect } from "react";
 import { CRMProvider } from "./contexts/CRMContext";
@@ -43,10 +43,7 @@ const routes = [
   { path: "/suporte", element: <ProtectedRoute><SuportePage /></ProtectedRoute> },
   { path: "/conectar-perfil", element: <ProtectedRoute><ConectarPerfilPage /></ProtectedRoute> },
   { path: "/lista-modelos", element: <ProtectedRoute><ListaModelosPage /></ProtectedRoute> },
-  
-  
-  
-  
+  { path: "/auto-reply", element: <ProtectedRoute><AutoReplyPage /></ProtectedRoute> },
   
   // Legacy routes (keeping old paths for backward compatibility)
   { path: "/parcelles", element: <ProtectedRoute><ParcelsPage /></ProtectedRoute> },
