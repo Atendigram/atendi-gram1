@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -23,8 +24,8 @@ import {
   Loader2,
   Phone,
   ArrowUpDown,
-  Hash,
   Search,
+  Mail,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -48,6 +49,7 @@ interface AutoReplyRule {
 interface AutoReplyRulesListProps {
   onEditRule: (ruleId: string) => void;
   onCreateRule: () => void;
+  onOpenMessages: (ruleId: string, ruleName: string) => void;
   refreshKey: number;
   onRefresh: () => void;
 }
@@ -79,6 +81,7 @@ const cooldownLabel = (hours: number | null): string => {
 const AutoReplyRulesList: React.FC<AutoReplyRulesListProps> = ({
   onEditRule,
   onCreateRule,
+  onOpenMessages,
   refreshKey,
   onRefresh,
 }) => {
@@ -97,7 +100,6 @@ const AutoReplyRulesList: React.FC<AutoReplyRulesListProps> = ({
     setLoading(true);
 
     try {
-      // Buscar regras com contagem de mensagens e disparos
       const { data, error } = await (supabase as any)
         .from('auto_reply_rules_with_counts')
         .select('*')
@@ -115,7 +117,6 @@ const AutoReplyRulesList: React.FC<AutoReplyRulesListProps> = ({
   };
 
   const toggleEnabled = async (ruleId: string, currentEnabled: boolean) => {
-    // Optimistic update
     setRules(prev =>
       prev.map(r => (r.id === ruleId ? { ...r, enabled: !currentEnabled } : r))
     );
@@ -129,7 +130,6 @@ const AutoReplyRulesList: React.FC<AutoReplyRulesListProps> = ({
       if (error) throw error;
       toast.success(currentEnabled ? 'Regra desativada' : 'Regra ativada');
     } catch (err: any) {
-      // Rollback
       setRules(prev =>
         prev.map(r => (r.id === ruleId ? { ...r, enabled: currentEnabled } : r))
       );
@@ -189,97 +189,125 @@ const AutoReplyRulesList: React.FC<AutoReplyRulesListProps> = ({
 
   return (
     <div className="space-y-3">
-      {rules.map((rule) => (
-        <Card
-          key={rule.id}
-          className={`p-4 transition-all hover:shadow-md ${
-            !rule.enabled ? 'opacity-60 bg-muted/30' : ''
-          }`}
-        >
-          <div className="flex items-start justify-between gap-4">
-            {/* Lado esquerdo: info da regra */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
-                <Switch
-                  checked={rule.enabled}
-                  onCheckedChange={() => toggleEnabled(rule.id, rule.enabled)}
-                />
-                <h3 className="font-semibold text-base truncate">{rule.name}</h3>
-                <Badge variant="outline" className="text-xs shrink-0">
-                  <ArrowUpDown className="h-3 w-3 mr-1" />
-                  P{rule.priority}
-                </Badge>
-                <Badge className={`text-xs shrink-0 ${matchModeColors[rule.match_mode] || 'bg-gray-100 text-gray-800'}`}>
-                  {matchModeLabels[rule.match_mode] || rule.match_mode}
-                </Badge>
-              </div>
+      {rules.map((rule) => {
+        const messageCount = rule.message_count ?? 0;
+        const hasNoMessages = messageCount === 0;
 
-              {/* Keywords */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {rule.keywords.map((kw, i) => (
-                  <Badge
-                    key={i}
-                    variant="secondary"
-                    className="text-xs font-mono px-2 py-0.5"
-                  >
-                    <Search className="h-3 w-3 mr-1 opacity-50" />
-                    {kw}
+        return (
+          <Card
+            key={rule.id}
+            className={`p-4 transition-all hover:shadow-md ${
+              !rule.enabled ? 'opacity-60 bg-muted/30' : ''
+            }`}
+          >
+            <div className="flex items-start justify-between gap-4">
+              {/* Lado esquerdo: info da regra */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-2">
+                  <Switch
+                    checked={rule.enabled}
+                    onCheckedChange={() => toggleEnabled(rule.id, rule.enabled)}
+                  />
+                  <h3 className="font-semibold text-base truncate">{rule.name}</h3>
+                  <Badge variant="outline" className="text-xs shrink-0">
+                    <ArrowUpDown className="h-3 w-3 mr-1" />
+                    P{rule.priority}
                   </Badge>
-                ))}
-                {rule.keywords.length === 0 && (
-                  <span className="text-xs text-muted-foreground italic">
-                    Sem palavras-chave configuradas
-                  </span>
-                )}
-              </div>
+                  <Badge className={`text-xs shrink-0 ${matchModeColors[rule.match_mode] || 'bg-gray-100 text-gray-800'}`}>
+                    {matchModeLabels[rule.match_mode] || rule.match_mode}
+                  </Badge>
+                </div>
 
-              {/* Metadados */}
-              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  {rule.message_count ?? 0} mensagen{(rule.message_count ?? 0) !== 1 ? 's' : ''}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Zap className="h-3.5 w-3.5" />
-                  {rule.trigger_count ?? 0} disparo{(rule.trigger_count ?? 0) !== 1 ? 's' : ''}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  {cooldownLabel(rule.cooldown_hours)}
-                </span>
-                {rule.session_phone && (
+                {/* Keywords */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {rule.keywords.map((kw, i) => (
+                    <Badge
+                      key={i}
+                      variant="secondary"
+                      className="text-xs font-mono px-2 py-0.5"
+                    >
+                      <Search className="h-3 w-3 mr-1 opacity-50" />
+                      {kw}
+                    </Badge>
+                  ))}
+                  {rule.keywords.length === 0 && (
+                    <span className="text-xs text-muted-foreground italic">
+                      Sem palavras-chave configuradas
+                    </span>
+                  )}
+                </div>
+
+                {/* Metadados */}
+                <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                  {/* Botão clicável de mensagens */}
+                  <button
+                    type="button"
+                    onClick={() => onOpenMessages(rule.id, rule.name)}
+                    className={`flex items-center gap-1 transition-colors hover:text-primary ${
+                      hasNoMessages ? 'text-amber-600 font-medium' : ''
+                    }`}
+                    title={hasNoMessages ? 'Clique para adicionar mensagens de resposta' : 'Gerenciar mensagens de resposta'}
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    {messageCount} mensagen{messageCount !== 1 ? 's' : ''}
+                    {hasNoMessages && (
+                      <span className="ml-1 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
+                        configurar
+                      </span>
+                    )}
+                  </button>
                   <span className="flex items-center gap-1">
-                    <Phone className="h-3.5 w-3.5" />
-                    {rule.session_phone}
+                    <Zap className="h-3.5 w-3.5" />
+                    {rule.trigger_count ?? 0} disparo{(rule.trigger_count ?? 0) !== 1 ? 's' : ''}
                   </span>
-                )}
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    {cooldownLabel(rule.cooldown_hours)}
+                  </span>
+                  {rule.session_phone && (
+                    <span className="flex items-center gap-1">
+                      <Phone className="h-3.5 w-3.5" />
+                      {rule.session_phone}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Lado direito: ações */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEditRule(rule.id)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar Regra
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => deleteRule(rule.id, rule.name)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Excluir
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </Card>
-      ))}
+              {/* Lado direito: ações */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onOpenMessages(rule.id, rule.name)}>
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Mensagens do Pool
+                    {hasNoMessages && (
+                      <Badge variant="outline" className="ml-2 text-[10px] px-1.5 py-0 border-amber-300 text-amber-600">
+                        vazio
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onEditRule(rule.id)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar Regra
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => deleteRule(rule.id, rule.name)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 };

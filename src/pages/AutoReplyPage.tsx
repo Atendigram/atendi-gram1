@@ -3,6 +3,7 @@ import PageLayout from '@/components/layout/PageLayout';
 import TabContainer, { TabItem } from '@/components/layout/TabContainer';
 import AutoReplyRulesList from '@/components/auto-reply/AutoReplyRulesList';
 import AutoReplyRuleModal from '@/components/auto-reply/AutoReplyRuleModal';
+import AutoReplyMessagesList from '@/components/auto-reply/AutoReplyMessagesList';
 import AutoReplyDashboard from '@/components/auto-reply/AutoReplyDashboard';
 import AutoReplyLogTable from '@/components/auto-reply/AutoReplyLogTable';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,12 @@ const AutoReplyPage = () => {
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // State para navegação interna: quando o usuário clica em "Mensagens" de uma regra
+  const [selectedRuleForMessages, setSelectedRuleForMessages] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleCreateRule = () => {
     setEditingRuleId(null);
@@ -43,33 +50,51 @@ const AutoReplyPage = () => {
     setRefreshKey(prev => prev + 1);
   };
 
-  const getTabActions = () => {
-    switch (activeTab) {
-      case 'rules':
-        return (
-          <Button onClick={handleCreateRule} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Regra
-          </Button>
-        );
-      default:
-        return null;
-    }
+  const handleOpenMessages = (ruleId: string, ruleName: string) => {
+    setSelectedRuleForMessages({ id: ruleId, name: ruleName });
   };
+
+  const handleBackFromMessages = () => {
+    setSelectedRuleForMessages(null);
+    // Refresh para atualizar contagens de mensagens
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const getTabActions = () => {
+    if (activeTab === 'rules' && !selectedRuleForMessages) {
+      return (
+        <Button onClick={handleCreateRule} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Nova Regra
+        </Button>
+      );
+    }
+    return null;
+  };
+
+  // Conteúdo da aba Regras: ou a lista de regras, ou o pool de mensagens de uma regra
+  const rulesTabContent = selectedRuleForMessages ? (
+    <AutoReplyMessagesList
+      ruleId={selectedRuleForMessages.id}
+      ruleName={selectedRuleForMessages.name}
+      onBack={handleBackFromMessages}
+    />
+  ) : (
+    <AutoReplyRulesList
+      key={refreshKey}
+      onEditRule={handleEditRule}
+      onCreateRule={handleCreateRule}
+      onOpenMessages={handleOpenMessages}
+      refreshKey={refreshKey}
+      onRefresh={() => setRefreshKey(prev => prev + 1)}
+    />
+  );
 
   const tabs: TabItem[] = [
     {
       value: 'rules',
       label: 'Regras',
-      content: (
-        <AutoReplyRulesList
-          key={refreshKey}
-          onEditRule={handleEditRule}
-          onCreateRule={handleCreateRule}
-          refreshKey={refreshKey}
-          onRefresh={() => setRefreshKey(prev => prev + 1)}
-        />
-      ),
+      content: rulesTabContent,
     },
     {
       value: 'dashboard',
@@ -125,7 +150,13 @@ const AutoReplyPage = () => {
         <TabContainer
           tabs={tabs}
           defaultValue={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={(value) => {
+            setActiveTab(value);
+            // Ao trocar de aba, sair da sub-view de mensagens
+            if (value !== 'rules') {
+              setSelectedRuleForMessages(null);
+            }
+          }}
         />
 
         {/* Modal de criar/editar regra */}

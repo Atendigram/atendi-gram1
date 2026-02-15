@@ -6,6 +6,7 @@ import {
   Home,
   Users,
   Send, // aviãozinho Telegram
+  Bot,
   MessageSquare,
   Wallet,
   BarChart2,
@@ -73,12 +74,13 @@ const Navbar = () => {
 
   // Sidebar normal para usuários não-admin
   const userNavItems = [
+    { title: 'Boas-Vindas', path: '/boas-vindas', icon: Wand2 },
     { title: 'Dashboard', path: '/', icon: Home },
+    { title: 'Conectar Perfil', path: '/conectar-perfil', icon: Settings },
     { title: 'Contatos', path: '/contatos', icon: Users },
     { title: 'Disparos', path: '/disparos', icon: Send },
-    { title: 'Boas-Vindas', path: '/boas-vindas', icon: Wand2 },
+    { title: 'Resposta Automática', path: '/auto-reply', icon: Bot },
     { title: 'Suporte', path: '/suporte', icon: HelpCircle },
-    { title: 'Conectar Perfil', path: '/conectar-perfil', icon: Settings },
   ];
 
   const navItems = isAdmin ? adminNavItems : userNavItems;
